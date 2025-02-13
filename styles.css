@@ -1,5 +1,6 @@
-/* 🌈 SET Game Detector - Themed Styles (Red, Green, Purple) */
+/* 🌈 SET Game Detector - Themed Tight Layout */
 
+/* Global Body Settings */
 body {
     background: linear-gradient(135deg, #8B0000, #006400, #4B0082);
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -8,48 +9,64 @@ body {
     padding: 0;
 }
 
-/* 🔹 Title & Headers */
+/* Container adjustments to reduce vertical space */
+.block-container {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    max-width: 1200px;
+    margin: auto;
+}
+
+/* Headers */
 h1, h3, h4 {
     text-align: center;
     color: #FFD700;
-    margin: 10px 0;
+    margin: 0.5rem 0;
 }
 
-/* 🖼️ Image Styling */
+/* Images */
 img {
     border-radius: 10px;
     border: 3px solid #FFD700;
-    margin-top: 10px;
+    margin: 0.5rem 0;
 }
 
-/* 📥 File Uploader */
+/* File Uploader */
 .stFileUploader {
     background-color: rgba(255, 255, 255, 0.15);
     border: 2px dashed #FFD700;
-    padding: 15px;
+    padding: 10px;
     border-radius: 10px;
     width: 100%;
     text-align: center;
+    margin-bottom: 0.5rem;
 }
 
-/* 🎛️ Buttons */
+/* Buttons */
 .stButton>button {
     background-color: #FFD700;
     color: #4B0082;
     font-weight: bold;
     border-radius: 8px;
-    padding: 12px 20px;
-    font-size: 18px;
+    padding: 10px 20px;
+    font-size: 16px;
     transition: background-color 0.3s ease;
+    width: 100%;
 }
 .stButton>button:hover {
     background-color: #FFC107;
 }
 
-/* 🔍 Expander */
-.css-1d391kg {
+/* Expander */
+.css-1d391kg, .streamlit-expanderHeader {
     background-color: rgba(255, 255, 255, 0.2);
     border-radius: 10px;
-    padding: 15px;
-    margin-top: 20px;
+    padding: 10px;
+    margin-top: 0.5rem;
+}
+
+/* Adjust spacing between columns for a tight layout */
+[data-testid="column"] {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
 }
