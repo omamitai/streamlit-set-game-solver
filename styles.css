@@ -1,8 +1,8 @@
-/* 🌈 SET Game Detector - Themed Styles (Red, Green, Purple) */
+/* 🌈 SET Game Detector - More Vibrant & Organized Theme */
 body {
-    background: linear-gradient(135deg, #8B0000, #006400, #4B0082);
+    background: linear-gradient(135deg, #FF4D4D, #33CC33, #9933FF);
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    color: #F8F8FF;
+    color: black; /* Ensuring all text is black */
     margin: 0;
     padding: 0;
 }
@@ -10,15 +10,14 @@ body {
 /* 🔹 Title & Headers */
 .title {
     text-align: center;
-    color: #FFD700;
-    margin-top: 10px;
+    color: black; 
     font-size: 2.5em;
     font-weight: bold;
 }
 
 .subtitle {
     text-align: center;
-    color: #F8F8FF;
+    color: black;
     font-size: 1.2em;
     margin-bottom: 20px;
 }
@@ -26,14 +25,14 @@ body {
 /* 🖼️ Image Styling */
 img {
     border-radius: 10px;
-    border: 3px solid #FFD700;
+    border: 3px solid black;
     margin-top: 10px;
 }
 
-/* 📥 File Uploader */
+/* 📥 File Uploader - Hidden After Upload */
 .stFileUploader {
-    background-color: rgba(255, 255, 255, 0.15);
-    border: 2px dashed #FFD700;
+    background-color: rgba(255, 255, 255, 0.3);
+    border: 2px dashed black;
     padding: 10px;
     border-radius: 10px;
     text-align: center;
@@ -42,8 +41,8 @@ img {
 
 /* 🎛️ Buttons */
 .stButton>button {
-    background-color: #FFD700;
-    color: #4B0082;
+    background-color: black;
+    color: white;
     font-weight: bold;
     border-radius: 8px;
     padding: 10px;
@@ -52,12 +51,12 @@ img {
     text-align: center;
 }
 .stButton>button:hover {
-    background-color: #FFC107;
+    background-color: #333;
 }
 
 /* 🔍 Expander */
 .css-1d391kg {
-    background-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.5);
     border-radius: 10px;
     padding: 15px;
     margin-top: 20px;
