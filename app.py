@@ -2,8 +2,8 @@
 SET Game Detector
 =================
 
-Upload an image of a SET game board. The app detects valid sets and displays
-the processed image alongside the original using a left-to-right layout.
+Upload an image of a SET game board and click **Find Sets** to detect valid sets.
+The app displays the original image on the left and the processed result on the right.
 
 Usage:
     streamlit run app.py
@@ -25,7 +25,7 @@ from itertools import combinations
 from pathlib import Path
 
 # ------------------------------------------------------------------------------
-# Page configuration and custom CSS
+# Page configuration and CSS injection
 # ------------------------------------------------------------------------------
 st.set_page_config(
     page_title="SET Game Detector",
@@ -200,19 +200,20 @@ def classify_and_find_sets_from_array(board_image: np.ndarray, card_detector, sh
 # Streamlit Interface: Left-to-Right Layout
 # ------------------------------------------------------------------------------
 st.markdown("<h1 style='text-align:center;'>SET Game Detector</h1>", unsafe_allow_html=True)
+st.write("Upload an image of a SET game board and click **Find Sets** to detect valid sets.")
 
-# Create two columns for a left-to-right layout
+# Create two columns for a horizontal layout
 col1, col2 = st.columns(2)
 
 with col1:
-    st.markdown("### Upload Image 📥")
-    uploaded_file = st.file_uploader("Choose a JPG/PNG file", type=["jpg", "jpeg", "png"])
+    st.markdown("#### Upload Image 📥")
+    uploaded_file = st.file_uploader("", type=["jpg", "jpeg", "png"])
     if uploaded_file:
         image = Image.open(uploaded_file)
-        st.image(image, caption="Original Image", width=450)
+        st.image(image, caption="Original Image", width=400)
 
 with col2:
-    st.markdown("### Processed Result 🔍")
+    st.markdown("#### Processed Result 🔍")
     if uploaded_file:
         if st.button("Find Sets"):
             try:
@@ -226,8 +227,8 @@ with col2:
                         shape_model
                     )
                 final_image_rgb = cv2.cvtColor(final_image, cv2.COLOR_BGR2RGB)
-                st.image(final_image_rgb, caption="Detected Sets", width=450)
-                st.success("Sets detected successfully!")
+                st.image(final_image_rgb, caption="Detected Sets", width=400)
+                st.success("Sets detected successfully.")
                 with st.expander("View Details"):
                     st.json(sets_info)
             except Exception as e:
