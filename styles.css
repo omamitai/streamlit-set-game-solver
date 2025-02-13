@@ -1,45 +1,57 @@
-/* SET-Themed Styles */
+/* SET-Themed Custom Styles */
 
-/* Overall background with a subtle gradient using SET colors */
+/* Overall background: a gradient that evokes the SET game colors */
 body {
-    background: linear-gradient(to right, #FFCCCC, #CCFFCC, #E5CCFF);
+    background: linear-gradient(135deg, #8B0000, #006400, #4B0082); /* Dark red, green, indigo */
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    color: #333;
+    color: #F8F8FF;
+    margin: 0;
+    padding: 0;
 }
 
-/* Title styling */
-h1 {
-    font-size: 3em;
+/* Container to center images and control width */
+.img-container {
+    display: flex;
+    justify-content: center;
+    margin: 30px 0;
+}
+
+/* Headings styling with golden accents and emojis */
+h1, h3 {
     text-align: center;
-    margin-bottom: 20px;
+    margin: 10px 0;
+    color: #FFD700;  /* Golden yellow */
 }
 
-/* File uploader styling */
+/* File uploader container styling with a modern SET twist */
 .stFileUploader {
-    background-color: rgba(255, 255, 255, 0.9);
-    border: 2px dashed #aaa;
-    padding: 20px;
-    border-radius: 10px;
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 3px dashed #FFD700;
+    padding: 40px;
+    border-radius: 15px;
+    margin: 30px auto;
+    width: 70%;
 }
 
-/* Button styling */
+/* Button styling: bold, vibrant, with hover effects */
 .stButton>button {
-    background-color: #4A148C;  /* Deep purple */
-    color: #fff;
-    border-radius: 8px;
+    background-color: #FFD700;
+    color: #4B0082;
+    border-radius: 10px;
     border: none;
-    padding: 10px 24px;
-    font-size: 16px;
+    padding: 14px 35px;
+    font-size: 20px;
+    font-weight: bold;
     transition: background-color 0.3s ease;
 }
-
 .stButton>button:hover {
-    background-color: #6A1B9A;
+    background-color: #FFC107;
 }
 
-/* Expander styling */
-.css-1d391kg { 
-    background-color: rgba(255, 255, 255, 0.8);
+/* Expander styling: semi-transparent with ample padding */
+.css-1d391kg {
+    background-color: rgba(255, 255, 255, 0.25);
     border-radius: 10px;
-    padding: 10px;
+    padding: 20px;
+    margin-top: 20px;
 }
