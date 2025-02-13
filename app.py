@@ -2,7 +2,8 @@
 SET Game Detector
 =================
 
-Upload an image of a SET game board. The app detects valid sets and highlights them.
+Upload an image of a SET game board. The app detects valid sets and displays
+the processed image alongside the original using a left-to-right layout.
 
 Usage:
     streamlit run app.py
@@ -24,7 +25,7 @@ from itertools import combinations
 from pathlib import Path
 
 # ------------------------------------------------------------------------------
-# Page Configuration and Custom CSS Injection
+# Page configuration and custom CSS
 # ------------------------------------------------------------------------------
 st.set_page_config(
     page_title="SET Game Detector",
@@ -167,7 +168,7 @@ def classify_cards_from_board_image(board_image: np.ndarray, card_detector, shap
     return pd.DataFrame(card_data)
 
 def draw_sets_on_image(board_image: np.ndarray, sets_info: list) -> np.ndarray:
-    colors = [(255, 0, 0), (0, 255, 0), (128, 0, 128)]  # red, green, purple
+    colors = [(255, 0, 0), (0, 128, 0), (128, 0, 128)]  # red, green, purple
     base_thickness = 8
     base_expansion = 5
     for index, set_info in enumerate(sets_info):
@@ -196,37 +197,39 @@ def classify_and_find_sets_from_array(board_image: np.ndarray, card_detector, sh
     return sets_found, final_image
 
 # ------------------------------------------------------------------------------
-# Streamlit Interface
+# Streamlit Interface: Left-to-Right Layout
 # ------------------------------------------------------------------------------
-st.markdown("<h1>SET Game Detector</h1>", unsafe_allow_html=True)
-st.write("Upload an image and click **Find Sets**.")
+st.markdown("<h1 style='text-align:center;'>SET Game Detector</h1>", unsafe_allow_html=True)
 
-uploaded_file = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"])
+# Create two columns for a left-to-right layout
+col1, col2 = st.columns(2)
 
-if uploaded_file:
-    image = Image.open(uploaded_file)
-    st.markdown("<div class='img-container'>", unsafe_allow_html=True)
-    st.image(image, caption="Uploaded Image", width=500)
-    st.markdown("</div>", unsafe_allow_html=True)
-    
-    if st.button("Find Sets"):
-        try:
-            image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-            with st.spinner("Processing..."):
-                sets_info, final_image = classify_and_find_sets_from_array(
-                    image_cv,
-                    card_detection_model,
-                    shape_detection_model,
-                    fill_model,
-                    shape_model
-                )
-            final_image_rgb = cv2.cvtColor(final_image, cv2.COLOR_BGR2RGB)
-            st.markdown("<div class='img-container'>", unsafe_allow_html=True)
-            st.image(final_image_rgb, caption="Processed Image", width=500)
-            st.markdown("</div>", unsafe_allow_html=True)
-            st.success("Sets detected successfully.")
-            with st.expander("View Details"):
-                st.json(sets_info)
-        except Exception as e:
-            st.error("An error occurred during processing:")
-            st.text(traceback.format_exc())
+with col1:
+    st.markdown("### Upload Image 📥")
+    uploaded_file = st.file_uploader("Choose a JPG/PNG file", type=["jpg", "jpeg", "png"])
+    if uploaded_file:
+        image = Image.open(uploaded_file)
+        st.image(image, caption="Original Image", width=450)
+
+with col2:
+    st.markdown("### Processed Result 🔍")
+    if uploaded_file:
+        if st.button("Find Sets"):
+            try:
+                image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+                with st.spinner("Processing..."):
+                    sets_info, final_image = classify_and_find_sets_from_array(
+                        image_cv,
+                        card_detection_model,
+                        shape_detection_model,
+                        fill_model,
+                        shape_model
+                    )
+                final_image_rgb = cv2.cvtColor(final_image, cv2.COLOR_BGR2RGB)
+                st.image(final_image_rgb, caption="Detected Sets", width=450)
+                st.success("Sets detected successfully!")
+                with st.expander("View Details"):
+                    st.json(sets_info)
+            except Exception as e:
+                st.error("Error during processing:")
+                st.text(traceback.format_exc())
