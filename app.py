@@ -1,17 +1,13 @@
 """
-SET Game Detector Streamlit App
-================================
+SET Game Detector
+=================
 
-🎮 Welcome to the SET Game Detector! 🎮
+Upload an image of a SET game board. The app detects valid sets and highlights them.
 
-This app analyzes an image of a SET game board to detect valid sets.
-Upload your image below and click the "🔍 Find Sets" button to process it.
-Enjoy our vibrant SET-themed design with fun emojis and balanced proportions!
-
-Run with:
+Usage:
     streamlit run app.py
 
-Ensure that your models are stored under the 'models/' directory.
+Ensure your models are stored under the 'models/' directory.
 """
 
 import streamlit as st
@@ -31,24 +27,22 @@ from pathlib import Path
 # Page Configuration and Custom CSS Injection
 # ------------------------------------------------------------------------------
 st.set_page_config(
-    page_title="SET Game Detector 🎴",
+    page_title="SET Game Detector",
     page_icon="🎴",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 
 def local_css(file_name):
-    """Inject custom CSS from a local file."""
     with open(file_name) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 local_css("styles.css")
 
 # ------------------------------------------------------------------------------
-# MODEL LOADING
+# Model Loading
 # ------------------------------------------------------------------------------
 base_dir = Path("models")
-
 characteristics_path = base_dir / "Characteristics" / "11022025"
 shape_path = base_dir / "Shape" / "15052024"
 card_path = base_dir / "Card" / "16042024"
@@ -69,15 +63,13 @@ if torch.cuda.is_available():
     shape_detection_model.to('cuda')
 
 # ------------------------------------------------------------------------------
-# UTILITY & PROCESSING FUNCTIONS
+# Utility & Processing Functions
 # ------------------------------------------------------------------------------
 def check_and_rotate_input_image(board_image: np.ndarray, detector) -> (np.ndarray, bool):
-    """Detect card regions and rotate the image if needed."""
     card_results = detector(board_image)
     card_boxes = card_results[0].boxes.xyxy.cpu().numpy().astype(int)
     if card_boxes.size == 0:
         return board_image, False
-
     widths = card_boxes[:, 2] - card_boxes[:, 0]
     heights = card_boxes[:, 3] - card_boxes[:, 1]
     if np.mean(heights) > np.mean(widths):
@@ -85,21 +77,15 @@ def check_and_rotate_input_image(board_image: np.ndarray, detector) -> (np.ndarr
     return board_image, False
 
 def restore_original_orientation(image: np.ndarray, was_rotated: bool) -> np.ndarray:
-    """Restore image orientation if it was rotated."""
     return cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE) if was_rotated else image
 
 def predict_color(shape_image: np.ndarray) -> str:
-    """
-    Determine the dominant color in a shape image using HSV thresholds.
-    Returns one of: 'green', 'purple', or 'red'.
-    """
     hsv_image = cv2.cvtColor(shape_image, cv2.COLOR_BGR2HSV)
     green_mask = cv2.inRange(hsv_image, np.array([40, 50, 50]), np.array([80, 255, 255]))
     purple_mask = cv2.inRange(hsv_image, np.array([120, 50, 50]), np.array([160, 255, 255]))
     red_mask1 = cv2.inRange(hsv_image, np.array([0, 50, 50]), np.array([10, 255, 255]))
     red_mask2 = cv2.inRange(hsv_image, np.array([170, 50, 50]), np.array([180, 255, 255]))
     red_mask = cv2.bitwise_or(red_mask1, red_mask2)
-    
     color_counts = {
         'green': cv2.countNonZero(green_mask),
         'purple': cv2.countNonZero(purple_mask),
@@ -108,24 +94,19 @@ def predict_color(shape_image: np.ndarray) -> str:
     return max(color_counts, key=color_counts.get)
 
 def predict_card_features(card_image: np.ndarray, shape_detector, fill_model, shape_model, box: list) -> dict:
-    """Detect and classify features on a card image."""
     shape_results = shape_detector(card_image)
     card_h, card_w = card_image.shape[:2]
     card_area = card_w * card_h
-
     filtered_boxes = [
         [int(x1), int(y1), int(x2), int(y2)]
         for x1, y1, x2, y2 in shape_results[0].boxes.xyxy.cpu().numpy()
         if (x2 - x1) * (y2 - y1) > 0.03 * card_area
     ]
-
     if not filtered_boxes:
         return {'count': 0, 'color': 'unknown', 'fill': 'unknown', 'shape': 'unknown', 'box': box}
-
     fill_input_shape = fill_model.input_shape[1:3]
     shape_input_shape = shape_model.input_shape[1:3]
     fill_imgs, shape_imgs, color_list = [], [], []
-
     for fb in filtered_boxes:
         x1, y1, x2, y2 = fb
         shape_img = card_image[y1:y2, x1:x2]
@@ -134,35 +115,27 @@ def predict_card_features(card_image: np.ndarray, shape_detector, fill_model, sh
         fill_imgs.append(fill_img)
         shape_imgs.append(shape_img_resized)
         color_list.append(predict_color(shape_img))
-        
     fill_imgs = np.array(fill_imgs)
     shape_imgs = np.array(shape_imgs)
-    
     fill_preds = fill_model.predict(fill_imgs, batch_size=len(fill_imgs))
     shape_preds = shape_model.predict(shape_imgs, batch_size=len(shape_imgs))
-    
     fill_labels_list = ['empty', 'full', 'striped']
     shape_labels_list = ['diamond', 'oval', 'squiggle']
-    
     predicted_fill = [fill_labels_list[np.argmax(pred)] for pred in fill_preds]
     predicted_shape = [shape_labels_list[np.argmax(pred)] for pred in shape_preds]
-
     color_label = max(set(color_list), key=color_list.count)
     fill_label = max(set(predicted_fill), key=predicted_fill.count)
     shape_label = max(set(predicted_shape), key=predicted_shape.count)
-    
     return {'count': len(filtered_boxes), 'color': color_label,
             'fill': fill_label, 'shape': shape_label, 'box': box}
 
 def is_set(cards: list) -> bool:
-    """Check if a group of cards forms a valid set."""
     for feature in ['Count', 'Color', 'Fill', 'Shape']:
         if len({card[feature] for card in cards}) not in [1, 3]:
             return False
     return True
 
 def find_sets(card_df: pd.DataFrame) -> list:
-    """Iterate over combinations of three cards to identify valid sets."""
     sets_found = []
     for combo in combinations(card_df.iterrows(), 3):
         cards = [entry[1] for entry in combo]
@@ -175,13 +148,11 @@ def find_sets(card_df: pd.DataFrame) -> list:
     return sets_found
 
 def detect_cards_from_image(board_image: np.ndarray, detector) -> list:
-    """Extract card regions from the board image."""
     card_results = detector(board_image)
     card_boxes = card_results[0].boxes.xyxy.cpu().numpy().astype(int)
     return [(board_image[y1:y2, x1:x2], [x1, y1, x2, y2]) for x1, y1, x2, y2 in card_boxes]
 
 def classify_cards_from_board_image(board_image: np.ndarray, card_detector, shape_detector, fill_model, shape_model) -> pd.DataFrame:
-    """Detect cards from the board image and classify their features."""
     cards = detect_cards_from_image(board_image, card_detector)
     card_data = []
     for card_image, box in cards:
@@ -196,9 +167,7 @@ def classify_cards_from_board_image(board_image: np.ndarray, card_detector, shap
     return pd.DataFrame(card_data)
 
 def draw_sets_on_image(board_image: np.ndarray, sets_info: list) -> np.ndarray:
-    """Draw bounding boxes and labels for each detected set on the board image."""
-    colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255),
-              (255, 255, 0), (255, 0, 255), (0, 255, 255)]
+    colors = [(255, 0, 0), (0, 255, 0), (128, 0, 128)]  # red, green, purple
     base_thickness = 8
     base_expansion = 5
     for index, set_info in enumerate(sets_info):
@@ -219,13 +188,6 @@ def draw_sets_on_image(board_image: np.ndarray, sets_info: list) -> np.ndarray:
     return board_image
 
 def classify_and_find_sets_from_array(board_image: np.ndarray, card_detector, shape_detector, fill_model, shape_model) -> (list, np.ndarray):
-    """
-    Process the board image:
-      1. Correct orientation.
-      2. Classify card features.
-      3. Identify valid sets.
-      4. Annotate the image with detected sets.
-    """
     processed_image, was_rotated = check_and_rotate_input_image(board_image, card_detector)
     card_df = classify_cards_from_board_image(processed_image, card_detector, shape_detector, fill_model, shape_model)
     sets_found = find_sets(card_df)
@@ -234,23 +196,23 @@ def classify_and_find_sets_from_array(board_image: np.ndarray, card_detector, sh
     return sets_found, final_image
 
 # ------------------------------------------------------------------------------
-# STREAMLIT INTERFACE
+# Streamlit Interface
 # ------------------------------------------------------------------------------
-st.markdown("<h1>🎴 SET Game Detector 🎴</h1>", unsafe_allow_html=True)
-st.markdown("<h3>Upload an image of your SET game board and let the magic happen! ✨</h3>", unsafe_allow_html=True)
+st.markdown("<h1>SET Game Detector</h1>", unsafe_allow_html=True)
+st.write("Upload an image and click **Find Sets**.")
 
-uploaded_file = st.file_uploader("👉 Drag and drop your image here or click to upload", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("Upload Image", type=["jpg", "jpeg", "png"])
 
-if uploaded_file is not None:
+if uploaded_file:
     image = Image.open(uploaded_file)
     st.markdown("<div class='img-container'>", unsafe_allow_html=True)
-    st.image(image, caption="Uploaded Image", width=600)
+    st.image(image, caption="Uploaded Image", width=500)
     st.markdown("</div>", unsafe_allow_html=True)
     
-    if st.button("🔍 Find Sets"):
+    if st.button("Find Sets"):
         try:
             image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-            with st.spinner("Processing... please wait ⏳"):
+            with st.spinner("Processing..."):
                 sets_info, final_image = classify_and_find_sets_from_array(
                     image_cv,
                     card_detection_model,
@@ -260,11 +222,11 @@ if uploaded_file is not None:
                 )
             final_image_rgb = cv2.cvtColor(final_image, cv2.COLOR_BGR2RGB)
             st.markdown("<div class='img-container'>", unsafe_allow_html=True)
-            st.image(final_image_rgb, caption="Processed Image", width=600)
+            st.image(final_image_rgb, caption="Processed Image", width=500)
             st.markdown("</div>", unsafe_allow_html=True)
-            st.success("✨ Sets detected successfully!")
-            with st.expander("📋 View Detected Sets Details"):
+            st.success("Sets detected successfully.")
+            with st.expander("View Details"):
                 st.json(sets_info)
         except Exception as e:
-            st.error("⚠️ An error occurred during processing:")
+            st.error("An error occurred during processing:")
             st.text(traceback.format_exc())
