@@ -1,16 +1,3 @@
-"""
-SET Game Detector
-=================
-
-Upload an image of a SET game board and click **Find Sets** to detect valid sets.
-The app displays the original image on the left and the processed result on the right.
-
-Usage:
-    streamlit run app.py
-
-Ensure your models are stored under the 'models/' directory.
-"""
-
 import streamlit as st
 from PIL import Image
 import numpy as np
@@ -24,9 +11,9 @@ from ultralytics import YOLO
 from itertools import combinations
 from pathlib import Path
 
-# ------------------------------------------------------------------------------
-# Page configuration and CSS injection
-# ------------------------------------------------------------------------------
+# --------------------------------------------------------------------------
+# 🎨 Streamlit Page Config
+# --------------------------------------------------------------------------
 st.set_page_config(
     page_title="SET Game Detector",
     page_icon="🎴",
@@ -34,15 +21,16 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
+# 📜 Inject Custom CSS
 def local_css(file_name):
     with open(file_name) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 local_css("styles.css")
 
-# ------------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 # Model Loading
-# ------------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 base_dir = Path("models")
 characteristics_path = base_dir / "Characteristics" / "11022025"
 shape_path = base_dir / "Shape" / "15052024"
@@ -63,9 +51,9 @@ if torch.cuda.is_available():
     card_detection_model.to('cuda')
     shape_detection_model.to('cuda')
 
-# ------------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 # Utility & Processing Functions
-# ------------------------------------------------------------------------------
+# --------------------------------------------------------------------------
 def check_and_rotate_input_image(board_image: np.ndarray, detector) -> (np.ndarray, bool):
     card_results = detector(board_image)
     card_boxes = card_results[0].boxes.xyxy.cpu().numpy().astype(int)
@@ -196,29 +184,36 @@ def classify_and_find_sets_from_array(board_image: np.ndarray, card_detector, sh
     final_image = restore_original_orientation(annotated_image, was_rotated)
     return sets_found, final_image
 
-# ------------------------------------------------------------------------------
-# Streamlit Interface: Left-to-Right Layout
-# ------------------------------------------------------------------------------
-st.markdown("<h1 style='text-align:center;'>SET Game Detector</h1>", unsafe_allow_html=True)
-st.write("Upload an image of a SET game board and click **Find Sets** to detect valid sets.")
+# --------------------------------------------------------------------------
+# 🎲 Streamlit App UI
+# --------------------------------------------------------------------------
 
-# Create two columns for a horizontal layout
-col1, col2 = st.columns(2)
+# 🌟 Title & Description
+st.markdown("<h1 style='text-align:center; color:#FFD700;'>🎴 SET Game Detector</h1>", unsafe_allow_html=True)
+st.markdown("<p style='text-align:center;'>Upload an image of a SET game board and click <b>Find Sets</b> to detect valid sets.</p>", unsafe_allow_html=True)
 
+# 🔹 Layout: Two Equal Columns
+col1, col2 = st.columns([1, 1])
+
+# 📥 Left Column: Upload & Show Original Image
 with col1:
-    st.markdown("#### Upload Image 📥")
-    uploaded_file = st.file_uploader("", type=["jpg", "jpeg", "png"])
+    st.markdown("### 📥 Upload Image")
+    uploaded_file = st.file_uploader("Choose an image file", type=["jpg", "jpeg", "png"])
+    
     if uploaded_file:
         image = Image.open(uploaded_file)
-        st.image(image, caption="Original Image", width=400)
+        st.image(image, caption="🎴 Original Image", use_column_width=True, output_format="JPEG")
 
+# 🔍 Right Column: Process & Show Results
 with col2:
-    st.markdown("#### Processed Result 🔍")
+    st.markdown("### 🔍 Processed Result")
+    
     if uploaded_file:
-        if st.button("Find Sets"):
+        if st.button("🔎 Find Sets", use_container_width=True):
             try:
                 image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-                with st.spinner("Processing..."):
+                
+                with st.spinner("🔄 Processing... Please wait."):
                     sets_info, final_image = classify_and_find_sets_from_array(
                         image_cv,
                         card_detection_model,
@@ -226,11 +221,16 @@ with col2:
                         fill_model,
                         shape_model
                     )
+                # Convert image back to RGB for display
                 final_image_rgb = cv2.cvtColor(final_image, cv2.COLOR_BGR2RGB)
-                st.image(final_image_rgb, caption="Detected Sets", width=400)
-                st.success("Sets detected successfully.")
-                with st.expander("View Details"):
+                st.image(final_image_rgb, caption="✅ Detected Sets", use_column_width=True, output_format="JPEG")
+                
+                # 🏆 Success Message
+                st.toast("🎉 Sets detected successfully!", icon="✅")
+                
+                # 📌 Expandable Results
+                with st.expander("📜 View Detected Sets Details"):
                     st.json(sets_info)
             except Exception as e:
-                st.error("Error during processing:")
+                st.error("⚠️ An error occurred during processing:")
                 st.text(traceback.format_exc())
