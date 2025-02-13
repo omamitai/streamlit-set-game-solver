@@ -1,0 +1,45 @@
+/* SET-Themed Styles */
+
+/* Overall background with a subtle gradient using SET colors */
+body {
+    background: linear-gradient(to right, #FFCCCC, #CCFFCC, #E5CCFF);
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: #333;
+}
+
+/* Title styling */
+h1 {
+    font-size: 3em;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* File uploader styling */
+.stFileUploader {
+    background-color: rgba(255, 255, 255, 0.9);
+    border: 2px dashed #aaa;
+    padding: 20px;
+    border-radius: 10px;
+}
+
+/* Button styling */
+.stButton>button {
+    background-color: #4A148C;  /* Deep purple */
+    color: #fff;
+    border-radius: 8px;
+    border: none;
+    padding: 10px 24px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+}
+
+.stButton>button:hover {
+    background-color: #6A1B9A;
+}
+
+/* Expander styling */
+.css-1d391kg { 
+    background-color: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    padding: 10px;
+}
