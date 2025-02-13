@@ -2,13 +2,17 @@
 Set Game Detector Streamlit App
 ================================
 
-This app detects valid sets from an uploaded image of a Set game board.
-It uses computer vision and machine learning models for card detection and
-feature classification, and then highlights the detected sets on the image.
+This app detects valid sets from an uploaded image of a SET game board.
+It uses computer vision and machine learning models to detect cards,
+classify their features, and highlight detected sets.
 
-Instructions:
-    - Place your pre-trained models under the `models/` directory as indicated.
-    - Run the app with: streamlit run app.py
+Before running:
+  - Ensure your models are stored under the `models/` directory as specified.
+  - Install all dependencies (see requirements.txt).
+  - Customize the CSS (styles.css) and theme (optional .streamlit/config.toml).
+
+Run the app with:
+    streamlit run app.py
 """
 
 import streamlit as st
@@ -24,14 +28,30 @@ from ultralytics import YOLO
 from itertools import combinations
 from pathlib import Path
 
-# =============================================================================
-#                             MODEL LOADING
-# =============================================================================
+# ------------------------------------------------------------------------------
+# Page Configuration and Custom CSS Injection
+# ------------------------------------------------------------------------------
+st.set_page_config(
+    page_title="SET Game Detector",
+    page_icon=":cards:",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 
-# Define the base directory for your models
+def local_css(file_name):
+    """Inject custom CSS from a local file."""
+    with open(file_name) as f:
+        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+
+# Load custom CSS for SET-themed styling
+local_css("styles.css")
+
+# ------------------------------------------------------------------------------
+#                             MODEL LOADING
+# ------------------------------------------------------------------------------
 base_dir = Path("models")
 
-# Define subdirectories for each model type
+# Define paths to your model directories
 characteristics_path = base_dir / "Characteristics" / "11022025"
 shape_path = base_dir / "Shape" / "15052024"
 card_path = base_dir / "Card" / "16042024"
@@ -54,20 +74,12 @@ if torch.cuda.is_available():
     card_detection_model.to('cuda')
     shape_detection_model.to('cuda')
 
-# =============================================================================
-#                       UTILITY & PROCESSING FUNCTIONS
-# =============================================================================
-
+# ------------------------------------------------------------------------------
+#                   UTILITY & PROCESSING FUNCTIONS
+# ------------------------------------------------------------------------------
 def check_and_rotate_input_image(board_image: np.ndarray, detector) -> (np.ndarray, bool):
     """
-    Detect card regions and determine if the image needs to be rotated.
-
-    Args:
-        board_image (np.ndarray): Input image.
-        detector: YOLO card detection model.
-
-    Returns:
-        tuple: (processed image, was_rotated flag)
+    Detect card regions and rotate the image if necessary.
     """
     card_results = detector(board_image)
     card_boxes = card_results[0].boxes.xyxy.cpu().numpy().astype(int)
@@ -81,16 +93,7 @@ def check_and_rotate_input_image(board_image: np.ndarray, detector) -> (np.ndarr
     return board_image, False
 
 def restore_original_orientation(image: np.ndarray, was_rotated: bool) -> np.ndarray:
-    """
-    Restore the original orientation of the image if it was rotated.
-
-    Args:
-        image (np.ndarray): Processed image.
-        was_rotated (bool): Flag indicating if rotation occurred.
-
-    Returns:
-        np.ndarray: Image in its original orientation.
-    """
+    """Restore image orientation if it was rotated."""
     if was_rotated:
         return cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
     return image
@@ -98,12 +101,6 @@ def restore_original_orientation(image: np.ndarray, was_rotated: bool) -> np.nda
 def predict_color(shape_image: np.ndarray) -> str:
     """
     Determine the dominant color in a shape image using HSV thresholds.
-
-    Args:
-        shape_image (np.ndarray): Image of the shape in BGR format.
-
-    Returns:
-        str: Dominant color ("green", "purple", or "red").
     """
     hsv_image = cv2.cvtColor(shape_image, cv2.COLOR_BGR2HSV)
     green_mask = cv2.inRange(hsv_image, np.array([40, 50, 50]), np.array([80, 255, 255]))
@@ -122,16 +119,6 @@ def predict_color(shape_image: np.ndarray) -> str:
 def predict_card_features(card_image: np.ndarray, shape_detector, fill_model, shape_model, box: list) -> dict:
     """
     Detect and classify features on a card image.
-
-    Args:
-        card_image (np.ndarray): Image of the card.
-        shape_detector: YOLO model for shape detection.
-        fill_model: Keras model for fill pattern classification.
-        shape_model: Keras model for shape classification.
-        box (list): Coordinates of the card bounding box.
-
-    Returns:
-        dict: Detected features including count, color, fill, shape, and box coordinates.
     """
     shape_results = shape_detector(card_image)
     card_h, card_w = card_image.shape[:2]
@@ -180,14 +167,7 @@ def predict_card_features(card_image: np.ndarray, shape_detector, fill_model, sh
 
 def is_set(cards: list) -> bool:
     """
-    Check if a group of cards forms a valid set. For each feature,
-    values must be all identical or all distinct.
-
-    Args:
-        cards (list): List of card feature dictionaries.
-
-    Returns:
-        bool: True if the group is a valid set, False otherwise.
+    Check if a group of cards forms a valid set.
     """
     for feature in ['Count', 'Color', 'Fill', 'Shape']:
         if len({card[feature] for card in cards}) not in [1, 3]:
@@ -196,13 +176,7 @@ def is_set(cards: list) -> bool:
 
 def find_sets(card_df: pd.DataFrame) -> list:
     """
-    Iterate over all combinations of three cards to identify valid sets.
-
-    Args:
-        card_df (pd.DataFrame): DataFrame with card features.
-
-    Returns:
-        list: A list of dictionaries containing information on detected sets.
+    Iterate over combinations of three cards to identify valid sets.
     """
     sets_found = []
     for combo in combinations(card_df.iterrows(), 3):
@@ -217,14 +191,7 @@ def find_sets(card_df: pd.DataFrame) -> list:
 
 def detect_cards_from_image(board_image: np.ndarray, detector) -> list:
     """
-    Extract card regions from the board image using the YOLO card detection model.
-
-    Args:
-        board_image (np.ndarray): Input board image.
-        detector: YOLO card detection model.
-
-    Returns:
-        list: List of tuples (card image, bounding box coordinates).
+    Extract card regions from the board image.
     """
     card_results = detector(board_image)
     card_boxes = card_results[0].boxes.xyxy.cpu().numpy().astype(int)
@@ -233,16 +200,6 @@ def detect_cards_from_image(board_image: np.ndarray, detector) -> list:
 def classify_cards_from_board_image(board_image: np.ndarray, card_detector, shape_detector, fill_model, shape_model) -> pd.DataFrame:
     """
     Detect cards from the board image and classify their features.
-
-    Args:
-        board_image (np.ndarray): Input board image.
-        card_detector: YOLO card detection model.
-        shape_detector: YOLO shape detection model.
-        fill_model: Keras model for fill classification.
-        shape_model: Keras model for shape classification.
-
-    Returns:
-        pd.DataFrame: DataFrame with card features.
     """
     cards = detect_cards_from_image(board_image, card_detector)
     card_data = []
@@ -260,13 +217,6 @@ def classify_cards_from_board_image(board_image: np.ndarray, card_detector, shap
 def draw_sets_on_image(board_image: np.ndarray, sets_info: list) -> np.ndarray:
     """
     Draw bounding boxes and labels for each detected set on the board image.
-
-    Args:
-        board_image (np.ndarray): The image to annotate.
-        sets_info (list): List of detected set information.
-
-    Returns:
-        np.ndarray: Annotated image.
     """
     colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255),
               (255, 255, 0), (255, 0, 255), (0, 255, 255)]
@@ -291,21 +241,11 @@ def draw_sets_on_image(board_image: np.ndarray, sets_info: list) -> np.ndarray:
 
 def classify_and_find_sets_from_array(board_image: np.ndarray, card_detector, shape_detector, fill_model, shape_model) -> (list, np.ndarray):
     """
-    Main processing function:
-      1. Corrects board image orientation.
-      2. Classifies card features.
-      3. Finds valid sets.
-      4. Annotates the image with detected sets.
-
-    Args:
-        board_image (np.ndarray): Input board image.
-        card_detector: YOLO card detection model.
-        shape_detector: YOLO shape detection model.
-        fill_model: Keras model for fill classification.
-        shape_model: Keras model for shape classification.
-
-    Returns:
-        tuple: (list of detected sets, annotated image)
+    Process the board image:
+      1. Correct orientation.
+      2. Classify card features.
+      3. Identify valid sets.
+      4. Annotate the image with the detected sets.
     """
     processed_image, was_rotated = check_and_rotate_input_image(board_image, card_detector)
     card_df = classify_cards_from_board_image(processed_image, card_detector, shape_detector, fill_model, shape_model)
@@ -314,40 +254,51 @@ def classify_and_find_sets_from_array(board_image: np.ndarray, card_detector, sh
     final_image = restore_original_orientation(annotated_image, was_rotated)
     return sets_found, final_image
 
-# =============================================================================
-#                           STREAMLIT INTERFACE
-# =============================================================================
+# ------------------------------------------------------------------------------
+#                         STREAMLIT INTERFACE LOGIC
+# ------------------------------------------------------------------------------
+st.title("SET Game Detector")
+st.write("Upload an image of a SET game board. Once uploaded, click **Find Sets** to process the image. Use **Clear** to reset.")
 
-st.title("Set Game Detector")
-st.write("Upload an image of a Set game board. The system will detect and highlight valid sets.")
+# Use session_state to manage the uploaded image
+if "uploaded_file" not in st.session_state:
+    st.session_state.uploaded_file = None
 
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+# Improved file uploader with drag-and-drop support
+uploaded_file = st.file_uploader("Drag and drop your image here or click to upload", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
-    try:
-        # Open and display the uploaded image
-        image = Image.open(uploaded_file)
-        st.image(image, caption="Uploaded Image", use_column_width=True)
-        
-        # Convert the PIL image to an OpenCV BGR image
-        image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-        
-        with st.spinner("Detecting sets..."):
-            sets_info, final_image = classify_and_find_sets_from_array(
-                image_cv,
-                card_detection_model,
-                shape_detection_model,
-                fill_model,
-                shape_model
-            )
-        
-        # Convert the processed image to RGB for display
-        final_image_rgb = cv2.cvtColor(final_image, cv2.COLOR_BGR2RGB)
-        st.image(final_image_rgb, caption="Processed Image", use_column_width=True)
-        st.success("Sets detected successfully!")
-        st.write("Detected Sets Information:")
-        st.json(sets_info)
-        
-    except Exception as e:
-        st.error("An error occurred during processing:")
-        st.text(traceback.format_exc())
+    st.session_state.uploaded_file = uploaded_file
+
+# Display uploaded image if available
+if st.session_state.uploaded_file is not None:
+    image = Image.open(st.session_state.uploaded_file)
+    st.image(image, caption="Uploaded Image", use_column_width=True)
+
+    # Display action buttons in two columns
+    col1, col2 = st.columns(2)
+    if col1.button("Find Sets"):
+        try:
+            # Convert the uploaded image to OpenCV BGR format
+            image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+            with st.spinner("Detecting sets..."):
+                sets_info, final_image = classify_and_find_sets_from_array(
+                    image_cv,
+                    card_detection_model,
+                    shape_detection_model,
+                    fill_model,
+                    shape_model
+                )
+            final_image_rgb = cv2.cvtColor(final_image, cv2.COLOR_BGR2RGB)
+            st.image(final_image_rgb, caption="Processed Image", use_column_width=True)
+            st.success("Sets detected successfully!")
+            with st.expander("View Detected Sets Details"):
+                st.json(sets_info)
+        except Exception as e:
+            st.error("An error occurred during processing:")
+            st.text(traceback.format_exc())
+    
+    if col2.button("Clear"):
+        # Clear session state and reload the page
+        st.session_state.uploaded_file = None
+        st.experimental_rerun()
