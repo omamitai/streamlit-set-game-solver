@@ -1,6 +1,4 @@
-/* 🌈 SET Game Detector - Themed Tight Layout */
-
-/* Global Body Settings */
+/* 🌈 SET Game Detector - Themed Styles (Red, Green, Purple) */
 body {
     background: linear-gradient(135deg, #8B0000, #006400, #4B0082);
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -9,64 +7,64 @@ body {
     padding: 0;
 }
 
-/* Container adjustments to reduce vertical space */
-.block-container {
-    padding-top: 1rem;
-    padding-bottom: 1rem;
-    max-width: 1200px;
-    margin: auto;
-}
-
-/* Headers */
-h1, h3, h4 {
+/* 🔹 Title & Headers */
+.title {
     text-align: center;
     color: #FFD700;
-    margin: 0.5rem 0;
+    margin-top: 10px;
+    font-size: 2.5em;
+    font-weight: bold;
 }
 
-/* Images */
+.subtitle {
+    text-align: center;
+    color: #F8F8FF;
+    font-size: 1.2em;
+    margin-bottom: 20px;
+}
+
+/* 🖼️ Image Styling */
 img {
     border-radius: 10px;
     border: 3px solid #FFD700;
-    margin: 0.5rem 0;
+    margin-top: 10px;
 }
 
-/* File Uploader */
+/* 📥 File Uploader */
 .stFileUploader {
     background-color: rgba(255, 255, 255, 0.15);
     border: 2px dashed #FFD700;
     padding: 10px;
     border-radius: 10px;
-    width: 100%;
     text-align: center;
-    margin-bottom: 0.5rem;
+    width: 100%;
 }
 
-/* Buttons */
+/* 🎛️ Buttons */
 .stButton>button {
     background-color: #FFD700;
     color: #4B0082;
     font-weight: bold;
     border-radius: 8px;
-    padding: 10px 20px;
+    padding: 10px;
     font-size: 16px;
     transition: background-color 0.3s ease;
-    width: 100%;
+    text-align: center;
 }
 .stButton>button:hover {
     background-color: #FFC107;
 }
 
-/* Expander */
-.css-1d391kg, .streamlit-expanderHeader {
+/* 🔍 Expander */
+.css-1d391kg {
     background-color: rgba(255, 255, 255, 0.2);
     border-radius: 10px;
-    padding: 10px;
-    margin-top: 0.5rem;
+    padding: 15px;
+    margin-top: 20px;
 }
 
-/* Adjust spacing between columns for a tight layout */
-[data-testid="column"] {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
+/* 📦 Columns Alignment */
+.st-emotion-cache-1kyxreq {
+    padding-left: 10px;
+    padding-right: 10px;
 }
