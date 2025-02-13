@@ -1,26 +1,28 @@
-/* SET-Themed Styles: red, purple, and green */
+/* SET-Themed Styles: Red, Green, Purple */
 
 body {
-    background: linear-gradient(135deg, #8B0000, #4B0082, #006400);
+    background: linear-gradient(135deg, #8B0000, #006400, #4B0082);
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     color: #F8F8FF;
     margin: 0;
     padding: 0;
 }
 
+/* Headings: centered with a clean look */
 h1, h3 {
     text-align: center;
     margin: 10px 0;
     color: #FFD700;
 }
 
+/* Centered container for images */
 .img-container {
     display: flex;
     justify-content: center;
     margin: 20px 0;
 }
 
-/* File uploader styling: compact and clean */
+/* File uploader styling: compact */
 .stFileUploader {
     background-color: rgba(255, 255, 255, 0.15);
     border: 2px dashed #FFD700;
@@ -30,7 +32,7 @@ h1, h3 {
     width: 60%;
 }
 
-/* Button styling: clean, with modest hover effect */
+/* Button styling */
 .stButton>button {
     background-color: #FFD700;
     color: #4B0082;
