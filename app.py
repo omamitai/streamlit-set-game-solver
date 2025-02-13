@@ -1,4 +1,4 @@
-import streamlit as st 
+import streamlit as st
 from PIL import Image
 import numpy as np
 import cv2
@@ -18,12 +18,10 @@ st.set_page_config(
     page_title="SET Game Detector",
     page_icon="🎴",
     layout="wide",
-    initial_sidebar_state="collapsed",  # Updated from "expanded" to "collapsed"
+    initial_sidebar_state="collapsed",
 )
 
-# -----------------------------------------------------------------------------
 # 📜 Inject Custom CSS
-# -----------------------------------------------------------------------------
 def local_css(file_name):
     with open(file_name) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
@@ -194,29 +192,28 @@ def classify_and_find_sets_from_array(board_image: np.ndarray, card_detector, sh
 st.markdown("<h1 class='title'>🎴 SET Game Detector</h1>", unsafe_allow_html=True)
 st.markdown("<p class='subtitle'>Upload an image of a SET game board and click <b>Find Sets</b> to detect valid sets.</p>", unsafe_allow_html=True)
 
-# 🔹 Layout: Two Equal Columns with a medium gap
+# 🔹 Layout: Two Equal Columns with Medium Gap
 col1, col2 = st.columns(2, gap="medium")
 
-# 📥 Left Column: Upload & Show Original Image + Find Sets Button
+# 📥 Left Column: Upload Image & Find Sets Button
 with col1:
-    st.markdown("### 📥 Upload Image")
+    uploaded_file = st.file_uploader("", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
     
-    # Align file uploader and button side by side
-    col_upload, col_button = st.columns([2, 1])
-    with col_upload:
-        uploaded_file = st.file_uploader("", type=["jpg", "jpeg", "png"])
-    with col_button:
-        find_sets_clicked = st.button("🔎 Find Sets", use_container_width=True)
-
     if uploaded_file:
+        # Display the uploaded image
         image = Image.open(uploaded_file)
         st.image(image, caption="🎴 Original Image", use_column_width=True, output_format="JPEG")
+        
+        # Remove the file uploader after an image is uploaded
+        st.markdown("<style>.stFileUploader {display: none;}</style>", unsafe_allow_html=True)
 
-# 🔍 Right Column: Process & Show Results
+        # 📍 Find Sets Button - Moved Directly Under the Image
+        find_sets_clicked = st.button("🔎 Find Sets", use_container_width=True)
+
+# 🔍 Right Column: Processed Image Output
 with col2:
-    st.markdown("### 🔍 Processed Result")
-    
     if uploaded_file and find_sets_clicked:
+        st.markdown("### 🔍 Processed Result")
         try:
             image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
             
@@ -239,7 +236,79 @@ with col2:
             # 📌 Expandable Results
             with st.expander("📜 View Detected Sets Details"):
                 st.json(sets_info)
-                
+
         except Exception as e:
             st.error("⚠️ An error occurred during processing:")
             st.text(traceback.format_exc())
+🎨 Updated styles.css
+css
+Copy
+/* 🌈 SET Game Detector - More Vibrant & Organized Theme */
+body {
+    background: linear-gradient(135deg, #FF4D4D, #33CC33, #9933FF);
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: black; /* Ensuring all text is black */
+    margin: 0;
+    padding: 0;
+}
+
+/* 🔹 Title & Headers */
+.title {
+    text-align: center;
+    color: black; 
+    font-size: 2.5em;
+    font-weight: bold;
+}
+
+.subtitle {
+    text-align: center;
+    color: black;
+    font-size: 1.2em;
+    margin-bottom: 20px;
+}
+
+/* 🖼️ Image Styling */
+img {
+    border-radius: 10px;
+    border: 3px solid black;
+    margin-top: 10px;
+}
+
+/* 📥 File Uploader - Hidden After Upload */
+.stFileUploader {
+    background-color: rgba(255, 255, 255, 0.3);
+    border: 2px dashed black;
+    padding: 10px;
+    border-radius: 10px;
+    text-align: center;
+    width: 100%;
+}
+
+/* 🎛️ Buttons */
+.stButton>button {
+    background-color: black;
+    color: white;
+    font-weight: bold;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+    text-align: center;
+}
+.stButton>button:hover {
+    background-color: #333;
+}
+
+/* 🔍 Expander */
+.css-1d391kg {
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
+    padding: 15px;
+    margin-top: 20px;
+}
+
+/* 📦 Columns Alignment */
+.st-emotion-cache-1kyxreq {
+    padding-left: 10px;
+    padding-right: 10px;
+}
