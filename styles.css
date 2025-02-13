@@ -1,46 +1,43 @@
-/* SET-Themed Custom Styles */
+/* SET-Themed Styles: red, purple, and green */
 
-/* Overall background: a gradient that evokes the SET game colors */
 body {
-    background: linear-gradient(135deg, #8B0000, #006400, #4B0082); /* Dark red, green, indigo */
+    background: linear-gradient(135deg, #8B0000, #4B0082, #006400);
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     color: #F8F8FF;
     margin: 0;
     padding: 0;
 }
 
-/* Container to center images and control width */
-.img-container {
-    display: flex;
-    justify-content: center;
-    margin: 30px 0;
-}
-
-/* Headings styling with golden accents and emojis */
 h1, h3 {
     text-align: center;
     margin: 10px 0;
-    color: #FFD700;  /* Golden yellow */
+    color: #FFD700;
 }
 
-/* File uploader container styling with a modern SET twist */
+.img-container {
+    display: flex;
+    justify-content: center;
+    margin: 20px 0;
+}
+
+/* File uploader styling: compact and clean */
 .stFileUploader {
-    background-color: rgba(255, 255, 255, 0.2);
-    border: 3px dashed #FFD700;
-    padding: 40px;
-    border-radius: 15px;
-    margin: 30px auto;
-    width: 70%;
+    background-color: rgba(255, 255, 255, 0.15);
+    border: 2px dashed #FFD700;
+    padding: 20px;
+    border-radius: 10px;
+    margin: 20px auto;
+    width: 60%;
 }
 
-/* Button styling: bold, vibrant, with hover effects */
+/* Button styling: clean, with modest hover effect */
 .stButton>button {
     background-color: #FFD700;
     color: #4B0082;
-    border-radius: 10px;
+    border-radius: 8px;
     border: none;
-    padding: 14px 35px;
-    font-size: 20px;
+    padding: 12px 30px;
+    font-size: 18px;
     font-weight: bold;
     transition: background-color 0.3s ease;
 }
@@ -48,10 +45,10 @@ h1, h3 {
     background-color: #FFC107;
 }
 
-/* Expander styling: semi-transparent with ample padding */
+/* Expander styling */
 .css-1d391kg {
-    background-color: rgba(255, 255, 255, 0.25);
+    background-color: rgba(255, 255, 255, 0.2);
     border-radius: 10px;
-    padding: 20px;
+    padding: 15px;
     margin-top: 20px;
 }
