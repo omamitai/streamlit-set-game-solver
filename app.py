@@ -27,7 +27,7 @@ from typing import Tuple, List, Dict
 
 st.set_page_config(layout="wide", page_title="SET Game Detector")
 
-# Custom CSS for a modern, clean look and centered sidebar uploader
+# Custom CSS for a modern, clean look; reduce top margin; center sidebar uploader
 st.markdown(
     """
     <style>
@@ -37,10 +37,10 @@ st.markdown(
         color: #333;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    /* Headings */
+    /* Header styling */
     .main-header {
         text-align: center;
-        margin-top: 1rem;
+        margin-top: 0.5rem;  /* Reduced gap at the top */
         margin-bottom: 1rem;
     }
     .main-header h1 {
@@ -64,7 +64,7 @@ st.markdown(
     .stButton>button:hover {
         background-color: #45a049;
     }
-    /* Sidebar uploader centering */
+    /* Sidebar uploader centering with reduced gap */
     [data-testid="stSidebar"] .css-1d391kg {
         display: flex;
         flex-direction: column;
@@ -83,7 +83,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Main header (no extra container box)
+# Main header (without extra container)
 st.markdown(
     """
     <div class="main-header">
@@ -289,7 +289,7 @@ def classify_and_find_sets_from_array(
 
 st.sidebar.markdown(
     """
-    <div style="display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:0.5rem;">
+    <div style="display:flex; flex-direction:column; align-items:center; gap:0.5rem;">
         <h3>Upload Your Image</h3>
     """,
     unsafe_allow_html=True,
@@ -297,59 +297,61 @@ st.sidebar.markdown(
 my_upload = st.sidebar.file_uploader("", type=["png", "jpg", "jpeg"])
 st.sidebar.markdown("</div>", unsafe_allow_html=True)
 
+# Save the uploaded file in session state if provided
 if my_upload is not None:
     st.session_state.uploaded_file = my_upload
-elif "uploaded_file" not in st.session_state:
-    st.session_state.uploaded_file = "default.jpg"  # Ensure "default.jpg" exists
 
 # =============================================================================
 #                           MAIN INTERFACE: Button & Image Display
 # =============================================================================
 
-try:
-    image = Image.open(st.session_state.uploaded_file)
-    max_width = 600  # Reduced max width for smaller images
-    if image.width > max_width:
-        ratio = max_width / image.width
-        new_height = int(image.height * ratio)
-        resample_method = getattr(Image, "Resampling", Image).LANCZOS
-        image = image.resize((max_width, new_height), resample_method)
-except Exception as e:
-    st.error("Failed to load image. Please try another file.")
-    st.exception(e)
-
-# Top Row: Centered "Find Sets" Button
-center_cols = st.columns([1, 2, 1])
-with center_cols[1]:
-    if st.button("🔎 Find Sets", key="find_sets"):
-        try:
-            image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-            with st.spinner("<p style='text-align: center;'>Processing... Please wait.</p>"):
-                sets_info, processed_image = classify_and_find_sets_from_array(
-                    image_cv,
-                    card_detection_model,
-                    shape_detection_model,
-                    fill_model,
-                    shape_model,
-                )
-            st.session_state.processed_image = processed_image
-            st.session_state.sets_info = sets_info
-        except Exception as e:
-            st.error("⚠️ An error occurred during processing:")
-            st.text(traceback.format_exc())
-
-# Bottom Row: Side-by-Side Image Display with Titles
-img_cols = st.columns(2)
-with img_cols[0]:
-    st.markdown("<div class='img-title'>Original Image</div>", unsafe_allow_html=True)
-    st.image(image, use_container_width=True, output_format="JPEG")
-with img_cols[1]:
-    st.markdown("<div class='img-title'>Detected Sets</div>", unsafe_allow_html=True)
-    if "processed_image" in st.session_state:
-        processed_image_rgb = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
-        st.image(processed_image_rgb, use_container_width=True, output_format="JPEG")
-        if st.session_state.get("sets_info"):
-            with st.expander("View Detected Sets Details"):
-                st.json(st.session_state.sets_info)
-    else:
-        st.info("Processed image will appear here after clicking 'Find Sets'.")
+if "uploaded_file" not in st.session_state:
+    st.info("Please upload an image in the sidebar to begin processing.")
+else:
+    try:
+        image = Image.open(st.session_state.uploaded_file)
+        max_width = 600  # Slightly smaller images
+        if image.width > max_width:
+            ratio = max_width / image.width
+            new_height = int(image.height * ratio)
+            resample_method = getattr(Image, "Resampling", Image).LANCZOS
+            image = image.resize((max_width, new_height), resample_method)
+    except Exception as e:
+        st.error("Failed to load image. Please try another file.")
+        st.exception(e)
+    
+    # Top Row: Centered "Find Sets" Button
+    center_cols = st.columns(3)
+    with center_cols[1]:
+        if st.button("🔎 Find Sets", key="find_sets"):
+            try:
+                image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+                with st.spinner("Processing... Please wait."):
+                    sets_info, processed_image = classify_and_find_sets_from_array(
+                        image_cv,
+                        card_detection_model,
+                        shape_detection_model,
+                        fill_model,
+                        shape_model,
+                    )
+                st.session_state.processed_image = processed_image
+                st.session_state.sets_info = sets_info
+            except Exception as e:
+                st.error("⚠️ An error occurred during processing:")
+                st.text(traceback.format_exc())
+    
+    # Bottom Row: Side-by-Side Image Display with Titles
+    img_cols = st.columns(2)
+    with img_cols[0]:
+        st.markdown("<div class='img-title'>Original Image</div>", unsafe_allow_html=True)
+        st.image(image, use_container_width=True, output_format="JPEG")
+    with img_cols[1]:
+        st.markdown("<div class='img-title'>Detected Sets</div>", unsafe_allow_html=True)
+        if "processed_image" in st.session_state:
+            processed_image_rgb = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
+            st.image(processed_image_rgb, use_container_width=True, output_format="JPEG")
+            if st.session_state.get("sets_info"):
+                with st.expander("View Detected Sets Details"):
+                    st.json(st.session_state.sets_info)
+        else:
+            st.info("Processed image will appear here after clicking 'Find Sets'.")
