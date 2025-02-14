@@ -32,12 +32,11 @@ img {
 
 /* 📥 File Uploader */
 .stFileUploader {
-    background-color: rgba(255, 255, 255, 0.3);
-    border: 2px dashed white;
-    padding: 12px;
-    border-radius: 12px;
+    border: 2px dashed white !important;
+    padding: 15px !important;
+    border-radius: 12px !important;
     text-align: center;
-    width: 100%;
+    background: rgba(255, 255, 255, 0.2) !important;
 }
 
 /* 🎛️ Buttons */
