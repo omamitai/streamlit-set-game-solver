@@ -50,12 +50,6 @@ local_css("styles.css")
 st.markdown(
     """
     <style>
-    .button-container {
-        display: flex;
-        justify-content: center;
-        gap: 20px;
-        margin-top: 20px;
-    }
     .title {
         text-align: center;
         font-size: 3em;
@@ -328,7 +322,7 @@ def classify_and_find_sets_from_array(
 # =============================================================================
 
 def refresh_app():
-    """Refresh the app. If st.experimental_rerun is unavailable, ask user to refresh manually."""
+    """Refresh the app; if st.experimental_rerun is unavailable, warn the user."""
     if hasattr(st, "experimental_rerun"):
         st.experimental_rerun()
     else:
@@ -341,7 +335,9 @@ def refresh_app():
 st.markdown("<h1 class='title'>🎴 SET Game Detector</h1>", unsafe_allow_html=True)
 st.markdown("<p class='subtitle'>Upload an image of a Set game board and detect valid sets!</p>", unsafe_allow_html=True)
 
-# Check if an image has been uploaded (stored in session state)
+# -----------------------------------------------------------------------------
+# Row 0: Image Upload (if no image has been loaded yet)
+# -----------------------------------------------------------------------------
 if "uploaded_file" not in st.session_state:
     st.markdown("### 📥 Upload Image")
     uploaded_file = st.file_uploader(
@@ -351,13 +347,13 @@ if "uploaded_file" not in st.session_state:
     )
     if uploaded_file is not None:
         st.session_state.uploaded_file = uploaded_file
-else:
-    uploaded_file = st.session_state.uploaded_file
 
-# If an image has been uploaded, show the image and buttons
-if uploaded_file is not None:
+# -----------------------------------------------------------------------------
+# Row 1: Buttons and Image Display (if an image has been loaded)
+# -----------------------------------------------------------------------------
+if "uploaded_file" in st.session_state:
     try:
-        image = Image.open(uploaded_file)
+        image = Image.open(st.session_state.uploaded_file)
         # Resize image if wider than 800px
         max_width = 800
         if image.width > max_width:
@@ -365,45 +361,53 @@ if uploaded_file is not None:
             new_height = int(image.height * ratio)
             resample_method = getattr(Image, "Resampling", Image).LANCZOS
             image = image.resize((max_width, new_height), resample_method)
-        st.image(image, caption="🎴 Original Image", use_container_width=True, output_format="JPEG")
     except Exception as e:
         st.error("Failed to load image. Please try another file.")
         st.exception(e)
-
-    # Create a symmetrical button container with two columns for "Find Sets" and "Refresh"
+    
+    # ---- Top Row: Buttons ----
     btn_cols = st.columns(2)
     with btn_cols[0]:
-        find_sets_clicked = st.button("🔎 Find Sets", key="find_sets", use_container_width=True)
+        if st.button("🔄 Refresh", key="refresh"):
+            # Clear stored images and refresh
+            if "uploaded_file" in st.session_state:
+                del st.session_state.uploaded_file
+            if "processed_image" in st.session_state:
+                del st.session_state.processed_image
+            if "sets_info" in st.session_state:
+                del st.session_state.sets_info
+            refresh_app()
     with btn_cols[1]:
-        refresh_clicked = st.button("🔄 Refresh", key="refresh", use_container_width=True)
-
-    if refresh_clicked:
-        # Remove the stored image and refresh the app
-        del st.session_state.uploaded_file
-        refresh_app()
-
-    if find_sets_clicked:
-        try:
-            # Convert PIL image to OpenCV BGR image
-            image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-            with st.spinner("🔄 Processing... Please wait."):
-                sets_info, final_image = classify_and_find_sets_from_array(
-                    image_cv,
-                    card_detection_model,
-                    shape_detection_model,
-                    fill_model,
-                    shape_model,
-                )
-            final_image_rgb = cv2.cvtColor(final_image, cv2.COLOR_BGR2RGB)
-            st.image(final_image_rgb, caption="✅ Detected Sets", use_container_width=True, output_format="JPEG")
-            st.success("🎉 Sets detected successfully!")
-            if sets_info:
+        if st.button("🔎 Find Sets", key="find_sets"):
+            try:
+                # Convert PIL image to OpenCV BGR image for processing
+                image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+                with st.spinner("🔄 Processing... Please wait."):
+                    sets_info, processed_image = classify_and_find_sets_from_array(
+                        image_cv,
+                        card_detection_model,
+                        shape_detection_model,
+                        fill_model,
+                        shape_model,
+                    )
+                st.session_state.processed_image = processed_image
+                st.session_state.sets_info = sets_info
+            except Exception as e:
+                st.error("⚠️ An error occurred during processing:")
+                st.text(traceback.format_exc())
+    
+    # ---- Bottom Row: Images ----
+    img_cols = st.columns(2)
+    with img_cols[0]:
+        st.image(image, caption="🎴 Original Image", use_container_width=True, output_format="JPEG")
+    with img_cols[1]:
+        if "processed_image" in st.session_state:
+            processed_image_rgb = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
+            st.image(processed_image_rgb, caption="✅ Detected Sets", use_container_width=True, output_format="JPEG")
+            if st.session_state.get("sets_info"):
                 with st.expander("📜 View Detected Sets Details"):
-                    st.json(sets_info)
-            else:
-                st.info("No valid sets were detected.")
-        except Exception as e:
-            st.error("⚠️ An error occurred during processing:")
-            st.text(traceback.format_exc())
+                    st.json(st.session_state.sets_info)
+        else:
+            st.info("Processed image will appear here after clicking 'Find Sets'.")
 else:
     st.info("Please upload an image above to begin processing.")
