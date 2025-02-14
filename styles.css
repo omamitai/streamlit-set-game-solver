@@ -1,4 +1,4 @@
-/* 🌈 SET Game Detector - Refined UI */
+/* 🌈 SET Game Detector - Clean & Simple UI */
 body {
     background-color: #f5f5f5;
     font-family: 'Segoe UI', sans-serif;
@@ -7,7 +7,7 @@ body {
 
 /* 🔹 Header & Subtitle */
 .main-header {
-    text-align: center;
+    text-align: left;
     margin-top: 0.2rem;
 }
 .main-header h1 {
@@ -17,6 +17,8 @@ body {
 .main-header p {
     font-size: 1.2rem;
     color: #666;
+    display: inline-block;
+    margin-right: 10px;
 }
 
 /* 📤 Sidebar Uploader */
@@ -51,17 +53,4 @@ body {
 .stSpinner > div {
     text-align: center;
     font-size: 1.2rem;
-}
-
-/* 🖼️ Image Display */
-.arrow {
-    text-align: center;
-    font-size: 2rem;
-    margin-top: 2rem;
-}
-
-/* 📦 Columns & Layout */
-.st-emotion-cache-1kyxreq {
-    padding-left: 10px;
-    padding-right: 10px;
 }
