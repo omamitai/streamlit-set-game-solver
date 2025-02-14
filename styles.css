@@ -1,56 +1,75 @@
-/* 🌈 SET Game Detector - Clean & Simple UI */
+/* Global styles */
 body {
-    background-color: #f5f5f5;
-    font-family: 'Segoe UI', sans-serif;
-    color: #333;
+  background-color: #f0f2f6;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #333;
+  margin: 0;
+  padding: 0;
 }
 
-/* 🔹 Header & Subtitle */
-.main-header {
-    text-align: left;
-    margin-top: 0.2rem;
+/* Header */
+.header-container {
+  text-align: center;
+  margin-top: 10px;
+  margin-bottom: 20px;
 }
-.main-header h1 {
-    font-size: 2.8rem;
-    margin-bottom: 0.3rem;
+.header-container h1 {
+  font-size: 3rem;
+  margin: 0;
+  padding: 0;
 }
-.main-header p {
-    font-size: 1.2rem;
-    color: #666;
-    display: inline-block;
-    margin-right: 10px;
+.header-container .subtitle {
+  font-size: 1.25rem;
+  color: #666;
+  margin-top: 5px;
 }
 
-/* 📤 Sidebar Uploader */
+/* Sidebar */
 .sidebar-header {
-    font-size: 1.5rem;
-    font-weight: 600;
-    text-align: center;
-    margin-bottom: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+  text-align: center;
 }
+
+/* File Uploader */
 .stFileUploader {
-    border: 2px dashed #007BFF !important;
-    padding: 12px !important;
-    border-radius: 8px !important;
-    background: rgba(0, 123, 255, 0.1) !important;
+  border: 2px dashed #aaa !important;
+  padding: 15px !important;
+  border-radius: 12px !important;
+  text-align: center;
+  background: #fff !important;
+  margin-bottom: 15px;
 }
 
-/* 🎛️ Buttons */
-.stButton > button {
-    background-color: #007BFF;
-    color: white;
-    border-radius: 6px;
-    font-size: 1rem;
-    padding: 10px 16px;
-    border: none;
-    transition: 0.3s ease;
+/* Buttons */
+.stButton>button {
+  background-color: #007BFF;
+  color: #fff;
+  border: none;
+  padding: 0.8rem 1.2rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
 }
-.stButton > button:hover {
-    background-color: #0056b3;
+.stButton>button:hover {
+  background-color: #0069d9;
 }
 
-/* 🔄 Spinner */
+/* Images */
+img {
+  max-width: 500px;
+  border-radius: 10px;
+  margin-top: 10px;
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Spinner */
 .stSpinner > div {
-    text-align: center;
-    font-size: 1.2rem;
+  text-align: center;
+  font-size: 1rem;
+  color: #333;
 }
