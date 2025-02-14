@@ -5,10 +5,6 @@ Set Game Detector Streamlit App
 This app detects valid sets from an uploaded image of a Set game board.
 It uses computer vision and machine learning models for card detection
 and feature classification, then highlights the detected sets on the image.
-
-Instructions:
-    - Place your pre-trained models under the models/ directory as indicated.
-    - Run the app with: streamlit run app.py
 """
 
 import streamlit as st
@@ -26,46 +22,66 @@ from pathlib import Path
 from typing import Tuple, List, Dict
 
 # =============================================================================
-#                               CONFIGURATION
+#                           CONFIGURATION & STYLE
 # =============================================================================
 
-st.set_page_config(
-    page_title="SET Game Detector",
-    page_icon="🎴",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
+st.set_page_config(layout="wide", page_title="SET Game Detector")
 
-def local_css(file_name: str) -> None:
-    """Load a local CSS file to inject custom styles into the app."""
-    try:
-        with open(file_name) as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-    except FileNotFoundError:
-        st.warning(f"CSS file '{file_name}' not found. Using default styles.")
-
-local_css("styles.css")
-
-# Additional inline styling for buttons and headings
+# Custom CSS for a modern, clean look
 st.markdown(
     """
     <style>
+    /* Global style */
+    body {
+        background-color: #f0f2f6;
+        color: #333;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    .main {
+        background-color: #fff;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin: 2rem auto;
+        max-width: 1200px;
+    }
+    .stButton>button {
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        padding: 0.8rem 1.2rem;
+        border-radius: 6px;
+        font-size: 1rem;
+        cursor: pointer;
+    }
+    .stButton>button:hover {
+        background-color: #45a049;
+    }
     .title {
         text-align: center;
-        font-size: 3em;
-        font-weight: bold;
-        margin-bottom: 0;
+        font-size: 3rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
     }
     .subtitle {
         text-align: center;
-        font-size: 1.25em;
-        color: #555;
-        margin-top: 0;
+        font-size: 1.25rem;
+        color: #666;
+        margin-bottom: 2rem;
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
+
+# Wrap the main content in a container for consistent styling
+with st.container():
+    st.markdown("<div class='main'>", unsafe_allow_html=True)
+    st.markdown("<h1 class='title'>🎴 SET Game Detector</h1>", unsafe_allow_html=True)
+    st.markdown(
+        "<p class='subtitle'>Upload an image of a Set game board from the sidebar and detect valid sets!</p>",
+        unsafe_allow_html=True,
+    )
 
 # =============================================================================
 #                              MODEL LOADING
@@ -322,92 +338,80 @@ def classify_and_find_sets_from_array(
 # =============================================================================
 
 def refresh_app():
-    """Refresh the app; if st.experimental_rerun is unavailable, warn the user."""
+    """Refresh the app using st.experimental_rerun."""
     if hasattr(st, "experimental_rerun"):
         st.experimental_rerun()
     else:
         st.warning("Refresh is not supported in this version of Streamlit. Please refresh your browser manually.")
 
 # =============================================================================
-#                           STREAMLIT INTERFACE
+#                           SIDEBAR: File Uploader
 # =============================================================================
 
-st.markdown("<h1 class='title'>🎴 SET Game Detector</h1>", unsafe_allow_html=True)
-st.markdown("<p class='subtitle'>Upload an image of a Set game board and detect valid sets!</p>", unsafe_allow_html=True)
+# Sidebar file uploader. If no file is uploaded, load a default image.
+my_upload = st.sidebar.file_uploader("Upload an image", type=["png", "jpg", "jpeg"])
+if my_upload is not None:
+    st.session_state.uploaded_file = my_upload
+elif "uploaded_file" not in st.session_state:
+    # Change the default path as needed (ensure "default.jpg" exists)
+    st.session_state.uploaded_file = "default.jpg"
 
-# -----------------------------------------------------------------------------
-# Row 0: Image Upload (if no image has been loaded yet)
-# -----------------------------------------------------------------------------
-if "uploaded_file" not in st.session_state:
-    st.markdown("### 📥 Upload Image")
-    uploaded_file = st.file_uploader(
-        "Drag & Drop or Browse Files",
-        type=["jpg", "jpeg", "png"],
-        label_visibility="collapsed"
-    )
-    if uploaded_file is not None:
-        st.session_state.uploaded_file = uploaded_file
+# =============================================================================
+#                           MAIN INTERFACE: Buttons & Image Display
+# =============================================================================
 
-# -----------------------------------------------------------------------------
-# Row 1: Buttons and Image Display (if an image has been loaded)
-# -----------------------------------------------------------------------------
-if "uploaded_file" in st.session_state:
-    try:
-        image = Image.open(st.session_state.uploaded_file)
-        # Resize image if wider than 800px
-        max_width = 800
-        if image.width > max_width:
-            ratio = max_width / image.width
-            new_height = int(image.height * ratio)
-            resample_method = getattr(Image, "Resampling", Image).LANCZOS
-            image = image.resize((max_width, new_height), resample_method)
-    except Exception as e:
-        st.error("Failed to load image. Please try another file.")
-        st.exception(e)
-    
-    # ---- Top Row: Buttons ----
-    btn_cols = st.columns(2)
-    with btn_cols[0]:
-        if st.button("🔄 Refresh", key="refresh"):
-            # Clear stored images and refresh
-            if "uploaded_file" in st.session_state:
-                del st.session_state.uploaded_file
-            if "processed_image" in st.session_state:
-                del st.session_state.processed_image
-            if "sets_info" in st.session_state:
-                del st.session_state.sets_info
-            refresh_app()
-    with btn_cols[1]:
-        if st.button("🔎 Find Sets", key="find_sets"):
-            try:
-                # Convert PIL image to OpenCV BGR image for processing
-                image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-                with st.spinner("🔄 Processing... Please wait."):
-                    sets_info, processed_image = classify_and_find_sets_from_array(
-                        image_cv,
-                        card_detection_model,
-                        shape_detection_model,
-                        fill_model,
-                        shape_model,
-                    )
-                st.session_state.processed_image = processed_image
-                st.session_state.sets_info = sets_info
-            except Exception as e:
-                st.error("⚠️ An error occurred during processing:")
-                st.text(traceback.format_exc())
-    
-    # ---- Bottom Row: Images ----
-    img_cols = st.columns(2)
-    with img_cols[0]:
-        st.image(image, caption="🎴 Original Image", use_container_width=True, output_format="JPEG")
-    with img_cols[1]:
-        if "processed_image" in st.session_state:
-            processed_image_rgb = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
-            st.image(processed_image_rgb, caption="✅ Detected Sets", use_container_width=True, output_format="JPEG")
-            if st.session_state.get("sets_info"):
-                with st.expander("📜 View Detected Sets Details"):
-                    st.json(st.session_state.sets_info)
-        else:
-            st.info("Processed image will appear here after clicking 'Find Sets'.")
-else:
-    st.info("Please upload an image above to begin processing.")
+try:
+    # Load and resize the image (either uploaded or default)
+    image = Image.open(st.session_state.uploaded_file)
+    max_width = 800
+    if image.width > max_width:
+        ratio = max_width / image.width
+        new_height = int(image.height * ratio)
+        resample_method = getattr(Image, "Resampling", Image).LANCZOS
+        image = image.resize((max_width, new_height), resample_method)
+except Exception as e:
+    st.error("Failed to load image. Please try another file.")
+    st.exception(e)
+
+# Top Row: Buttons (Refresh and Find Sets)
+btn_cols = st.columns(2)
+with btn_cols[0]:
+    if st.button("🔄 Refresh", key="refresh"):
+        for key in ["uploaded_file", "processed_image", "sets_info"]:
+            if key in st.session_state:
+                del st.session_state[key]
+        refresh_app()
+with btn_cols[1]:
+    if st.button("🔎 Find Sets", key="find_sets"):
+        try:
+            # Convert PIL image to OpenCV BGR image for processing
+            image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+            with st.spinner("🔄 Processing... Please wait."):
+                sets_info, processed_image = classify_and_find_sets_from_array(
+                    image_cv,
+                    card_detection_model,
+                    shape_detection_model,
+                    fill_model,
+                    shape_model,
+                )
+            st.session_state.processed_image = processed_image
+            st.session_state.sets_info = sets_info
+        except Exception as e:
+            st.error("⚠️ An error occurred during processing:")
+            st.text(traceback.format_exc())
+
+# Bottom Row: Side-by-Side Image Display
+img_cols = st.columns(2)
+with img_cols[0]:
+    st.image(image, caption="🎴 Original Image", use_container_width=True, output_format="JPEG")
+with img_cols[1]:
+    if "processed_image" in st.session_state:
+        processed_image_rgb = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
+        st.image(processed_image_rgb, caption="✅ Detected Sets", use_container_width=True, output_format="JPEG")
+        if st.session_state.get("sets_info"):
+            with st.expander("📜 View Detected Sets Details"):
+                st.json(st.session_state.sets_info)
+    else:
+        st.info("Processed image will appear here after clicking 'Find Sets'.")
+
+st.markdown("</div>", unsafe_allow_html=True)
