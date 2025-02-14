@@ -41,7 +41,7 @@ st.markdown(
     /* Header styling with minimal top gap */
     .main-header {
         text-align: center;
-        margin-top: 0.1rem;  /* Very small gap at the top */
+        margin-top: 0.1rem;
         margin-bottom: 1rem;
     }
     .main-header h1 {
@@ -74,7 +74,7 @@ st.markdown(
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 0.5rem;
+        gap: 0.25rem;
     }
     /* Sidebar title styling - slightly smaller */
     .sidebar-header {
@@ -82,23 +82,17 @@ st.markdown(
         font-weight: 600;
         margin-bottom: 0.25rem;
     }
-    /* Titles above images - slightly smaller */
-    .img-title {
-        text-align: center;
-        font-size: 1.25rem;
-        margin-bottom: 0.5rem;
-    }
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# Main header (placed very close to the top)
+# Main header (sits very close to the top)
 st.markdown(
     """
     <div class="main-header">
         <h1>🎴 SET Game Detector</h1>
-        <p>Upload an image of a Set game board from the sidebar and detect valid sets!</p>
+        <p>Upload an image of a Set game board from the sidebar and click "Find Sets"</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -320,7 +314,7 @@ if "uploaded_file" not in st.session_state:
 else:
     try:
         image = Image.open(st.session_state.uploaded_file)
-        max_width = 400  # Smaller images now
+        max_width = 400  # Smaller images
         if image.width > max_width:
             ratio = max_width / image.width
             new_height = int(image.height * ratio)
@@ -330,13 +324,13 @@ else:
         st.error("Failed to load image. Please try another file.")
         st.exception(e)
     
-    # Top Row: Centered "Find Sets" Button in a 3-column layout with equal columns
+    # Top Row: Centered "Find Sets" Button in a 3-column layout
     col1, col2, col3 = st.columns(3)
     with col2:
         if st.button("🔎 Find Sets", key="find_sets"):
             try:
                 image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-                with st.spinner("Processing... Please wait."):
+                with st.spinner("⏳ Processing... Please wait."):
                     sets_info, processed_image = classify_and_find_sets_from_array(
                         image_cv,
                         card_detection_model,
@@ -350,18 +344,15 @@ else:
                 st.error("⚠️ An error occurred during processing:")
                 st.text(traceback.format_exc())
     
-    # Bottom Row: Side-by-Side Image Display with Titles
-    img_col1, img_col2 = st.columns(2)
-    with img_col1:
-        st.markdown("<div class='img-title'>Original Image</div>", unsafe_allow_html=True)
+    # Bottom Row: Three-column layout for images with an arrow in the center
+    left_col, mid_col, right_col = st.columns([3,1,3])
+    with left_col:
         st.image(image, use_container_width=True, output_format="JPEG")
-    with img_col2:
-        st.markdown("<div class='img-title'>Detected Sets</div>", unsafe_allow_html=True)
+    with mid_col:
+        st.markdown("<div style='text-align: center; font-size: 2rem;'>➡️</div>", unsafe_allow_html=True)
+    with right_col:
         if "processed_image" in st.session_state:
             processed_image_rgb = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
             st.image(processed_image_rgb, use_container_width=True, output_format="JPEG")
-            if st.session_state.get("sets_info"):
-                with st.expander("View Detected Sets Details"):
-                    st.json(st.session_state.sets_info)
         else:
             st.info("Processed image will appear here after clicking 'Find Sets'.")
