@@ -322,26 +322,31 @@ with col1:
         label_visibility="collapsed"
     )
     if uploaded_file:
-        with file_container:
-            st.markdown("""
-                <style>
-                div[data-testid="stFileUploader"] {
-                    border: 2px dashed #6A0DAD;
-                    padding: 12px;
-                    border-radius: 12px;
-                    background: rgba(255, 255, 255, 0.2);
-                    text-align: center;
-                }
-                </style>
-                """, unsafe_allow_html=True)
-        image = Image.open(uploaded_file)
-        # Resize image if wider than 800px
-        max_width = 800
-        if image.width > max_width:
-            ratio = max_width / image.width
-            new_height = int(image.height * ratio)
-            image = image.resize((max_width, new_height), Image.ANTIALIAS)
-        st.image(image, caption="🎴 Original Image", use_container_width=True, output_format="JPEG")
+    with file_container:
+        st.markdown(
+            """
+            <style>
+            div[data-testid="stFileUploader"] {
+                border: 2px dashed #6A0DAD;
+                padding: 12px;
+                border-radius: 12px;
+                background: rgba(255, 255, 255, 0.2);
+                text-align: center;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
+    image = Image.open(uploaded_file)
+    # Resize image if wider than 800px
+    max_width = 800
+    if image.width > max_width:
+        ratio = max_width / image.width
+        new_height = int(image.height * ratio)
+        resample_method = getattr(Image, "Resampling", Image).LANCZOS
+        image = image.resize((max_width, new_height), resample_method)
+    st.image(image, caption="🎴 Original Image", use_container_width=True, output_format="JPEG")
+
 
 # Right Column: Processed Result and Buttons
 with col2:
