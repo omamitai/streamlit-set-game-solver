@@ -27,7 +27,7 @@ from typing import Tuple, List, Dict
 
 st.set_page_config(layout="wide", page_title="SET Game Detector")
 
-# Custom CSS for a modern, clean look; reduce top margin; center sidebar uploader
+# Custom CSS for a modern, clean look with refined spacing and styling
 st.markdown(
     """
     <style>
@@ -37,10 +37,10 @@ st.markdown(
         color: #333;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
-    /* Header styling */
+    /* Header styling with minimal top gap */
     .main-header {
         text-align: center;
-        margin-top: 0.5rem;  /* Reduced gap at the top */
+        margin-top: 0.2rem;  /* Very small gap */
         margin-bottom: 1rem;
     }
     .main-header h1 {
@@ -51,9 +51,9 @@ st.markdown(
         font-size: 1.25rem;
         color: #666;
     }
-    /* Button styling */
+    /* Blue button styling for Find Sets */
     .stButton>button {
-        background-color: #4CAF50;
+        background-color: #007BFF;
         color: white;
         border: none;
         padding: 0.8rem 1.2rem;
@@ -62,9 +62,9 @@ st.markdown(
         cursor: pointer;
     }
     .stButton>button:hover {
-        background-color: #45a049;
+        background-color: #0069d9;
     }
-    /* Sidebar uploader centering with reduced gap */
+    /* Sidebar uploader centering with minimal gap */
     [data-testid="stSidebar"] .css-1d391kg {
         display: flex;
         flex-direction: column;
@@ -72,10 +72,16 @@ st.markdown(
         justify-content: flex-start;
         gap: 0.5rem;
     }
-    /* Titles above images */
+    /* Sidebar title size increased */
+    .sidebar-header {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-bottom: 0.25rem;
+    }
+    /* Titles above images - slightly smaller */
     .img-title {
         text-align: center;
-        font-size: 1.5rem;
+        font-size: 1.25rem;
         margin-bottom: 0.5rem;
     }
     </style>
@@ -83,7 +89,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Main header (without extra container)
+# Main header
 st.markdown(
     """
     <div class="main-header">
@@ -290,14 +296,13 @@ def classify_and_find_sets_from_array(
 st.sidebar.markdown(
     """
     <div style="display:flex; flex-direction:column; align-items:center; gap:0.5rem;">
-        <h3>Upload Your Image</h3>
+        <div class="sidebar-header">Upload Your Image</div>
     """,
     unsafe_allow_html=True,
 )
 my_upload = st.sidebar.file_uploader("", type=["png", "jpg", "jpeg"])
 st.sidebar.markdown("</div>", unsafe_allow_html=True)
 
-# Save the uploaded file in session state if provided
 if my_upload is not None:
     st.session_state.uploaded_file = my_upload
 
@@ -310,7 +315,7 @@ if "uploaded_file" not in st.session_state:
 else:
     try:
         image = Image.open(st.session_state.uploaded_file)
-        max_width = 600  # Slightly smaller images
+        max_width = 500  # Slightly smaller images
         if image.width > max_width:
             ratio = max_width / image.width
             new_height = int(image.height * ratio)
@@ -320,8 +325,8 @@ else:
         st.error("Failed to load image. Please try another file.")
         st.exception(e)
     
-    # Top Row: Centered "Find Sets" Button
-    center_cols = st.columns(3)
+    # Top Row: Centered "Find Sets" Button in a 3-column layout
+    center_cols = st.columns([1, 2, 1])
     with center_cols[1]:
         if st.button("🔎 Find Sets", key="find_sets"):
             try:
