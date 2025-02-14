@@ -330,32 +330,36 @@ def classify_and_find_sets_from_array(
 st.markdown("<h1 class='title'>🎴 SET Game Detector</h1>", unsafe_allow_html=True)
 st.markdown("<p class='subtitle'>Upload an image of a Set game board and detect valid sets!</p>", unsafe_allow_html=True)
 
-# Two-column layout for image upload and processed result
+# Two-column layout: Left for image upload/preview & refresh, Right for processing results.
 col1, col2 = st.columns(2, gap="medium")
 
-# Left Column: Image Upload and Preview
+# ----- Left Column: Image Upload or Refresh Button -----
 with col1:
-    st.markdown("### 📥 Upload Image")
-    uploaded_file = st.file_uploader(
-        "Drag & Drop or Browse Files",
-        type=["jpg", "jpeg", "png"],
-        label_visibility="collapsed"
-    )
-    if uploaded_file:
-        st.markdown(
-            """
-            <style>
-            div[data-testid="stFileUploader"] {
-                border: 2px dashed #6A0DAD;
-                padding: 12px;
-                border-radius: 12px;
-                background: rgba(255, 255, 255, 0.2);
-                text-align: center;
-            }
-            </style>
-            """,
-            unsafe_allow_html=True,
+    if "uploaded_file" not in st.session_state:
+        st.markdown("### 📥 Upload Image")
+        uploaded_file = st.file_uploader(
+            "Drag & Drop or Browse Files",
+            type=["jpg", "jpeg", "png"],
+            label_visibility="collapsed"
         )
+        if uploaded_file is not None:
+            st.session_state.uploaded_file = uploaded_file
+            try:
+                image = Image.open(uploaded_file)
+                # Resize image if wider than 800px
+                max_width = 800
+                if image.width > max_width:
+                    ratio = max_width / image.width
+                    new_height = int(image.height * ratio)
+                    resample_method = getattr(Image, "Resampling", Image).LANCZOS
+                    image = image.resize((max_width, new_height), resample_method)
+                st.image(image, caption="🎴 Original Image", use_container_width=True, output_format="JPEG")
+            except Exception as e:
+                st.error("Failed to load image. Please try another file.")
+                st.exception(e)
+    else:
+        uploaded_file = st.session_state.uploaded_file
+        st.markdown("### 🎴 Image Loaded")
         try:
             image = Image.open(uploaded_file)
             # Resize image if wider than 800px
@@ -367,19 +371,18 @@ with col1:
                 image = image.resize((max_width, new_height), resample_method)
             st.image(image, caption="🎴 Original Image", use_container_width=True, output_format="JPEG")
         except Exception as e:
-            st.error("Failed to open image. Please try a different file.")
+            st.error("Failed to load image. Please try another file.")
             st.exception(e)
+        # Display refresh button to allow uploading a new image.
+        if st.button("🔄 Refresh", key="refresh_left"):
+            del st.session_state.uploaded_file
+            st.experimental_rerun()
 
-# Right Column: Processed Result and Control Buttons
+# ----- Right Column: Processed Result & Find Sets Button -----
 with col2:
     st.markdown("### 🔍 Processed Result")
-    if uploaded_file:
-        button_cols = st.columns(2)
-        with button_cols[0]:
-            find_sets_clicked = st.button("🔎 Find Sets", key="find_sets", use_container_width=True)
-        with button_cols[1]:
-            refresh_clicked = st.button("🔄 Refresh", key="refresh", use_container_width=True)
-
+    if "uploaded_file" in st.session_state:
+        find_sets_clicked = st.button("🔎 Find Sets", key="find_sets", use_container_width=True)
         if find_sets_clicked:
             try:
                 # Convert PIL image to OpenCV BGR image
@@ -403,7 +406,5 @@ with col2:
             except Exception as e:
                 st.error("⚠️ An error occurred during processing:")
                 st.text(traceback.format_exc())
-        elif refresh_clicked:
-            st.experimental_rerun()
     else:
-        st.info("Please upload an image to begin processing.")
+        st.info("Upload an image on the left to begin processing.")
