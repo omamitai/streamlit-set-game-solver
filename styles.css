@@ -1,70 +1,66 @@
-/* 🌈 SET Game Detector - Sleek & Thematic UI */
+/* 🌈 SET Game Detector - Refined UI */
 body {
-    background: linear-gradient(135deg, #6a0dad, #ff4d4d, #33cc33);
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    color: black;
-    margin: 0;
-    padding: 0;
+    background-color: #f5f5f5;
+    font-family: 'Segoe UI', sans-serif;
+    color: #333;
 }
 
-/* 🔹 Title & Headers */
-.title {
+/* 🔹 Header & Subtitle */
+.main-header {
     text-align: center;
-    color: white;
-    font-size: 3em;
-    font-weight: bold;
-    text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+    margin-top: 0.2rem;
+}
+.main-header h1 {
+    font-size: 2.8rem;
+    margin-bottom: 0.3rem;
+}
+.main-header p {
+    font-size: 1.2rem;
+    color: #666;
 }
 
-.subtitle {
+/* 📤 Sidebar Uploader */
+.sidebar-header {
+    font-size: 1.5rem;
+    font-weight: 600;
     text-align: center;
-    color: white;
-    font-size: 1.4em;
-    margin-bottom: 20px;
+    margin-bottom: 0.5rem;
 }
-
-/* 🖼️ Image Styling */
-img {
-    border-radius: 10px;
-    border: 4px solid black;
-    margin-top: 10px;
-}
-
-/* 📥 File Uploader */
 .stFileUploader {
-    border: 2px dashed white !important;
-    padding: 15px !important;
-    border-radius: 12px !important;
-    text-align: center;
-    background: rgba(255, 255, 255, 0.2) !important;
+    border: 2px dashed #007BFF !important;
+    padding: 12px !important;
+    border-radius: 8px !important;
+    background: rgba(0, 123, 255, 0.1) !important;
 }
 
 /* 🎛️ Buttons */
-.stButton>button {
-    background-color: #6a0dad;
+.stButton > button {
+    background-color: #007BFF;
     color: white;
-    font-weight: bold;
-    border-radius: 8px;
-    padding: 12px;
-    font-size: 16px;
-    transition: all 0.3s ease;
+    border-radius: 6px;
+    font-size: 1rem;
+    padding: 10px 16px;
     border: none;
+    transition: 0.3s ease;
 }
-.stButton>button:hover {
-    background-color: #4a148c;
-    transform: scale(1.05);
-}
-
-/* 🔍 Expander */
-.stExpander {
-    background-color: rgba(255, 255, 255, 0.6);
-    border-radius: 10px;
-    padding: 15px;
-    margin-top: 20px;
-    color: black;
+.stButton > button:hover {
+    background-color: #0056b3;
 }
 
-/* 📦 Columns Alignment */
+/* 🔄 Spinner */
+.stSpinner > div {
+    text-align: center;
+    font-size: 1.2rem;
+}
+
+/* 🖼️ Image Display */
+.arrow {
+    text-align: center;
+    font-size: 2rem;
+    margin-top: 2rem;
+}
+
+/* 📦 Columns & Layout */
 .st-emotion-cache-1kyxreq {
     padding-left: 10px;
     padding-right: 10px;
