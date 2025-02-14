@@ -23,6 +23,7 @@ import torch
 from ultralytics import YOLO
 from itertools import combinations
 from pathlib import Path
+from typing import Tuple, List, Dict
 
 # =============================================================================
 #                               CONFIGURATION
@@ -35,8 +36,8 @@ st.set_page_config(
     initial_sidebar_state="collapsed",
 )
 
-# Inject custom CSS for improved design
-def local_css(file_name):
+def local_css(file_name: str) -> None:
+    """Load a local CSS file to inject custom styles into the app."""
     try:
         with open(file_name) as f:
             st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
@@ -45,8 +46,9 @@ def local_css(file_name):
 
 local_css("styles.css")
 
-# Additional inline styling for the buttons container
-st.markdown("""
+# Additional inline styling for buttons and headings
+st.markdown(
+    """
     <style>
     .button-container {
         display: flex;
@@ -67,43 +69,53 @@ st.markdown("""
         margin-top: 0;
     }
     </style>
-    """, unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True,
+)
 
 # =============================================================================
 #                              MODEL LOADING
 # =============================================================================
 
-# Define base model directory
+# Define base model directory and subdirectories
 base_dir = Path("models")
-
-# Define model subdirectories
 characteristics_path = base_dir / "Characteristics" / "11022025"
 shape_path = base_dir / "Shape" / "15052024"
 card_path = base_dir / "Card" / "16042024"
 
-# Load classification models (Keras)
-shape_model = load_model(str(characteristics_path / "shape_model.keras"))
-fill_model = load_model(str(characteristics_path / "fill_model.keras"))
+@st.cache_resource(show_spinner=False)
+def load_classification_models() -> Tuple[tf.keras.Model, tf.keras.Model]:
+    """Load and return the Keras classification models (shape and fill)."""
+    shape_model = load_model(str(characteristics_path / "shape_model.keras"))
+    fill_model = load_model(str(characteristics_path / "fill_model.keras"))
+    return shape_model, fill_model
 
-# Load YOLO detection models
-shape_detection_model = YOLO(str(shape_path / "best.pt"))
-shape_detection_model.conf = 0.5
+@st.cache_resource(show_spinner=False)
+def load_detection_models() -> Tuple[YOLO, YOLO]:
+    """Load and return the YOLO detection models (card and shape)."""
+    shape_detection_model = YOLO(str(shape_path / "best.pt"))
+    shape_detection_model.conf = 0.5
 
-card_detection_model = YOLO(str(card_path / "best.pt"))
-card_detection_model.conf = 0.5
+    card_detection_model = YOLO(str(card_path / "best.pt"))
+    card_detection_model.conf = 0.5
 
-# Move YOLO models to GPU if available
-if torch.cuda.is_available():
-    card_detection_model.to("cuda")
-    shape_detection_model.to("cuda")
+    # Move YOLO models to GPU if available
+    if torch.cuda.is_available():
+        card_detection_model.to("cuda")
+        shape_detection_model.to("cuda")
+    return card_detection_model, shape_detection_model
+
+shape_model, fill_model = load_classification_models()
+card_detection_model, shape_detection_model = load_detection_models()
 
 # =============================================================================
 #                          UTILITY & PROCESSING FUNCTIONS
 # =============================================================================
 
-def check_and_rotate_input_image(board_image: np.ndarray, detector) -> (np.ndarray, bool):
+def check_and_rotate_input_image(board_image: np.ndarray, detector: YOLO) -> Tuple[np.ndarray, bool]:
     """
     Detect card regions and determine if the image needs to be rotated.
+    Returns the (possibly rotated) image and a flag indicating rotation.
     """
     card_results = detector(board_image)
     card_boxes = card_results[0].boxes.xyxy.cpu().numpy().astype(int)
@@ -117,9 +129,7 @@ def check_and_rotate_input_image(board_image: np.ndarray, detector) -> (np.ndarr
     return board_image, False
 
 def restore_original_orientation(image: np.ndarray, was_rotated: bool) -> np.ndarray:
-    """
-    Restore the original orientation of the image if it was rotated.
-    """
+    """Restore the original orientation of the image if it was rotated."""
     if was_rotated:
         return cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
     return image
@@ -127,6 +137,7 @@ def restore_original_orientation(image: np.ndarray, was_rotated: bool) -> np.nda
 def predict_color(shape_image: np.ndarray) -> str:
     """
     Determine the dominant color in a shape image using HSV thresholds.
+    Returns one of 'green', 'purple', or 'red'.
     """
     hsv_image = cv2.cvtColor(shape_image, cv2.COLOR_BGR2HSV)
     green_mask = cv2.inRange(hsv_image, np.array([40, 50, 50]), np.array([80, 255, 255]))
@@ -142,9 +153,12 @@ def predict_color(shape_image: np.ndarray) -> str:
     }
     return max(color_counts, key=color_counts.get)
 
-def predict_card_features(card_image: np.ndarray, shape_detector, fill_model, shape_model, box: list) -> dict:
+def predict_card_features(card_image: np.ndarray, shape_detector: YOLO,
+                          fill_model: tf.keras.Model, shape_model: tf.keras.Model,
+                          box: List[int]) -> Dict:
     """
     Detect and classify features on a card image.
+    Returns a dictionary with card features.
     """
     shape_results = shape_detector(card_image)
     card_h, card_w = card_image.shape[:2]
@@ -196,18 +210,20 @@ def predict_card_features(card_image: np.ndarray, shape_detector, fill_model, sh
         'box': box
     }
 
-def is_set(cards: list) -> bool:
+def is_set(cards: List[dict]) -> bool:
     """
     Check if a group of cards forms a valid set.
+    A valid set requires each feature to be either all the same or all different.
     """
     for feature in ['Count', 'Color', 'Fill', 'Shape']:
         if len({card[feature] for card in cards}) not in [1, 3]:
             return False
     return True
 
-def find_sets(card_df: pd.DataFrame) -> list:
+def find_sets(card_df: pd.DataFrame) -> List[dict]:
     """
     Iterate over all combinations of three cards to identify valid sets.
+    Returns a list of detected sets.
     """
     sets_found = []
     for combo in combinations(card_df.iterrows(), 3):
@@ -222,9 +238,10 @@ def find_sets(card_df: pd.DataFrame) -> list:
             })
     return sets_found
 
-def detect_cards_from_image(board_image: np.ndarray, detector) -> list:
+def detect_cards_from_image(board_image: np.ndarray, detector: YOLO) -> List[Tuple[np.ndarray, List[int]]]:
     """
     Extract card regions from the board image using the YOLO card detection model.
+    Returns a list of tuples (card_image, bounding_box).
     """
     card_results = detector(board_image)
     card_boxes = card_results[0].boxes.xyxy.cpu().numpy().astype(int)
@@ -233,9 +250,12 @@ def detect_cards_from_image(board_image: np.ndarray, detector) -> list:
         for x1, y1, x2, y2 in card_boxes
     ]
 
-def classify_cards_from_board_image(board_image: np.ndarray, card_detector, shape_detector, fill_model, shape_model) -> pd.DataFrame:
+def classify_cards_from_board_image(board_image: np.ndarray, card_detector: YOLO,
+                                      shape_detector: YOLO, fill_model: tf.keras.Model,
+                                      shape_model: tf.keras.Model) -> pd.DataFrame:
     """
     Detect cards from the board image and classify their features.
+    Returns a DataFrame with card feature information.
     """
     cards = detect_cards_from_image(board_image, card_detector)
     card_data = []
@@ -250,9 +270,10 @@ def classify_cards_from_board_image(board_image: np.ndarray, card_detector, shap
         })
     return pd.DataFrame(card_data)
 
-def draw_sets_on_image(board_image: np.ndarray, sets_info: list) -> np.ndarray:
+def draw_sets_on_image(board_image: np.ndarray, sets_info: List[dict]) -> np.ndarray:
     """
     Draw bounding boxes and labels for each detected set on the board image.
+    Returns the annotated image.
     """
     colors = [
         (255, 0, 0), (0, 255, 0), (0, 0, 255),
@@ -282,17 +303,18 @@ def draw_sets_on_image(board_image: np.ndarray, sets_info: list) -> np.ndarray:
 
 def classify_and_find_sets_from_array(
     board_image: np.ndarray,
-    card_detector,
-    shape_detector,
-    fill_model,
-    shape_model
-) -> (list, np.ndarray):
+    card_detector: YOLO,
+    shape_detector: YOLO,
+    fill_model: tf.keras.Model,
+    shape_model: tf.keras.Model
+) -> Tuple[List[dict], np.ndarray]:
     """
     Main processing function:
       1. Corrects board image orientation.
       2. Classifies card features.
       3. Finds valid sets.
       4. Annotates the image with detected sets.
+    Returns detected sets info and the final annotated image.
     """
     processed_image, was_rotated = check_and_rotate_input_image(board_image, card_detector)
     card_df = classify_cards_from_board_image(processed_image, card_detector, shape_detector, fill_model, shape_model)
@@ -305,24 +327,21 @@ def classify_and_find_sets_from_array(
 #                           STREAMLIT INTERFACE
 # =============================================================================
 
-# Title & Description
 st.markdown("<h1 class='title'>🎴 SET Game Detector</h1>", unsafe_allow_html=True)
 st.markdown("<p class='subtitle'>Upload an image of a Set game board and detect valid sets!</p>", unsafe_allow_html=True)
 
-# Two-Column Layout for Upload and Processed Result
+# Two-column layout for image upload and processed result
 col1, col2 = st.columns(2, gap="medium")
 
-# Left Column: Upload & Preview
+# Left Column: Image Upload and Preview
 with col1:
     st.markdown("### 📥 Upload Image")
-    file_container = st.empty()
-    uploaded_file = file_container.file_uploader(
+    uploaded_file = st.file_uploader(
         "Drag & Drop or Browse Files",
         type=["jpg", "jpeg", "png"],
         label_visibility="collapsed"
     )
     if uploaded_file:
-    with file_container:
         st.markdown(
             """
             <style>
@@ -337,22 +356,24 @@ with col1:
             """,
             unsafe_allow_html=True,
         )
-    image = Image.open(uploaded_file)
-    # Resize image if wider than 800px
-    max_width = 800
-    if image.width > max_width:
-        ratio = max_width / image.width
-        new_height = int(image.height * ratio)
-        resample_method = getattr(Image, "Resampling", Image).LANCZOS
-        image = image.resize((max_width, new_height), resample_method)
-    st.image(image, caption="🎴 Original Image", use_container_width=True, output_format="JPEG")
+        try:
+            image = Image.open(uploaded_file)
+            # Resize image if wider than 800px
+            max_width = 800
+            if image.width > max_width:
+                ratio = max_width / image.width
+                new_height = int(image.height * ratio)
+                resample_method = getattr(Image, "Resampling", Image).LANCZOS
+                image = image.resize((max_width, new_height), resample_method)
+            st.image(image, caption="🎴 Original Image", use_container_width=True, output_format="JPEG")
+        except Exception as e:
+            st.error("Failed to open image. Please try a different file.")
+            st.exception(e)
 
-
-# Right Column: Processed Result and Buttons
+# Right Column: Processed Result and Control Buttons
 with col2:
     st.markdown("### 🔍 Processed Result")
     if uploaded_file:
-        # Create a container for symmetrical buttons
         button_cols = st.columns(2)
         with button_cols[0]:
             find_sets_clicked = st.button("🔎 Find Sets", key="find_sets", use_container_width=True)
@@ -374,10 +395,15 @@ with col2:
                 final_image_rgb = cv2.cvtColor(final_image, cv2.COLOR_BGR2RGB)
                 st.image(final_image_rgb, caption="✅ Detected Sets", use_container_width=True, output_format="JPEG")
                 st.success("🎉 Sets detected successfully!")
-                with st.expander("📜 View Detected Sets Details"):
-                    st.json(sets_info)
+                if sets_info:
+                    with st.expander("📜 View Detected Sets Details"):
+                        st.json(sets_info)
+                else:
+                    st.info("No valid sets were detected.")
             except Exception as e:
                 st.error("⚠️ An error occurred during processing:")
                 st.text(traceback.format_exc())
         elif refresh_clicked:
             st.experimental_rerun()
+    else:
+        st.info("Please upload an image to begin processing.")
