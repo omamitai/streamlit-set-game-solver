@@ -36,11 +36,12 @@ st.markdown(
         background-color: #f0f2f6;
         color: #333;
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        margin-top: 0;
     }
     /* Header styling with minimal top gap */
     .main-header {
         text-align: center;
-        margin-top: 0.2rem;  /* Very small gap */
+        margin-top: 0.1rem;  /* Very small gap at the top */
         margin-bottom: 1rem;
     }
     .main-header h1 {
@@ -64,17 +65,20 @@ st.markdown(
     .stButton>button:hover {
         background-color: #0069d9;
     }
+    /* Center the spinner text */
+    .stSpinner > div {
+        text-align: center;
+    }
     /* Sidebar uploader centering with minimal gap */
     [data-testid="stSidebar"] .css-1d391kg {
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: flex-start;
         gap: 0.5rem;
     }
-    /* Sidebar title size increased */
+    /* Sidebar title styling - slightly smaller */
     .sidebar-header {
-        font-size: 1.75rem;
+        font-size: 1.5rem;
         font-weight: 600;
         margin-bottom: 0.25rem;
     }
@@ -89,7 +93,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Main header
+# Main header (placed very close to the top)
 st.markdown(
     """
     <div class="main-header">
@@ -295,13 +299,14 @@ def classify_and_find_sets_from_array(
 
 st.sidebar.markdown(
     """
-    <div style="display:flex; flex-direction:column; align-items:center; gap:0.5rem;">
+    <div style="display:flex; flex-direction:column; align-items:center; gap:0.25rem;">
         <div class="sidebar-header">Upload Your Image</div>
+    </div>
     """,
     unsafe_allow_html=True,
 )
 my_upload = st.sidebar.file_uploader("", type=["png", "jpg", "jpeg"])
-st.sidebar.markdown("</div>", unsafe_allow_html=True)
+st.sidebar.markdown("", unsafe_allow_html=True)
 
 if my_upload is not None:
     st.session_state.uploaded_file = my_upload
@@ -315,7 +320,7 @@ if "uploaded_file" not in st.session_state:
 else:
     try:
         image = Image.open(st.session_state.uploaded_file)
-        max_width = 500  # Slightly smaller images
+        max_width = 400  # Smaller images now
         if image.width > max_width:
             ratio = max_width / image.width
             new_height = int(image.height * ratio)
@@ -325,9 +330,9 @@ else:
         st.error("Failed to load image. Please try another file.")
         st.exception(e)
     
-    # Top Row: Centered "Find Sets" Button in a 3-column layout
-    center_cols = st.columns([1, 2, 1])
-    with center_cols[1]:
+    # Top Row: Centered "Find Sets" Button in a 3-column layout with equal columns
+    col1, col2, col3 = st.columns(3)
+    with col2:
         if st.button("🔎 Find Sets", key="find_sets"):
             try:
                 image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
@@ -346,11 +351,11 @@ else:
                 st.text(traceback.format_exc())
     
     # Bottom Row: Side-by-Side Image Display with Titles
-    img_cols = st.columns(2)
-    with img_cols[0]:
+    img_col1, img_col2 = st.columns(2)
+    with img_col1:
         st.markdown("<div class='img-title'>Original Image</div>", unsafe_allow_html=True)
         st.image(image, use_container_width=True, output_format="JPEG")
-    with img_cols[1]:
+    with img_col2:
         st.markdown("<div class='img-title'>Detected Sets</div>", unsafe_allow_html=True)
         if "processed_image" in st.session_state:
             processed_image_rgb = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
