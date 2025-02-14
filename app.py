@@ -68,8 +68,9 @@ st.markdown(
     [data-testid="stSidebar"] .css-1d391kg {
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        min-height: 70vh;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.5rem;
     }
     /* Titles above images */
     .img-title {
@@ -82,7 +83,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Main header (no extra container box above)
+# Main header (no extra container box)
 st.markdown(
     """
     <div class="main-header">
@@ -283,23 +284,12 @@ def classify_and_find_sets_from_array(
     return sets_found, final_image
 
 # =============================================================================
-#                           APP UTILITY FUNCTIONS
-# =============================================================================
-
-def refresh_app():
-    if hasattr(st, "experimental_rerun"):
-        st.experimental_rerun()
-    else:
-        st.warning("Refresh is not supported in this version of Streamlit. Please refresh your browser manually.")
-
-# =============================================================================
 #                           SIDEBAR: Centered File Uploader
 # =============================================================================
 
-# Wrap the uploader in a centered div with a small title
 st.sidebar.markdown(
     """
-    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:70vh;">
+    <div style="display:flex; flex-direction:column; align-items:center; justify-content:flex-start; gap:0.5rem;">
         <h3>Upload Your Image</h3>
     """,
     unsafe_allow_html=True,
@@ -313,12 +303,12 @@ elif "uploaded_file" not in st.session_state:
     st.session_state.uploaded_file = "default.jpg"  # Ensure "default.jpg" exists
 
 # =============================================================================
-#                           MAIN INTERFACE: Buttons & Image Display
+#                           MAIN INTERFACE: Button & Image Display
 # =============================================================================
 
 try:
     image = Image.open(st.session_state.uploaded_file)
-    max_width = 800
+    max_width = 600  # Reduced max width for smaller images
     if image.width > max_width:
         ratio = max_width / image.width
         new_height = int(image.height * ratio)
@@ -328,13 +318,13 @@ except Exception as e:
     st.error("Failed to load image. Please try another file.")
     st.exception(e)
 
-# Top Row: Buttons (Find Sets on left, Refresh on right)
-btn_cols = st.columns(2)
-with btn_cols[0]:
+# Top Row: Centered "Find Sets" Button
+center_cols = st.columns([1, 2, 1])
+with center_cols[1]:
     if st.button("🔎 Find Sets", key="find_sets"):
         try:
             image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-            with st.spinner("Processing... Please wait."):
+            with st.spinner("<p style='text-align: center;'>Processing... Please wait.</p>"):
                 sets_info, processed_image = classify_and_find_sets_from_array(
                     image_cv,
                     card_detection_model,
@@ -347,12 +337,6 @@ with btn_cols[0]:
         except Exception as e:
             st.error("⚠️ An error occurred during processing:")
             st.text(traceback.format_exc())
-with btn_cols[1]:
-    if st.button("🔄 Refresh", key="refresh"):
-        for key in ["uploaded_file", "processed_image", "sets_info"]:
-            if key in st.session_state:
-                del st.session_state[key]
-        refresh_app()
 
 # Bottom Row: Side-by-Side Image Display with Titles
 img_cols = st.columns(2)
