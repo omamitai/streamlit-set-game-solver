@@ -27,7 +27,7 @@ from typing import Tuple, List, Dict
 
 st.set_page_config(layout="wide", page_title="SET Game Detector")
 
-# Function to load external CSS from styles.css
+# Load custom CSS
 def local_css(file_name):
     try:
         with open(file_name) as f:
@@ -37,43 +37,8 @@ def local_css(file_name):
 
 local_css("styles.css")
 
-# Additional inline CSS for header and button aesthetics
-st.markdown(
-    """
-    <style>
-    .header-container {
-        text-align: center;
-        padding: 20px 0;  /* reduced vertical padding */
-        background-color: #007BFF;  /* blue background */
-        color: #fff;
-        border-radius: 10px;
-        margin-bottom: 30px;
-    }
-    .header-container h1 {
-        font-size: 2.5rem;  /* smaller headline */
-        margin: 0;
-    }
-    .header-container .subtitle {
-        font-size: 1.2rem;
-    }
-    .sidebar-header {
-        font-size: 1.5rem;
-        font-weight: bold;
-        margin-bottom: 10px;
-    }
-    .loading-message {
-        font-size: 1.2rem;
-        color: #555;
-        text-align: center;
-        margin: 20px 0;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
 # =============================================================================
-#                           HEADER SECTION (Centered)
+#                           HEADER SECTION
 # =============================================================================
 
 st.markdown(
@@ -92,7 +57,6 @@ my_upload = st.sidebar.file_uploader("", type=["png", "jpg", "jpeg"])
 if my_upload is not None:
     st.session_state.uploaded_file = my_upload
 
-# Ensure the original image is preserved across runs.
 if "original_image" not in st.session_state and "uploaded_file" in st.session_state:
     try:
         st.session_state.original_image = Image.open(st.session_state.uploaded_file)
@@ -311,7 +275,6 @@ else:
         st.exception(e)
         st.stop()
 
-    # Display a centered loading message when processing
     loading_message = st.empty()
     if find_sets_clicked:
         loading_message.markdown("<p class='loading-message'>Detecting sets...</p>", unsafe_allow_html=True)
@@ -332,7 +295,6 @@ else:
         finally:
             loading_message.empty()
 
-    # Display original and processed images side by side
     left_col, mid_col, right_col = st.columns([3, 1, 3])
     with left_col:
         st.subheader("Original Image")
