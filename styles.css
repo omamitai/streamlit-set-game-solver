@@ -10,11 +10,13 @@ body {
 /* Header */
 .header-container {
   text-align: center;
-  margin-top: 10px;
-  margin-bottom: 20px;
+  margin: 10px auto;
+  padding: 10px;
+  background-color: #e8f0fe;  /* subtle light blue */
+  border-radius: 8px;
 }
 .header-container h1 {
-  font-size: 3rem;
+  font-size: 2.5rem;
   margin: 0;
   padding: 0;
 }
@@ -38,7 +40,7 @@ body {
 /* File Uploader */
 .stFileUploader {
   border: 2px dashed #aaa !important;
-  padding: 15px !important;
+  padding: 10px !important;  /* reduced padding */
   border-radius: 12px !important;
   text-align: center;
   background: #fff !important;
@@ -67,7 +69,7 @@ body {
   text-align: center;
   font-size: 1.1rem;
   color: #555;
-  margin-top: 15px;
+  margin-top: 10px; /* reduced margin */
   font-style: italic;
 }
 
