@@ -45,10 +45,14 @@ st.markdown(
 )
 
 # Inline instruction with the button placed immediately after "click"
-col1, col2, col3 = st.columns([1,2,1])
+col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     st.markdown(
-        "<p class='subtitle' style='display:inline;'>Upload an image of a Set game board from the sidebar and click&nbsp;</p>",
+        """
+        <div style="text-align:center;">
+            <span class="subtitle">Upload an image of a Set game board from the sidebar and click&nbsp;</span>
+        </div>
+        """,
         unsafe_allow_html=True,
     )
     find_sets_clicked = st.button("🔎 Find Sets", key="find_sets", disabled=("uploaded_file" not in st.session_state))
@@ -247,13 +251,10 @@ def classify_and_find_sets_from_array(
 # =============================================================================
 
 st.sidebar.markdown(
-    """
-    <div class="sidebar-header">Upload Your Image</div>
-    """,
+    """<div class="sidebar-header">Upload Your Image</div>""",
     unsafe_allow_html=True,
 )
 my_upload = st.sidebar.file_uploader("", type=["png", "jpg", "jpeg"])
-st.sidebar.markdown("", unsafe_allow_html=True)
 
 if my_upload is not None:
     st.session_state.uploaded_file = my_upload
@@ -276,7 +277,7 @@ else:
     except Exception as e:
         st.error("Failed to load image. Please try another file.")
         st.exception(e)
-    
+
     # Process image when the inline "Find Sets" button is clicked
     if find_sets_clicked:
         try:
@@ -294,14 +295,14 @@ else:
         except Exception as e:
             st.error("⚠️ An error occurred during processing:")
             st.text(traceback.format_exc())
-    
+
     # Display images in a three-column layout with the arrow lowered further
-    left_col, mid_col, right_col = st.columns([3,1,3])
+    left_col, mid_col, right_col = st.columns([3, 1, 3])
     with left_col:
         st.image(image, use_container_width=True, output_format="JPEG")
     with mid_col:
         st.markdown(
-            "<div style='text-align: center; font-size: 2rem; margin-top: 80px;'>➡️</div>",
+            "<div style='text-align: center; font-size: 2rem; margin-top: 100px;'>➡️</div>",
             unsafe_allow_html=True,
         )
     with right_col:
