@@ -43,14 +43,14 @@ st.markdown(
     <style>
     .header-container {
         text-align: center;
-        padding: 40px 0;
-        background: linear-gradient(135deg, #89f7fe, #66a6ff);
+        padding: 20px 0;  /* reduced vertical padding */
+        background-color: #007BFF;  /* blue background */
         color: #fff;
         border-radius: 10px;
         margin-bottom: 30px;
     }
     .header-container h1 {
-        font-size: 3rem;
+        font-size: 2.5rem;  /* smaller headline */
         margin: 0;
     }
     .header-container .subtitle {
@@ -65,6 +65,7 @@ st.markdown(
         font-size: 1.2rem;
         color: #555;
         text-align: center;
+        margin: 20px 0;
     }
     </style>
     """,
@@ -85,11 +86,18 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Centered "Find Sets" Button in the sidebar for a cleaner look
+# Sidebar: File uploader and button
 st.sidebar.markdown('<div class="sidebar-header">Upload Your Image</div>', unsafe_allow_html=True)
 my_upload = st.sidebar.file_uploader("", type=["png", "jpg", "jpeg"])
 if my_upload is not None:
     st.session_state.uploaded_file = my_upload
+
+# Ensure the original image is preserved across runs.
+if "original_image" not in st.session_state and "uploaded_file" in st.session_state:
+    try:
+        st.session_state.original_image = Image.open(st.session_state.uploaded_file)
+    except Exception as e:
+        st.error("Failed to load image. Please try another file.")
 
 find_sets_clicked = st.sidebar.button("🔎 Find Sets", key="find_sets")
 
@@ -290,41 +298,45 @@ if "uploaded_file" not in st.session_state:
     st.info("Please upload an image from the sidebar.")
 else:
     try:
-        image = Image.open(st.session_state.uploaded_file)
+        # Always display the original image from session state
+        original_image = st.session_state.original_image.copy()
         max_width = 400  # Limit image size for display purposes
-        if image.width > max_width:
-            ratio = max_width / image.width
-            new_height = int(image.height * ratio)
+        if original_image.width > max_width:
+            ratio = max_width / original_image.width
+            new_height = int(original_image.height * ratio)
             resample_method = getattr(Image, "Resampling", Image).LANCZOS
-            image = image.resize((max_width, new_height), resample_method)
+            original_image = original_image.resize((max_width, new_height), resample_method)
     except Exception as e:
         st.error("Failed to load image. Please try another file.")
         st.exception(e)
         st.stop()
 
-    # Process the image when the button is clicked; using a spinner for better UX.
+    # Display a centered loading message when processing
+    loading_message = st.empty()
     if find_sets_clicked:
-        with st.spinner("Detecting sets..."):
-            try:
-                image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-                sets_info, processed_image = classify_and_find_sets_from_array(
-                    image_cv,
-                    card_detection_model,
-                    shape_detection_model,
-                    fill_model,
-                    shape_model,
-                )
-                st.session_state.processed_image = processed_image
-                st.session_state.sets_info = sets_info
-            except Exception as e:
-                st.error("⚠️ An error occurred during processing:")
-                st.text(traceback.format_exc())
+        loading_message.markdown("<p class='loading-message'>Detecting sets...</p>", unsafe_allow_html=True)
+        try:
+            image_cv = cv2.cvtColor(np.array(original_image), cv2.COLOR_RGB2BGR)
+            sets_info, processed_image = classify_and_find_sets_from_array(
+                image_cv,
+                card_detection_model,
+                shape_detection_model,
+                fill_model,
+                shape_model,
+            )
+            st.session_state.processed_image = processed_image
+            st.session_state.sets_info = sets_info
+        except Exception as e:
+            st.error("⚠️ An error occurred during processing:")
+            st.text(traceback.format_exc())
+        finally:
+            loading_message.empty()
 
     # Display original and processed images side by side
     left_col, mid_col, right_col = st.columns([3, 1, 3])
     with left_col:
         st.subheader("Original Image")
-        st.image(image, use_container_width=True, output_format="JPEG")
+        st.image(original_image, use_container_width=True, output_format="JPEG")
     with mid_col:
         st.markdown(
             "<div style='text-align: center; font-size: 2rem; margin-top: 140px;'>➡️</div>",
