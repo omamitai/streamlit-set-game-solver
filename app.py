@@ -53,7 +53,7 @@ with st.container():
             unsafe_allow_html=True,
         )
     with col2:
-        find_sets_clicked = st.button("🔎 Find Sets", key="find_sets", disabled=("uploaded_file" not in st.session_state))
+        find_sets_clicked = st.button("🔎 Find Sets", key="find_sets")
 
 
 # =============================================================================
