@@ -21,9 +21,10 @@ body {
 
 /* Subtitle */
 .subtitle {
+  text-align: center;
   font-size: 1.25rem;
   color: #666;
-  display: inline;
+  margin-top: 5px;
 }
 
 /* Sidebar */
@@ -46,6 +47,8 @@ body {
 
 /* Buttons */
 .stButton>button {
+  display: block;
+  margin: auto;
   background-color: #007BFF;
   color: #fff;
   border: none;
@@ -61,7 +64,7 @@ body {
 
 /* Images */
 img {
-  max-width: 500px;
+  max-width: 400px;
   border-radius: 10px;
   margin-top: 10px;
   display: block;
@@ -74,4 +77,5 @@ img {
   text-align: center;
   font-size: 1rem;
   color: #333;
+  margin-top: 10px;
 }
