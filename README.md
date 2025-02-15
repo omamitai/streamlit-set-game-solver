@@ -1,6 +1,6 @@
 # Streamlit Set Game Detector
 
-[![Streamlit App](https://img.shields.io/badge/Streamlit-App-brightgreen)](your-streamlit-app-link-here)
+[![Streamlit App](https://img.shields.io/badge/Streamlit-App-brightgreen)](https://app-set-game-solver.streamlit.app/)
 
 ## Project Overview
 
