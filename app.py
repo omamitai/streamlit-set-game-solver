@@ -44,18 +44,14 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Inline instruction with the button placed right after "click"
-col_text, col_button = st.columns([4,1])
-with col_text:
+# Inline instruction with the button placed immediately after "click"
+col1, col2, col3 = st.columns([1,2,1])
+with col2:
     st.markdown(
         "<p class='subtitle' style='display:inline;'>Upload an image of a Set game board from the sidebar and click&nbsp;</p>",
         unsafe_allow_html=True,
     )
-with col_button:
-    # Disable the button if no image is uploaded
-    find_sets_clicked = st.button(
-        "🔎 Find Sets", key="find_sets", disabled=("uploaded_file" not in st.session_state)
-    )
+    find_sets_clicked = st.button("🔎 Find Sets", key="find_sets", disabled=("uploaded_file" not in st.session_state))
 
 # =============================================================================
 #                              MODEL LOADING
@@ -299,13 +295,13 @@ else:
             st.error("⚠️ An error occurred during processing:")
             st.text(traceback.format_exc())
     
-    # Display images in a three-column layout with a vertically shifted arrow
+    # Display images in a three-column layout with the arrow lowered further
     left_col, mid_col, right_col = st.columns([3,1,3])
     with left_col:
         st.image(image, use_container_width=True, output_format="JPEG")
     with mid_col:
         st.markdown(
-            "<div style='text-align: center; font-size: 2rem; margin-top: 40px;'>➡️</div>",
+            "<div style='text-align: center; font-size: 2rem; margin-top: 80px;'>➡️</div>",
             unsafe_allow_html=True,
         )
     with right_col:
