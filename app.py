@@ -34,16 +34,28 @@ def local_css(file_name):
 
 local_css("styles.css")
 
-# Main header (positioned near the top with minimal vertical spacing)
+# Header: Title at the top
 st.markdown(
     """
     <div class="header-container">
         <h1>🎴 SET Game Detector</h1>
-        <p class="subtitle">Upload an image of a Set game board from the sidebar and click "Find Sets"</p>
     </div>
     """,
     unsafe_allow_html=True,
 )
+
+# Inline instruction with the button placed right after "click"
+col_text, col_button = st.columns([4,1])
+with col_text:
+    st.markdown(
+        "<p class='subtitle' style='display:inline;'>Upload an image of a Set game board from the sidebar and click&nbsp;</p>",
+        unsafe_allow_html=True,
+    )
+with col_button:
+    # Disable the button if no image is uploaded
+    find_sets_clicked = st.button(
+        "🔎 Find Sets", key="find_sets", disabled=("uploaded_file" not in st.session_state)
+    )
 
 # =============================================================================
 #                              MODEL LOADING
@@ -251,7 +263,7 @@ if my_upload is not None:
     st.session_state.uploaded_file = my_upload
 
 # =============================================================================
-#                           MAIN INTERFACE: Button & Image Display
+#                           MAIN INTERFACE: Image Display
 # =============================================================================
 
 if "uploaded_file" not in st.session_state:
@@ -269,32 +281,33 @@ else:
         st.error("Failed to load image. Please try another file.")
         st.exception(e)
     
-    # Top Row: Centered "Find Sets" Button in a 3-column layout
-    col1, col2, col3 = st.columns(3)
-    with col2:
-        if st.button("🔎 Find Sets", key="find_sets"):
-            try:
-                image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-                with st.spinner("⏳ Processing... Please wait."):
-                    sets_info, processed_image = classify_and_find_sets_from_array(
-                        image_cv,
-                        card_detection_model,
-                        shape_detection_model,
-                        fill_model,
-                        shape_model,
-                    )
-                st.session_state.processed_image = processed_image
-                st.session_state.sets_info = sets_info
-            except Exception as e:
-                st.error("⚠️ An error occurred during processing:")
-                st.text(traceback.format_exc())
+    # Process image when the inline "Find Sets" button is clicked
+    if find_sets_clicked:
+        try:
+            image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+            with st.spinner("⏳ Processing... Please wait."):
+                sets_info, processed_image = classify_and_find_sets_from_array(
+                    image_cv,
+                    card_detection_model,
+                    shape_detection_model,
+                    fill_model,
+                    shape_model,
+                )
+            st.session_state.processed_image = processed_image
+            st.session_state.sets_info = sets_info
+        except Exception as e:
+            st.error("⚠️ An error occurred during processing:")
+            st.text(traceback.format_exc())
     
-    # Bottom Row: Three-column layout for images with a centered arrow
+    # Display images in a three-column layout with a vertically shifted arrow
     left_col, mid_col, right_col = st.columns([3,1,3])
     with left_col:
         st.image(image, use_container_width=True, output_format="JPEG")
     with mid_col:
-        st.markdown("<div style='text-align: center; font-size: 2rem;'>➡️</div>", unsafe_allow_html=True)
+        st.markdown(
+            "<div style='text-align: center; font-size: 2rem; margin-top: 40px;'>➡️</div>",
+            unsafe_allow_html=True,
+        )
     with right_col:
         if "processed_image" in st.session_state:
             processed_image_rgb = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
