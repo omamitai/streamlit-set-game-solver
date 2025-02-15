@@ -53,6 +53,9 @@ col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     find_sets_clicked = st.button("🔎 Find Sets", key="find_sets")
 
+# Aesthetic Loading Message (Empty for now, will be updated later)
+loading_message = st.empty()
+
 # =============================================================================
 #                              MODEL LOADING
 # =============================================================================
@@ -81,6 +84,7 @@ def load_detection_models() -> Tuple[YOLO, YOLO]:
 
 shape_model, fill_model = load_classification_models()
 card_detection_model, shape_detection_model = load_detection_models()
+
 
 # =============================================================================
 #                    UTILITY & PROCESSING FUNCTIONS
@@ -241,7 +245,6 @@ def classify_and_find_sets_from_array(
     annotated_image = draw_sets_on_image(processed_image.copy(), sets_found)
     final_image = restore_original_orientation(annotated_image, was_rotated)
     return sets_found, final_image
-
 # =============================================================================
 #                           SIDEBAR: Centered File Uploader
 # =============================================================================
@@ -260,7 +263,7 @@ if my_upload is not None:
 # =============================================================================
 
 if "uploaded_file" not in st.session_state:
-    st.info("Please upload an image in the sidebar to begin processing.")
+    st.info("Please upload an image.")
 else:
     try:
         image = Image.open(st.session_state.uploaded_file)
@@ -274,25 +277,7 @@ else:
         st.error("Failed to load image. Please try another file.")
         st.exception(e)
 
-    # Process image when "Find Sets" button is clicked
-    if find_sets_clicked:
-        try:
-            image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-            with st.spinner("⏳ Processing... Please wait."):
-                sets_info, processed_image = classify_and_find_sets_from_array(
-                    image_cv,
-                    card_detection_model,
-                    shape_detection_model,
-                    fill_model,
-                    shape_model,
-                )
-            st.session_state.processed_image = processed_image
-            st.session_state.sets_info = sets_info
-        except Exception as e:
-            st.error("⚠️ An error occurred during processing:")
-            st.text(traceback.format_exc())
-
-    # Display images in a three-column layout with the arrow perfectly centered
+    # Display original image before processing
     left_col, mid_col, right_col = st.columns([3, 1, 3])
     with left_col:
         st.image(image, use_container_width=True, output_format="JPEG")
@@ -305,5 +290,27 @@ else:
         if "processed_image" in st.session_state:
             processed_image_rgb = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
             st.image(processed_image_rgb, use_container_width=True, output_format="JPEG")
-        else:
-            st.info("Processed image will appear here after clicking 'Find Sets'.")
+
+    # Process image when "Find Sets" button is clicked
+    if find_sets_clicked:
+        loading_message.markdown(
+            "<p class='loading-message'>Detecting sets...</p>",
+            unsafe_allow_html=True,
+        )
+        try:
+            image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+            sets_info, processed_image = classify_and_find_sets_from_array(
+                image_cv,
+                card_detection_model,
+                shape_detection_model,
+                fill_model,
+                shape_model,
+            )
+            st.session_state.processed_image = processed_image
+            st.session_state.sets_info = sets_info
+        except Exception as e:
+            st.error("⚠️ An error occurred during processing:")
+            st.text(traceback.format_exc())
+        finally:
+            loading_message.empty()  # Remove loading message when done
+
