@@ -44,47 +44,17 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Inline instruction with the button placed immediately after "click"
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    st.markdown(
-        """
-        <div style="text-align:center;">
-            <span class="subtitle">Upload an image of a Set game board from the sidebar and click&nbsp;</span>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
-    find_sets_clicked = st.button("🔎 Find Sets", key="find_sets", disabled=("uploaded_file" not in st.session_state))
+# Inline instruction with the "Find Sets" button right after "click"
+with st.container():
+    col1, col2 = st.columns([4, 1])
+    with col1:
+        st.markdown(
+            """<p class="subtitle">Upload an image of a Set game board from the sidebar and click</p>""",
+            unsafe_allow_html=True,
+        )
+    with col2:
+        find_sets_clicked = st.button("🔎 Find Sets", key="find_sets", disabled=("uploaded_file" not in st.session_state))
 
-# =============================================================================
-#                              MODEL LOADING
-# =============================================================================
-
-base_dir = Path("models")
-characteristics_path = base_dir / "Characteristics" / "11022025"
-shape_path = base_dir / "Shape" / "15052024"
-card_path = base_dir / "Card" / "16042024"
-
-@st.cache_resource(show_spinner=False)
-def load_classification_models() -> Tuple[tf.keras.Model, tf.keras.Model]:
-    shape_model = load_model(str(characteristics_path / "shape_model.keras"))
-    fill_model = load_model(str(characteristics_path / "fill_model.keras"))
-    return shape_model, fill_model
-
-@st.cache_resource(show_spinner=False)
-def load_detection_models() -> Tuple[YOLO, YOLO]:
-    shape_detection_model = YOLO(str(shape_path / "best.pt"))
-    shape_detection_model.conf = 0.5
-    card_detection_model = YOLO(str(card_path / "best.pt"))
-    card_detection_model.conf = 0.5
-    if torch.cuda.is_available():
-        card_detection_model.to("cuda")
-        shape_detection_model.to("cuda")
-    return card_detection_model, shape_detection_model
-
-shape_model, fill_model = load_classification_models()
-card_detection_model, shape_detection_model = load_detection_models()
 
 # =============================================================================
 #                    UTILITY & PROCESSING FUNCTIONS
@@ -296,13 +266,13 @@ else:
             st.error("⚠️ An error occurred during processing:")
             st.text(traceback.format_exc())
 
-    # Display images in a three-column layout with the arrow lowered further
+    # Display images in a three-column layout with the arrow lowered even more
     left_col, mid_col, right_col = st.columns([3, 1, 3])
     with left_col:
         st.image(image, use_container_width=True, output_format="JPEG")
     with mid_col:
         st.markdown(
-            "<div style='text-align: center; font-size: 2rem; margin-top: 100px;'>➡️</div>",
+            "<div style='text-align: center; font-size: 2rem; margin-top: 140px;'>➡️</div>",
             unsafe_allow_html=True,
         )
     with right_col:
@@ -311,3 +281,4 @@ else:
             st.image(processed_image_rgb, use_container_width=True, output_format="JPEG")
         else:
             st.info("Processed image will appear here after clicking 'Find Sets'.")
+
