@@ -44,16 +44,47 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Inline instruction with the "Find Sets" button right after "click"
-with st.container():
-    col1, col2 = st.columns([4, 1])
-    with col1:
-        st.markdown(
-            """<p class="subtitle">Upload an image of a Set game board from the sidebar and click</p>""",
-            unsafe_allow_html=True,
-        )
-    with col2:
-        find_sets_clicked = st.button("🔎 Find Sets", key="find_sets")
+# Inline instruction with "Find Sets" button immediately after "click"
+st.markdown(
+    """
+    <div style="display: flex; align-items: center; gap: 5px;">
+        <span class="subtitle">Upload an image of a Set game board from the sidebar and click</span>
+    """,
+    unsafe_allow_html=True,
+)
+
+find_sets_clicked = st.button("🔎 Find Sets", key="find_sets")
+
+st.markdown("</div>", unsafe_allow_html=True)
+
+# =============================================================================
+#                              MODEL LOADING
+# =============================================================================
+
+base_dir = Path("models")
+characteristics_path = base_dir / "Characteristics" / "11022025"
+shape_path = base_dir / "Shape" / "15052024"
+card_path = base_dir / "Card" / "16042024"
+
+@st.cache_resource(show_spinner=False)
+def load_classification_models() -> Tuple[tf.keras.Model, tf.keras.Model]:
+    shape_model = load_model(str(characteristics_path / "shape_model.keras"))
+    fill_model = load_model(str(characteristics_path / "fill_model.keras"))
+    return shape_model, fill_model
+
+@st.cache_resource(show_spinner=False)
+def load_detection_models() -> Tuple[YOLO, YOLO]:
+    shape_detection_model = YOLO(str(shape_path / "best.pt"))
+    card_detection_model = YOLO(str(card_path / "best.pt"))
+
+    if torch.cuda.is_available():
+        card_detection_model.to("cuda")
+        shape_detection_model.to("cuda")
+
+    return card_detection_model, shape_detection_model
+
+shape_model, fill_model = load_classification_models()
+card_detection_model, shape_detection_model = load_detection_models()
 
 
 # =============================================================================
@@ -281,4 +312,3 @@ else:
             st.image(processed_image_rgb, use_container_width=True, output_format="JPEG")
         else:
             st.info("Processed image will appear here after clicking 'Find Sets'.")
-
