@@ -29,10 +29,47 @@ st.set_page_config(layout="wide", page_title="SET Game Detector")
 
 # Function to load external CSS from styles.css
 def local_css(file_name):
-    with open(file_name) as f:
-        st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    try:
+        with open(file_name) as f:
+            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
+    except Exception as e:
+        st.error("Could not load custom CSS.")
 
 local_css("styles.css")
+
+# Additional inline CSS for header and button aesthetics
+st.markdown(
+    """
+    <style>
+    .header-container {
+        text-align: center;
+        padding: 40px 0;
+        background: linear-gradient(135deg, #89f7fe, #66a6ff);
+        color: #fff;
+        border-radius: 10px;
+        margin-bottom: 30px;
+    }
+    .header-container h1 {
+        font-size: 3rem;
+        margin: 0;
+    }
+    .header-container .subtitle {
+        font-size: 1.2rem;
+    }
+    .sidebar-header {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    .loading-message {
+        font-size: 1.2rem;
+        color: #555;
+        text-align: center;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # =============================================================================
 #                           HEADER SECTION (Centered)
@@ -42,19 +79,19 @@ st.markdown(
     """
     <div class="header-container">
         <h1>🎴 SET Game Detector</h1>
-        <p class="subtitle">Upload an image of a Set game board from the sidebar and click "Find Sets"</p>
+        <p class="subtitle">Upload an image of a Set game board and click "Find Sets"</p>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-# Centered "Find Sets" Button
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    find_sets_clicked = st.button("🔎 Find Sets", key="find_sets")
+# Centered "Find Sets" Button in the sidebar for a cleaner look
+st.sidebar.markdown('<div class="sidebar-header">Upload Your Image</div>', unsafe_allow_html=True)
+my_upload = st.sidebar.file_uploader("", type=["png", "jpg", "jpeg"])
+if my_upload is not None:
+    st.session_state.uploaded_file = my_upload
 
-# Aesthetic Loading Message (Empty for now, will be updated later)
-loading_message = st.empty()
+find_sets_clicked = st.sidebar.button("🔎 Find Sets", key="find_sets")
 
 # =============================================================================
 #                              MODEL LOADING
@@ -84,7 +121,6 @@ def load_detection_models() -> Tuple[YOLO, YOLO]:
 
 shape_model, fill_model = load_classification_models()
 card_detection_model, shape_detection_model = load_detection_models()
-
 
 # =============================================================================
 #                    UTILITY & PROCESSING FUNCTIONS
@@ -183,7 +219,7 @@ def find_sets(card_df: pd.DataFrame) -> List[dict]:
             })
     return sets_found
 
-def detect_cards_from_image(board_image: np.ndarray, detector: YOLO) -> List[Tuple[np.ndarray, List[int]]]:
+def detect_cards_from_image(board_image: np.ndarray, detector: YOLO) -> List[tuple]:
     card_results = detector(board_image)
     card_boxes = card_results[0].boxes.xyxy.cpu().numpy().astype(int)
     return [
@@ -238,36 +274,24 @@ def classify_and_find_sets_from_array(
     shape_detector: YOLO,
     fill_model: tf.keras.Model,
     shape_model: tf.keras.Model
-) -> Tuple[List[dict], np.ndarray]:
+) -> tuple:
     processed_image, was_rotated = check_and_rotate_input_image(board_image, card_detector)
     card_df = classify_cards_from_board_image(processed_image, card_detector, shape_detector, fill_model, shape_model)
     sets_found = find_sets(card_df)
     annotated_image = draw_sets_on_image(processed_image.copy(), sets_found)
     final_image = restore_original_orientation(annotated_image, was_rotated)
     return sets_found, final_image
-# =============================================================================
-#                           SIDEBAR: Centered File Uploader
-# =============================================================================
-
-st.sidebar.markdown(
-    """<div class="sidebar-header">Upload Your Image</div>""",
-    unsafe_allow_html=True,
-)
-my_upload = st.sidebar.file_uploader("", type=["png", "jpg", "jpeg"])
-
-if my_upload is not None:
-    st.session_state.uploaded_file = my_upload
 
 # =============================================================================
-#                           MAIN INTERFACE: Image Display
+#                           IMAGE PROCESSING & DISPLAY
 # =============================================================================
 
 if "uploaded_file" not in st.session_state:
-    st.info("Please upload an image.")
+    st.info("Please upload an image from the sidebar.")
 else:
     try:
         image = Image.open(st.session_state.uploaded_file)
-        max_width = 400  # Ensure images are compact
+        max_width = 400  # Limit image size for display purposes
         if image.width > max_width:
             ratio = max_width / image.width
             new_height = int(image.height * ratio)
@@ -276,10 +300,30 @@ else:
     except Exception as e:
         st.error("Failed to load image. Please try another file.")
         st.exception(e)
+        st.stop()
 
-    # Display original image before processing
+    # Process the image when the button is clicked; using a spinner for better UX.
+    if find_sets_clicked:
+        with st.spinner("Detecting sets..."):
+            try:
+                image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
+                sets_info, processed_image = classify_and_find_sets_from_array(
+                    image_cv,
+                    card_detection_model,
+                    shape_detection_model,
+                    fill_model,
+                    shape_model,
+                )
+                st.session_state.processed_image = processed_image
+                st.session_state.sets_info = sets_info
+            except Exception as e:
+                st.error("⚠️ An error occurred during processing:")
+                st.text(traceback.format_exc())
+
+    # Display original and processed images side by side
     left_col, mid_col, right_col = st.columns([3, 1, 3])
     with left_col:
+        st.subheader("Original Image")
         st.image(image, use_container_width=True, output_format="JPEG")
     with mid_col:
         st.markdown(
@@ -287,30 +331,9 @@ else:
             unsafe_allow_html=True,
         )
     with right_col:
+        st.subheader("Detected Sets")
         if "processed_image" in st.session_state:
             processed_image_rgb = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
             st.image(processed_image_rgb, use_container_width=True, output_format="JPEG")
-
-    # Process image when "Find Sets" button is clicked
-    if find_sets_clicked:
-        loading_message.markdown(
-            "<p class='loading-message'>Detecting sets...</p>",
-            unsafe_allow_html=True,
-        )
-        try:
-            image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-            sets_info, processed_image = classify_and_find_sets_from_array(
-                image_cv,
-                card_detection_model,
-                shape_detection_model,
-                fill_model,
-                shape_model,
-            )
-            st.session_state.processed_image = processed_image
-            st.session_state.sets_info = sets_info
-        except Exception as e:
-            st.error("⚠️ An error occurred during processing:")
-            st.text(traceback.format_exc())
-        finally:
-            loading_message.empty()  # Remove loading message when done
-
+        else:
+            st.info("Processed image will appear here after detection.")
