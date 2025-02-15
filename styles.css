@@ -21,9 +21,9 @@ body {
 
 /* Subtitle */
 .subtitle {
-  display: inline;
   font-size: 1.25rem;
   color: #666;
+  display: inline;
 }
 
 /* Sidebar */
@@ -61,7 +61,7 @@ body {
 
 /* Images */
 img {
-  max-width: 400px;
+  max-width: 500px;
   border-radius: 10px;
   margin-top: 10px;
   display: block;
