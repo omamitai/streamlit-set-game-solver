@@ -21,7 +21,7 @@ body {
 
 /* Subtitle */
 .subtitle {
-  text-align: center;
+  display: inline;
   font-size: 1.25rem;
   color: #666;
 }
@@ -61,7 +61,7 @@ body {
 
 /* Images */
 img {
-  max-width: 500px;
+  max-width: 400px;
   border-radius: 10px;
   margin-top: 10px;
   display: block;
