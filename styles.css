@@ -18,10 +18,9 @@ body {
   margin: 0;
   padding: 0;
 }
-.header-container .subtitle {
+.subtitle {
   font-size: 1.25rem;
   color: #666;
-  margin-top: 5px;
 }
 
 /* Sidebar */
