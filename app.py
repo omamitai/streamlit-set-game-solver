@@ -34,28 +34,24 @@ def local_css(file_name):
 
 local_css("styles.css")
 
-# Header: Title at the top
+# =============================================================================
+#                           HEADER SECTION (Centered)
+# =============================================================================
+
 st.markdown(
     """
     <div class="header-container">
         <h1>🎴 SET Game Detector</h1>
+        <p class="subtitle">Upload an image of a Set game board from the sidebar and click "Find Sets"</p>
     </div>
     """,
     unsafe_allow_html=True,
 )
 
-# Inline instruction with "Find Sets" button immediately after "click"
-st.markdown(
-    """
-    <div style="display: flex; align-items: center; gap: 5px;">
-        <span class="subtitle">Upload an image of a Set game board from the sidebar and click</span>
-    """,
-    unsafe_allow_html=True,
-)
-
-find_sets_clicked = st.button("🔎 Find Sets", key="find_sets")
-
-st.markdown("</div>", unsafe_allow_html=True)
+# Centered "Find Sets" Button
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    find_sets_clicked = st.button("🔎 Find Sets", key="find_sets")
 
 # =============================================================================
 #                              MODEL LOADING
@@ -75,17 +71,16 @@ def load_classification_models() -> Tuple[tf.keras.Model, tf.keras.Model]:
 @st.cache_resource(show_spinner=False)
 def load_detection_models() -> Tuple[YOLO, YOLO]:
     shape_detection_model = YOLO(str(shape_path / "best.pt"))
+    shape_detection_model.conf = 0.5
     card_detection_model = YOLO(str(card_path / "best.pt"))
-
+    card_detection_model.conf = 0.5
     if torch.cuda.is_available():
         card_detection_model.to("cuda")
         shape_detection_model.to("cuda")
-
     return card_detection_model, shape_detection_model
 
 shape_model, fill_model = load_classification_models()
 card_detection_model, shape_detection_model = load_detection_models()
-
 
 # =============================================================================
 #                    UTILITY & PROCESSING FUNCTIONS
@@ -279,7 +274,7 @@ else:
         st.error("Failed to load image. Please try another file.")
         st.exception(e)
 
-    # Process image when the inline "Find Sets" button is clicked
+    # Process image when "Find Sets" button is clicked
     if find_sets_clicked:
         try:
             image_cv = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
@@ -297,7 +292,7 @@ else:
             st.error("⚠️ An error occurred during processing:")
             st.text(traceback.format_exc())
 
-    # Display images in a three-column layout with the arrow lowered even more
+    # Display images in a three-column layout with the arrow perfectly centered
     left_col, mid_col, right_col = st.columns([3, 1, 3])
     with left_col:
         st.image(image, use_container_width=True, output_format="JPEG")
