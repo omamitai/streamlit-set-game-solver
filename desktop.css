@@ -1,0 +1,23 @@
+/* Desktop layout styles */
+.desktop-arrow {
+    text-align: center;
+    font-size: 2rem;
+    margin-top: 100px;
+}
+
+/* Sidebar uploader only */
+.sidebar-uploader {
+    display: block;
+}
+
+/* Hide mobile uploader */
+.main-uploader {
+    display: none;
+}
+
+/* Center loader for desktop */
+.center-loader {
+    text-align: center;
+    font-size: 1.2rem;
+    margin: 20px 0;
+}
