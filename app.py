@@ -22,12 +22,23 @@ from pathlib import Path
 from typing import Tuple, List, Dict
 
 # =============================================================================
+#       INITIALIZE SESSION STATE (if not already set)
+# =============================================================================
+
+if "uploaded_file" not in st.session_state:
+    st.session_state.uploaded_file = None
+    st.session_state.original_image = None
+    st.session_state.processed_image = None
+    st.session_state.sets_info = None
+    st.session_state.is_mobile = False
+
+# =============================================================================
 #                           CONFIGURATION & STYLE
 # =============================================================================
 
 st.set_page_config(layout="wide", page_title="SET Game Detector")
 
-# Load custom CSS (styles.css can contain your global styling)
+# Load custom CSS (from an external file) and add extra inline CSS for arrow, loader, and layout adjustments.
 def local_css(file_name):
     try:
         with open(file_name) as f:
@@ -37,7 +48,6 @@ def local_css(file_name):
 
 local_css("styles.css")
 
-# Additional inline CSS for arrow, loader, and mobile adjustments.
 st.markdown(
     """
     <style>
@@ -52,7 +62,7 @@ st.markdown(
         display: none;
         text-align: center;
         font-size: 2rem;
-        margin-bottom: 20px;
+        margin: 20px 0;
     }
     /* Loader styling for mobile */
     .center-loader {
@@ -67,7 +77,7 @@ st.markdown(
         .mobile-arrow {
             display: block;
         }
-        /* Mobile uploader is always visible on main page */
+        /* Mobile uploader styling */
         .mobile-uploader {
             display: block;
             margin: 20px auto;
@@ -97,16 +107,13 @@ st.markdown(
 #                FILE UPLOADER & DEVICE VERSION DETECTION
 # =============================================================================
 
-# Desktop uploader in sidebar.
-st.sidebar.markdown('<div class="sidebar-header">Upload Your Image</div>', unsafe_allow_html=True)
+# Desktop: Only use sidebar uploader.
 uploaded_file_side = st.sidebar.file_uploader("", type=["png", "jpg", "jpeg"], key="sidebar_uploader")
 
-# Mobile uploader on main page.
-if "uploaded_file" not in st.session_state:
-    st.markdown('<div class="mobile-uploader"><strong>Upload Your Image</strong></div>', unsafe_allow_html=True)
+# Mobile: Use main-page uploader.
 mobile_file = st.file_uploader("", type=["png", "jpg", "jpeg"], key="main_uploader")
 
-# Decide which uploader is being used.
+# Update session state based on which uploader returned a file.
 if uploaded_file_side is not None:
     st.session_state.uploaded_file = uploaded_file_side
     st.session_state.is_mobile = False
@@ -126,11 +133,12 @@ elif mobile_file is not None:
     except Exception as e:
         st.error("Failed to load image. Please try another file.")
 
-# For desktop, show a Find Sets button.
-is_mobile = st.session_state.get("is_mobile", False)
-find_sets_clicked = False
-if not is_mobile:
+# For desktop, instruct the user to click the Find Sets button.
+if not st.session_state.is_mobile:
+    st.sidebar.info("After uploading, please click the **Find Sets** button to start processing.")
     find_sets_clicked = st.sidebar.button("🔎 Find Sets", key="find_sets")
+else:
+    find_sets_clicked = True  # Mobile: process automatically
 
 # =============================================================================
 #                              MODEL LOADING
@@ -325,8 +333,8 @@ def classify_and_find_sets_from_array(
 #                           IMAGE PROCESSING & DISPLAY
 # =============================================================================
 
-if "uploaded_file" not in st.session_state:
-    st.info("Please upload an image from the sidebar or above.")
+if st.session_state.uploaded_file is None:
+    st.info("Please upload an image from the sidebar (desktop) or above (mobile).")
 else:
     try:
         original_image = st.session_state.original_image.copy()
@@ -335,22 +343,19 @@ else:
         st.exception(e)
         st.stop()
 
-    # Determine processing trigger:
-    # For mobile, process automatically upon upload.
-    # For desktop, process only if the "Find Sets" button is clicked.
+    # Decide when to run processing:
+    # Desktop: only run if the Find Sets button is clicked.
+    # Mobile: automatically run processing once an image is uploaded.
     run_processing = False
-    if st.session_state.get("is_mobile", False):
+    if st.session_state.is_mobile:
         run_processing = True
     else:
         run_processing = find_sets_clicked
 
     if run_processing:
-        # For mobile, show a centered loader.
-        if st.session_state.get("is_mobile", False):
-            loader_placeholder = st.empty()
-            loader_placeholder.markdown('<div class="center-loader">Detecting sets...</div>', unsafe_allow_html=True)
-        else:
-            st.sidebar.markdown("<p class='loading-message'>Detecting sets...</p>", unsafe_allow_html=True)
+        # Show a loader in the main page (centered) for mobile; for desktop, also in main page.
+        loader_placeholder = st.empty()
+        loader_placeholder.markdown('<div class="center-loader">Detecting sets...</div>', unsafe_allow_html=True)
         try:
             image_cv = cv2.cvtColor(np.array(original_image), cv2.COLOR_RGB2BGR)
             sets_info, processed_image = classify_and_find_sets_from_array(
@@ -362,48 +367,36 @@ else:
             )
             st.session_state.processed_image = processed_image
             st.session_state.sets_info = sets_info
-            # Feedback messages:
+            # Provide feedback messages:
             cards = detect_cards_from_image(image_cv, card_detection_model)
             if not cards:
                 msg = "No cards detected. Please verify that this is a valid Set game board."
-                if st.session_state.get("is_mobile", False):
-                    st.error(msg)
-                else:
-                    st.sidebar.warning(msg)
+                st.error(msg)
             elif not sets_info:
                 msg = "Cards detected but no valid sets found."
-                if st.session_state.get("is_mobile", False):
-                    st.warning(msg)
-                else:
-                    st.sidebar.warning(msg)
+                st.warning(msg)
             else:
                 msg = "Sets detected!"
-                if st.session_state.get("is_mobile", False):
-                    st.success(msg)
-                else:
-                    st.sidebar.success(msg)
+                st.success(msg)
         except Exception as e:
             st.error("⚠️ An error occurred during processing:")
             st.text(traceback.format_exc())
         finally:
-            if st.session_state.get("is_mobile", False):
-                loader_placeholder.empty()
-            else:
-                st.sidebar.empty()
+            loader_placeholder.empty()
 
-    # Layout: For desktop, use two columns; for mobile, they stack.
+    # Layout: For desktop, use two columns; on mobile they stack.
     left_col, right_col = st.columns(2)
     with left_col:
         st.subheader("Original Image")
         st.image(original_image, width=400, output_format="JPEG")
-    # Arrow: on mobile, show above detected sets.
-    if st.session_state.get("is_mobile", False):
+    # Arrow placement: mobile arrow appears immediately after the original image; desktop arrow appears between columns.
+    if st.session_state.is_mobile:
         st.markdown('<div class="mobile-arrow">⬇️</div>', unsafe_allow_html=True)
     else:
         st.markdown('<div class="desktop-arrow">➡️</div>', unsafe_allow_html=True)
     with right_col:
         st.subheader("Detected Sets")
-        if "processed_image" in st.session_state and st.session_state.processed_image is not None:
+        if st.session_state.processed_image is not None:
             processed_image_rgb = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
             st.image(processed_image_rgb, width=400, output_format="JPEG")
         else:
