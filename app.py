@@ -22,6 +22,12 @@ from itertools import combinations
 from pathlib import Path
 from typing import Tuple, List, Dict
 
+# -------------------------------------------------------------------------
+# Workaround for TorchScript registration error:
+# Disable JIT profiling optimizations (this can help with unregistered classes)
+torch._C._jit_set_profiling_executor(False)
+torch._C._jit_set_profiling_mode(False)
+
 # =============================================================================
 # Device Detection via Query Parameter (reloads page once)
 # =============================================================================
@@ -54,7 +60,6 @@ if "uploaded_file" not in st.session_state:
 # =============================================================================
 st.set_page_config(layout="wide", page_title="SET Game Detector")
 
-# Global CSS (provided) and device-specific CSS merged below.
 st.markdown(
     """
     <style>
@@ -134,7 +139,7 @@ st.markdown(
       margin-left: auto;
       margin-right: auto;
     }
-
+    
     /* Device-specific CSS */
     /* Desktop: only show the sidebar uploader */
     @media screen and (min-width: 769px) {
