@@ -38,35 +38,33 @@ if "uploaded_file" not in st.session_state:
 
 st.set_page_config(layout="wide", page_title="SET Game Detector")
 
-# Load external CSS and add inline CSS for arrow, loader, and layout adjustments.
-def local_css(file_name):
-    try:
-        with open(file_name) as f:
-            st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
-    except Exception as e:
-        st.error("Could not load custom CSS.")
-
-local_css("styles.css")
-
+# The following CSS is split into two sections: one for desktop and one for mobile.
 st.markdown(
     """
     <style>
-    /* Arrow styling for desktop and mobile */
-    .desktop-arrow {
-        text-align: center;
-        font-size: 2rem;
-        margin-top: 140px;
+    /* Desktop CSS: applies when screen width is 769px or wider */
+    @media screen and (min-width: 769px) {
+        /* Only the sidebar uploader is shown on desktop */
+        .desktop-uploader { display: block; }
+        .mobile-uploader { display: none; }
+        /* Arrow for desktop: right-pointing arrow with extra top margin */
+        .arrow {
+            text-align: center;
+            font-size: 2rem;
+            margin-top: 140px;
+        }
     }
-    .mobile-arrow {
-        text-align: center;
-        font-size: 2rem;
-        margin: 20px 0;
-    }
-    /* Centered loader for mobile */
-    .center-loader {
-        text-align: center;
-        font-size: 1.2rem;
-        margin: 20px 0;
+    /* Mobile CSS: applies when screen width is 768px or less */
+    @media screen and (max-width: 768px) {
+        /* Only the main-page uploader is shown on mobile */
+        .desktop-uploader { display: none; }
+        .mobile-uploader { display: block; text-align: center; margin: 20px auto; }
+        /* Arrow for mobile: down-pointing arrow with vertical margin */
+        .arrow {
+            text-align: center;
+            font-size: 2rem;
+            margin: 20px 0;
+        }
     }
     </style>
     """,
@@ -79,9 +77,9 @@ st.markdown(
 
 st.markdown(
     """
-    <div class="header-container">
+    <div style="text-align:center;">
         <h1>🎴 SET Game Detector</h1>
-        <p class="subtitle">Upload an image of a Set game board and detect valid sets.</p>
+        <p>Upload an image of a Set game board and detect valid sets.</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -90,7 +88,7 @@ st.markdown(
 # =============================================================================
 #                FILE UPLOADER & DEVICE VERSION DETECTION
 # =============================================================================
-# For desktop: only use the sidebar uploader.
+# Desktop: only the sidebar uploader is shown.
 uploaded_file_side = st.sidebar.file_uploader("Upload your image", type=["png", "jpg", "jpeg"], key="sidebar_uploader")
 if uploaded_file_side is not None:
     st.session_state.uploaded_file = uploaded_file_side
@@ -102,7 +100,7 @@ if uploaded_file_side is not None:
     except Exception as e:
         st.error("Failed to load image. Please try another file.")
 
-# For mobile: only use the main-page uploader.
+# Mobile: only the main-page uploader is shown.
 uploaded_file_main = st.file_uploader("Upload your image", type=["png", "jpg", "jpeg"], key="main_uploader")
 if uploaded_file_main is not None and st.session_state.uploaded_file is None:
     st.session_state.uploaded_file = uploaded_file_main
@@ -119,7 +117,7 @@ if not st.session_state.is_mobile:
     st.sidebar.info("After uploading, click **Find Sets** to start processing.")
     find_sets_clicked = st.sidebar.button("🔎 Find Sets", key="find_sets")
 else:
-    # For mobile, processing starts automatically.
+    # For mobile, processing starts automatically once an image is uploaded.
     find_sets_clicked = True
 
 # =============================================================================
@@ -326,9 +324,9 @@ else:
         st.stop()
 
     # Decide when to run processing:
-    # Desktop: run only when Find Sets is clicked.
+    # Desktop: run only when the Find Sets button is clicked.
     # Mobile: run automatically.
-    run_processing = st.session_state.is_mobile or st.sidebar.button("🔎 Find Sets", key="find_sets")  # For desktop, button appears; mobile: always true.
+    run_processing = st.session_state.is_mobile or find_sets_clicked
     
     if run_processing:
         # Show a loader in the main page for both versions.
@@ -359,12 +357,12 @@ else:
         finally:
             loader_placeholder.empty()
 
-    # Layout: use different layouts for desktop and mobile.
+    # Layout:
     if st.session_state.is_mobile:
-        # Mobile: single column layout.
+        # Mobile: vertical (top-to-bottom) layout.
         st.subheader("Original Image")
         st.image(original_image, width=400, output_format="JPEG")
-        st.markdown('<div class="mobile-arrow">⬇️</div>', unsafe_allow_html=True)
+        st.markdown('<div class="arrow">⬇️</div>', unsafe_allow_html=True)
         st.subheader("Detected Sets")
         if st.session_state.processed_image is not None:
             processed_image_rgb = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
@@ -372,13 +370,13 @@ else:
         else:
             st.info("Processed image will appear here after detection.")
     else:
-        # Desktop: two-column layout with an arrow in the middle.
+        # Desktop: horizontal (left-to-right) layout using three columns.
         col1, col2, col3 = st.columns([3, 1, 3])
         with col1:
             st.subheader("Original Image")
             st.image(original_image, width=400, output_format="JPEG")
         with col2:
-            st.markdown("<div style='text-align:center;font-size:2rem;'>➡️</div>", unsafe_allow_html=True)
+            st.markdown('<div class="arrow">➡️</div>', unsafe_allow_html=True)
         with col3:
             st.subheader("Detected Sets")
             if st.session_state.processed_image is not None:
