@@ -24,7 +24,6 @@ from typing import Tuple, List, Dict
 # =============================================================================
 #       INITIALIZE SESSION STATE (if not already set)
 # =============================================================================
-
 if "uploaded_file" not in st.session_state:
     st.session_state.uploaded_file = None
     st.session_state.original_image = None
@@ -35,37 +34,28 @@ if "uploaded_file" not in st.session_state:
 # =============================================================================
 #                           CONFIGURATION & STYLE
 # =============================================================================
-
 st.set_page_config(layout="wide", page_title="SET Game Detector")
 
-# The following CSS is split into two sections: one for desktop and one for mobile.
+# CSS: Desktop will show only the sidebar uploader and mobile only the main uploader.
 st.markdown(
     """
     <style>
-    /* Desktop CSS: applies when screen width is 769px or wider */
+    /* Desktop CSS: only show elements with class .desktop-uploader */
     @media screen and (min-width: 769px) {
-        /* Only the sidebar uploader is shown on desktop */
         .desktop-uploader { display: block; }
         .mobile-uploader { display: none; }
-        /* Arrow for desktop: right-pointing arrow with extra top margin */
-        .arrow {
-            text-align: center;
-            font-size: 2rem;
-            margin-top: 140px;
-        }
+        /* Arrow for desktop: right-pointing */
+        .arrow { text-align: center; font-size: 2rem; margin-top: 140px; }
     }
-    /* Mobile CSS: applies when screen width is 768px or less */
+    /* Mobile CSS: only show elements with class .mobile-uploader */
     @media screen and (max-width: 768px) {
-        /* Only the main-page uploader is shown on mobile */
         .desktop-uploader { display: none; }
         .mobile-uploader { display: block; text-align: center; margin: 20px auto; }
-        /* Arrow for mobile: down-pointing arrow with vertical margin */
-        .arrow {
-            text-align: center;
-            font-size: 2rem;
-            margin: 20px 0;
-        }
+        /* Arrow for mobile: down-pointing */
+        .arrow { text-align: center; font-size: 2rem; margin: 20px 0; }
     }
+    /* Loader styling remains the same for both */
+    .center-loader { text-align: center; font-size: 1.2rem; margin: 20px 0; }
     </style>
     """,
     unsafe_allow_html=True,
@@ -74,7 +64,6 @@ st.markdown(
 # =============================================================================
 #                           HEADER SECTION
 # =============================================================================
-
 st.markdown(
     """
     <div style="text-align:center;">
@@ -88,20 +77,26 @@ st.markdown(
 # =============================================================================
 #                FILE UPLOADER & DEVICE VERSION DETECTION
 # =============================================================================
-# Desktop: only the sidebar uploader is shown.
-uploaded_file_side = st.sidebar.file_uploader("Upload your image", type=["png", "jpg", "jpeg"], key="sidebar_uploader")
-if uploaded_file_side is not None:
-    st.session_state.uploaded_file = uploaded_file_side
-    st.session_state.is_mobile = False
-    try:
-        st.session_state.original_image = Image.open(uploaded_file_side)
-        st.session_state.processed_image = None
-        st.session_state.sets_info = None
-    except Exception as e:
-        st.error("Failed to load image. Please try another file.")
+# Desktop: Sidebar uploader with a larger headline.
+with st.sidebar:
+    st.markdown('<div class="desktop-uploader">', unsafe_allow_html=True)
+    st.markdown("<h2 style='font-size:24px;'>Upload Your Image</h2>", unsafe_allow_html=True)
+    uploaded_file_side = st.file_uploader("", type=["png", "jpg", "jpeg"], key="sidebar_uploader")
+    st.markdown('</div>', unsafe_allow_html=True)
+    if uploaded_file_side is not None:
+        st.session_state.uploaded_file = uploaded_file_side
+        st.session_state.is_mobile = False
+        try:
+            st.session_state.original_image = Image.open(uploaded_file_side)
+            st.session_state.processed_image = None
+            st.session_state.sets_info = None
+        except Exception as e:
+            st.error("Failed to load image. Please try another file.")
 
-# Mobile: only the main-page uploader is shown.
-uploaded_file_main = st.file_uploader("Upload your image", type=["png", "jpg", "jpeg"], key="main_uploader")
+# Mobile: Main-page uploader.
+st.markdown('<div class="mobile-uploader">', unsafe_allow_html=True)
+uploaded_file_main = st.file_uploader("Upload Your Image", type=["png", "jpg", "jpeg"], key="main_uploader")
+st.markdown('</div>', unsafe_allow_html=True)
 if uploaded_file_main is not None and st.session_state.uploaded_file is None:
     st.session_state.uploaded_file = uploaded_file_main
     st.session_state.is_mobile = True
@@ -112,18 +107,19 @@ if uploaded_file_main is not None and st.session_state.uploaded_file is None:
     except Exception as e:
         st.error("Failed to load image. Please try another file.")
 
-# For desktop, instruct the user to click the Find Sets button.
+# Processing trigger:
+# Desktop: instruct the user to click the Find Sets button.
 if not st.session_state.is_mobile:
-    st.sidebar.info("After uploading, click **Find Sets** to start processing.")
-    find_sets_clicked = st.sidebar.button("🔎 Find Sets", key="find_sets")
+    with st.sidebar:
+        st.info("After uploading, click **Find Sets** to start processing.")
+        find_sets_clicked = st.button("🔎 Find Sets", key="find_sets")
 else:
-    # For mobile, processing starts automatically once an image is uploaded.
+    # Mobile: processing starts automatically.
     find_sets_clicked = True
 
 # =============================================================================
 #                              MODEL LOADING
 # =============================================================================
-
 base_dir = Path("models")
 characteristics_path = base_dir / "Characteristics" / "11022025"
 shape_path = base_dir / "Shape" / "15052024"
@@ -152,7 +148,6 @@ card_detection_model, shape_detection_model = load_detection_models()
 # =============================================================================
 #                    UTILITY & PROCESSING FUNCTIONS
 # =============================================================================
-
 def check_and_rotate_input_image(board_image: np.ndarray, detector: YOLO) -> Tuple[np.ndarray, bool]:
     card_results = detector(board_image)
     card_boxes = card_results[0].boxes.xyxy.cpu().numpy().astype(int)
@@ -310,30 +305,35 @@ def classify_and_find_sets_from_array(
     return sets_found, final_image
 
 # =============================================================================
-#                           IMAGE PROCESSING & DISPLAY
+#            DISPLAY: ORIGINAL IMAGE & DETECTED SETS (Persistent Original)
 # =============================================================================
-
 if st.session_state.uploaded_file is None:
     st.info("Please upload an image using the appropriate uploader.")
 else:
-    try:
-        original_image = st.session_state.original_image.copy()
-    except Exception as e:
-        st.error("Failed to load image. Please try another file.")
-        st.exception(e)
-        st.stop()
+    # Create a container to always show the original image.
+    if st.session_state.is_mobile:
+        # Mobile: vertical layout.
+        st.subheader("Original Image")
+        st.image(st.session_state.original_image, width=400, output_format="JPEG")
+        detected_placeholder = st.empty()
+    else:
+        # Desktop: two-column layout. Left column shows the original image.
+        col1, col2 = st.columns(2)
+        with col1:
+            st.subheader("Original Image")
+            st.image(st.session_state.original_image, width=400, output_format="JPEG")
+        detected_placeholder = col2.empty()
 
-    # Decide when to run processing:
-    # Desktop: run only when the Find Sets button is clicked.
-    # Mobile: run automatically.
+    # =============================================================================
+    #                           IMAGE PROCESSING
+    # =============================================================================
+    # Trigger processing (desktop: via button; mobile: automatically)
     run_processing = st.session_state.is_mobile or find_sets_clicked
-    
     if run_processing:
-        # Show a loader in the main page for both versions.
         loader_placeholder = st.empty()
         loader_placeholder.markdown('<div class="center-loader">Detecting sets...</div>', unsafe_allow_html=True)
         try:
-            image_cv = cv2.cvtColor(np.array(original_image), cv2.COLOR_RGB2BGR)
+            image_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_RGB2BGR)
             sets_info, processed_image = classify_and_find_sets_from_array(
                 image_cv,
                 card_detection_model,
@@ -357,30 +357,28 @@ else:
         finally:
             loader_placeholder.empty()
 
-    # Layout:
+    # =============================================================================
+    #            DISPLAY: DETECTED SETS WITH ARROW (Layout Adjusts Per Device)
+    # =============================================================================
     if st.session_state.is_mobile:
-        # Mobile: vertical (top-to-bottom) layout.
-        st.subheader("Original Image")
-        st.image(original_image, width=400, output_format="JPEG")
         st.markdown('<div class="arrow">⬇️</div>', unsafe_allow_html=True)
         st.subheader("Detected Sets")
         if st.session_state.processed_image is not None:
-            processed_image_rgb = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
-            st.image(processed_image_rgb, width=400, output_format="JPEG")
+            detected_placeholder.image(
+                cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB),
+                width=400, output_format="JPEG"
+            )
         else:
-            st.info("Processed image will appear here after detection.")
+            detected_placeholder.info("Processed image will appear here after detection.")
     else:
-        # Desktop: horizontal (left-to-right) layout using three columns.
-        col1, col2, col3 = st.columns([3, 1, 3])
-        with col1:
-            st.subheader("Original Image")
-            st.image(original_image, width=400, output_format="JPEG")
-        with col2:
-            st.markdown('<div class="arrow">➡️</div>', unsafe_allow_html=True)
-        with col3:
+        # Desktop: already used two columns; update the detected sets column.
+        st.markdown('<div class="arrow" style="text-align:center;">➡️</div>', unsafe_allow_html=True)
+        with detected_placeholder:
             st.subheader("Detected Sets")
             if st.session_state.processed_image is not None:
-                processed_image_rgb = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
-                st.image(processed_image_rgb, width=400, output_format="JPEG")
+                st.image(
+                    cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB),
+                    width=400, output_format="JPEG"
+                )
             else:
                 st.info("Processed image will appear here after detection.")
