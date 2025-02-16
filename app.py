@@ -22,11 +22,6 @@ from itertools import combinations
 from pathlib import Path
 from typing import Tuple, List, Dict
 
-# -------------------------------------------------------------------------
-# Workaround for TorchScript registration error:
-# Disable JIT profiling optimizations (this can help with unregistered classes)
-torch._C._jit_set_profiling_executor(False)
-torch._C._jit_set_profiling_mode(False)
 
 # =============================================================================
 # Device Detection via Query Parameter (reloads page once)
