@@ -262,14 +262,8 @@ if "uploaded_file" not in st.session_state:
     st.info("Please upload an image from the sidebar.")
 else:
     try:
-        # Always display the original image from session state
+        # Use the original image without resizing its pixel data
         original_image = st.session_state.original_image.copy()
-        max_width = 400  # Limit image size for display purposes
-        if original_image.width > max_width:
-            ratio = max_width / original_image.width
-            new_height = int(original_image.height * ratio)
-            resample_method = getattr(Image, "Resampling", Image).LANCZOS
-            original_image = original_image.resize((max_width, new_height), resample_method)
     except Exception as e:
         st.error("Failed to load image. Please try another file.")
         st.exception(e)
@@ -298,7 +292,8 @@ else:
     left_col, mid_col, right_col = st.columns([3, 1, 3])
     with left_col:
         st.subheader("Original Image")
-        st.image(original_image, use_container_width=True, output_format="JPEG")
+        # Display the original image at a scaled-down width (without modifying the underlying resolution)
+        st.image(original_image, width=400, output_format="JPEG")
     with mid_col:
         st.markdown(
             "<div style='text-align: center; font-size: 2rem; margin-top: 140px;'>➡️</div>",
@@ -308,6 +303,6 @@ else:
         st.subheader("Detected Sets")
         if "processed_image" in st.session_state:
             processed_image_rgb = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
-            st.image(processed_image_rgb, use_container_width=True, output_format="JPEG")
+            st.image(processed_image_rgb, width=400, output_format="JPEG")
         else:
             st.info("Processed image will appear here after detection.")
