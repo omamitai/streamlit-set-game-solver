@@ -38,7 +38,7 @@ if "uploaded_file" not in st.session_state:
 
 st.set_page_config(layout="wide", page_title="SET Game Detector")
 
-# Load custom CSS (from an external file) and add extra inline CSS for arrow, loader, and layout adjustments.
+# Load external CSS and add inline CSS for arrow, loader, and layout adjustments.
 def local_css(file_name):
     try:
         with open(file_name) as f:
@@ -51,38 +51,22 @@ local_css("styles.css")
 st.markdown(
     """
     <style>
-    /* Arrow styling */
+    /* Arrow styling for desktop and mobile */
     .desktop-arrow {
-        display: block;
         text-align: center;
         font-size: 2rem;
         margin-top: 140px;
     }
     .mobile-arrow {
-        display: none;
         text-align: center;
         font-size: 2rem;
         margin: 20px 0;
     }
-    /* Loader styling for mobile */
+    /* Centered loader for mobile */
     .center-loader {
         text-align: center;
         font-size: 1.2rem;
         margin: 20px 0;
-    }
-    @media screen and (max-width: 768px) {
-        .desktop-arrow {
-            display: none;
-        }
-        .mobile-arrow {
-            display: block;
-        }
-        /* Mobile uploader styling */
-        .mobile-uploader {
-            display: block;
-            margin: 20px auto;
-            text-align: center;
-        }
     }
     </style>
     """,
@@ -106,14 +90,8 @@ st.markdown(
 # =============================================================================
 #                FILE UPLOADER & DEVICE VERSION DETECTION
 # =============================================================================
-
-# Desktop: Only use sidebar uploader.
-uploaded_file_side = st.sidebar.file_uploader("", type=["png", "jpg", "jpeg"], key="sidebar_uploader")
-
-# Mobile: Use main-page uploader.
-mobile_file = st.file_uploader("", type=["png", "jpg", "jpeg"], key="main_uploader")
-
-# Update session state based on which uploader returned a file.
+# For desktop: only use the sidebar uploader.
+uploaded_file_side = st.sidebar.file_uploader("Upload your image", type=["png", "jpg", "jpeg"], key="sidebar_uploader")
 if uploaded_file_side is not None:
     st.session_state.uploaded_file = uploaded_file_side
     st.session_state.is_mobile = False
@@ -123,11 +101,14 @@ if uploaded_file_side is not None:
         st.session_state.sets_info = None
     except Exception as e:
         st.error("Failed to load image. Please try another file.")
-elif mobile_file is not None:
-    st.session_state.uploaded_file = mobile_file
+
+# For mobile: only use the main-page uploader.
+uploaded_file_main = st.file_uploader("Upload your image", type=["png", "jpg", "jpeg"], key="main_uploader")
+if uploaded_file_main is not None and st.session_state.uploaded_file is None:
+    st.session_state.uploaded_file = uploaded_file_main
     st.session_state.is_mobile = True
     try:
-        st.session_state.original_image = Image.open(mobile_file)
+        st.session_state.original_image = Image.open(uploaded_file_main)
         st.session_state.processed_image = None
         st.session_state.sets_info = None
     except Exception as e:
@@ -135,10 +116,11 @@ elif mobile_file is not None:
 
 # For desktop, instruct the user to click the Find Sets button.
 if not st.session_state.is_mobile:
-    st.sidebar.info("After uploading, please click the **Find Sets** button to start processing.")
+    st.sidebar.info("After uploading, click **Find Sets** to start processing.")
     find_sets_clicked = st.sidebar.button("🔎 Find Sets", key="find_sets")
 else:
-    find_sets_clicked = True  # Mobile: process automatically
+    # For mobile, processing starts automatically.
+    find_sets_clicked = True
 
 # =============================================================================
 #                              MODEL LOADING
@@ -334,7 +316,7 @@ def classify_and_find_sets_from_array(
 # =============================================================================
 
 if st.session_state.uploaded_file is None:
-    st.info("Please upload an image from the sidebar (desktop) or above (mobile).")
+    st.info("Please upload an image using the appropriate uploader.")
 else:
     try:
         original_image = st.session_state.original_image.copy()
@@ -344,16 +326,12 @@ else:
         st.stop()
 
     # Decide when to run processing:
-    # Desktop: only run if the Find Sets button is clicked.
-    # Mobile: automatically run processing once an image is uploaded.
-    run_processing = False
-    if st.session_state.is_mobile:
-        run_processing = True
-    else:
-        run_processing = find_sets_clicked
-
+    # Desktop: run only when Find Sets is clicked.
+    # Mobile: run automatically.
+    run_processing = st.session_state.is_mobile or st.sidebar.button("🔎 Find Sets", key="find_sets")  # For desktop, button appears; mobile: always true.
+    
     if run_processing:
-        # Show a loader in the main page (centered) for mobile; for desktop, also in main page.
+        # Show a loader in the main page for both versions.
         loader_placeholder = st.empty()
         loader_placeholder.markdown('<div class="center-loader">Detecting sets...</div>', unsafe_allow_html=True)
         try:
@@ -367,37 +345,44 @@ else:
             )
             st.session_state.processed_image = processed_image
             st.session_state.sets_info = sets_info
-            # Provide feedback messages:
+            # Feedback messages:
             cards = detect_cards_from_image(image_cv, card_detection_model)
             if not cards:
-                msg = "No cards detected. Please verify that this is a valid Set game board."
-                st.error(msg)
+                st.error("No cards detected. Please verify that this is a valid Set game board.")
             elif not sets_info:
-                msg = "Cards detected but no valid sets found."
-                st.warning(msg)
+                st.warning("Cards detected but no valid sets found.")
             else:
-                msg = "Sets detected!"
-                st.success(msg)
+                st.success("Sets detected!")
         except Exception as e:
             st.error("⚠️ An error occurred during processing:")
             st.text(traceback.format_exc())
         finally:
             loader_placeholder.empty()
 
-    # Layout: For desktop, use two columns; on mobile they stack.
-    left_col, right_col = st.columns(2)
-    with left_col:
+    # Layout: use different layouts for desktop and mobile.
+    if st.session_state.is_mobile:
+        # Mobile: single column layout.
         st.subheader("Original Image")
         st.image(original_image, width=400, output_format="JPEG")
-    # Arrow placement: mobile arrow appears immediately after the original image; desktop arrow appears between columns.
-    if st.session_state.is_mobile:
         st.markdown('<div class="mobile-arrow">⬇️</div>', unsafe_allow_html=True)
-    else:
-        st.markdown('<div class="desktop-arrow">➡️</div>', unsafe_allow_html=True)
-    with right_col:
         st.subheader("Detected Sets")
         if st.session_state.processed_image is not None:
             processed_image_rgb = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
             st.image(processed_image_rgb, width=400, output_format="JPEG")
         else:
             st.info("Processed image will appear here after detection.")
+    else:
+        # Desktop: two-column layout with an arrow in the middle.
+        col1, col2, col3 = st.columns([3, 1, 3])
+        with col1:
+            st.subheader("Original Image")
+            st.image(original_image, width=400, output_format="JPEG")
+        with col2:
+            st.markdown("<div style='text-align:center;font-size:2rem;'>➡️</div>", unsafe_allow_html=True)
+        with col3:
+            st.subheader("Detected Sets")
+            if st.session_state.processed_image is not None:
+                processed_image_rgb = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
+                st.image(processed_image_rgb, width=400, output_format="JPEG")
+            else:
+                st.info("Processed image will appear here after detection.")
