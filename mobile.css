@@ -1,0 +1,25 @@
+/* Mobile layout styles */
+.mobile-arrow {
+    text-align: center;
+    font-size: 2rem;
+    margin: 20px 0;
+}
+
+/* Hide sidebar uploader */
+.sidebar-uploader {
+    display: none;
+}
+
+/* Show main uploader */
+.main-uploader {
+    display: block;
+    margin: 20px auto;
+    text-align: center;
+}
+
+/* Center loader for mobile */
+.center-loader {
+    text-align: center;
+    font-size: 1.2rem;
+    margin: 20px 0;
+}
