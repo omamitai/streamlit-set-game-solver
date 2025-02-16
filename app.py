@@ -25,7 +25,7 @@ from typing import Tuple, List, Dict
 # =============================================================================
 # Device Detection via Query Parameter (reloads page once)
 # =============================================================================
-query_params = st.query_params  # Use as a property, not a function.
+query_params = st.query_params  # Use as a property.
 if "device" not in query_params:
     device_js = """
     <script>
@@ -54,14 +54,91 @@ if "uploaded_file" not in st.session_state:
 # =============================================================================
 st.set_page_config(layout="wide", page_title="SET Game Detector")
 
-# CSS for desktop (sidebar uploader) vs mobile (main uploader)
+# Global CSS (provided) and device-specific CSS merged below.
 st.markdown(
     """
     <style>
+    /* Global styles */
+    body {
+      background-color: #f0f2f6;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    /* Header */
+    .header-container {
+      text-align: center;
+      margin: 10px auto;
+      padding: 10px;
+      background-color: #e8f0fe;
+      border-radius: 8px;
+    }
+    .header-container h1 {
+      font-size: 2.5rem;
+      margin: 0;
+      padding: 0;
+    }
+    .subtitle {
+      text-align: center;
+      font-size: 1.25rem;
+      color: #666;
+      margin-top: 5px;
+    }
+    /* Sidebar */
+    .sidebar-header {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    /* File Uploader */
+    .stFileUploader {
+      border: 2px dashed #aaa !important;
+      padding: 10px !important;
+      border-radius: 12px !important;
+      text-align: center;
+      background: #fff !important;
+      margin-bottom: 15px;
+    }
+    /* Buttons */
+    .stButton>button {
+      display: block;
+      margin: auto;
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      padding: 0.8rem 1.2rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    .stButton>button:hover {
+      background-color: #0069d9;
+    }
+    /* Loading Message */
+    .loading-message {
+      text-align: center;
+      font-size: 1.1rem;
+      color: #555;
+      margin-top: 10px;
+      font-style: italic;
+    }
+    /* Images */
+    img {
+      max-width: 400px;
+      border-radius: 10px;
+      margin-top: 10px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* Device-specific CSS */
     /* Desktop: only show the sidebar uploader */
     @media screen and (min-width: 769px) {
         .mobile-uploader { display: none; }
-        /* Sidebar headline styling */
         .sidebar-headline { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
         .arrow { text-align: center; font-size: 2rem; margin-top: 140px; }
     }
@@ -81,9 +158,9 @@ st.markdown(
 # =============================================================================
 st.markdown(
     """
-    <div style="text-align:center;">
+    <div class="header-container">
         <h1>🎴 SET Game Detector</h1>
-        <p>Upload an image of a Set game board and detect valid sets.</p>
+        <p class="subtitle">Upload an image of a Set game board and detect valid sets.</p>
     </div>
     """,
     unsafe_allow_html=True,
@@ -318,7 +395,6 @@ def classify_and_find_sets_from_array(
 if st.session_state.uploaded_file is None:
     st.info("Please upload an image using the appropriate uploader.")
 else:
-    # Always display the original image.
     if is_mobile:
         st.subheader("Original Image")
         st.image(st.session_state.original_image, width=400, output_format="JPEG")
@@ -348,7 +424,6 @@ else:
             )
             st.session_state.processed_image = processed_image
             st.session_state.sets_info = sets_info
-            # Feedback messages:
             cards = detect_cards_from_image(image_cv, card_detection_model)
             if not cards:
                 st.error("No cards detected. Please verify that this is a valid Set game board.")
