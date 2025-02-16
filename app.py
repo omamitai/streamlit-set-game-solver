@@ -51,15 +51,20 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-# Sidebar: File uploader and button
-st.sidebar.markdown('<div class="sidebar-header">Upload Your Image</div>', unsafe_allow_html=True)
-my_upload = st.sidebar.file_uploader("", type=["png", "jpg", "jpeg"])
-if my_upload is not None:
-    st.session_state.uploaded_file = my_upload
+# =============================================================================
+#                        FILE UPLOADER & SESSION STATE
+# =============================================================================
 
-if "original_image" not in st.session_state and "uploaded_file" in st.session_state:
+# Sidebar: File uploader
+st.sidebar.markdown('<div class="sidebar-header">Upload Your Image</div>', unsafe_allow_html=True)
+uploaded_file = st.sidebar.file_uploader("", type=["png", "jpg", "jpeg"])
+if uploaded_file is not None:
+    st.session_state.uploaded_file = uploaded_file
     try:
-        st.session_state.original_image = Image.open(st.session_state.uploaded_file)
+        # Always update the original image and reset previous results
+        st.session_state.original_image = Image.open(uploaded_file)
+        st.session_state.processed_image = None
+        st.session_state.sets_info = None
     except Exception as e:
         st.error("Failed to load image. Please try another file.")
 
@@ -262,7 +267,7 @@ if "uploaded_file" not in st.session_state:
     st.info("Please upload an image from the sidebar.")
 else:
     try:
-        # Use the original image without resizing its pixel data
+        # Use the full-resolution original image (for processing) from session state
         original_image = st.session_state.original_image.copy()
     except Exception as e:
         st.error("Failed to load image. Please try another file.")
@@ -273,6 +278,7 @@ else:
     if find_sets_clicked:
         loading_message.markdown("<p class='loading-message'>Detecting sets...</p>", unsafe_allow_html=True)
         try:
+            # Process using full-resolution image
             image_cv = cv2.cvtColor(np.array(original_image), cv2.COLOR_RGB2BGR)
             sets_info, processed_image = classify_and_find_sets_from_array(
                 image_cv,
@@ -289,10 +295,10 @@ else:
         finally:
             loading_message.empty()
 
+    # Display using columns; images are scaled in the UI via the width parameter.
     left_col, mid_col, right_col = st.columns([3, 1, 3])
     with left_col:
         st.subheader("Original Image")
-        # Display the original image at a scaled-down width (without modifying the underlying resolution)
         st.image(original_image, width=400, output_format="JPEG")
     with mid_col:
         st.markdown(
@@ -301,7 +307,7 @@ else:
         )
     with right_col:
         st.subheader("Detected Sets")
-        if "processed_image" in st.session_state:
+        if "processed_image" in st.session_state and st.session_state.processed_image is not None:
             processed_image_rgb = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
             st.image(processed_image_rgb, width=400, output_format="JPEG")
         else:
