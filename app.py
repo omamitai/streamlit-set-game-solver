@@ -37,6 +37,41 @@ def local_css(file_name):
 
 local_css("styles.css")
 
+# Additional inline CSS for arrow and mobile uploader
+st.markdown(
+    """
+    <style>
+    /* Arrow styling for desktop vs mobile */
+    .desktop-arrow {
+        display: block;
+        text-align: center;
+        font-size: 2rem;
+        margin-top: 140px;
+    }
+    .mobile-arrow {
+        display: none;
+        text-align: center;
+        font-size: 2rem;
+        margin: 20px 0;
+    }
+    @media screen and (max-width: 768px) {
+        .desktop-arrow {
+            display: none;
+        }
+        .mobile-arrow {
+            display: block;
+        }
+        /* Show the mobile uploader container */
+        .mobile-uploader {
+            display: block;
+            margin: 20px auto;
+        }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
 # =============================================================================
 #                           HEADER SECTION
 # =============================================================================
@@ -52,21 +87,33 @@ st.markdown(
 )
 
 # =============================================================================
-#                        FILE UPLOADER & SESSION STATE
+#                   FILE UPLOADER & SESSION STATE
 # =============================================================================
 
-# Sidebar: File uploader
+# Sidebar uploader (for desktop users)
 st.sidebar.markdown('<div class="sidebar-header">Upload Your Image</div>', unsafe_allow_html=True)
-uploaded_file = st.sidebar.file_uploader("", type=["png", "jpg", "jpeg"])
-if uploaded_file is not None:
-    st.session_state.uploaded_file = uploaded_file
+uploaded_file_side = st.sidebar.file_uploader("", type=["png", "jpg", "jpeg"], key="sidebar_uploader")
+if uploaded_file_side is not None:
+    st.session_state.uploaded_file = uploaded_file_side
     try:
-        # Always update the original image and reset previous results
-        st.session_state.original_image = Image.open(uploaded_file)
+        st.session_state.original_image = Image.open(uploaded_file_side)
         st.session_state.processed_image = None
         st.session_state.sets_info = None
     except Exception as e:
         st.error("Failed to load image. Please try another file.")
+
+# Main page uploader (especially for mobile)
+if "uploaded_file" not in st.session_state:
+    st.markdown('<div class="mobile-uploader"><strong>Upload Your Image</strong></div>', unsafe_allow_html=True)
+    uploaded_file_main = st.file_uploader("", type=["png", "jpg", "jpeg"], key="main_uploader")
+    if uploaded_file_main is not None:
+        st.session_state.uploaded_file = uploaded_file_main
+        try:
+            st.session_state.original_image = Image.open(uploaded_file_main)
+            st.session_state.processed_image = None
+            st.session_state.sets_info = None
+        except Exception as e:
+            st.error("Failed to load image. Please try another file.")
 
 find_sets_clicked = st.sidebar.button("🔎 Find Sets", key="find_sets")
 
@@ -264,10 +311,9 @@ def classify_and_find_sets_from_array(
 # =============================================================================
 
 if "uploaded_file" not in st.session_state:
-    st.info("Please upload an image from the sidebar.")
+    st.info("Please upload an image from the sidebar or above.")
 else:
     try:
-        # Use the full-resolution original image (for processing) from session state
         original_image = st.session_state.original_image.copy()
     except Exception as e:
         st.error("Failed to load image. Please try another file.")
@@ -278,7 +324,6 @@ else:
     if find_sets_clicked:
         loading_message.markdown("<p class='loading-message'>Detecting sets...</p>", unsafe_allow_html=True)
         try:
-            # Process using full-resolution image
             image_cv = cv2.cvtColor(np.array(original_image), cv2.COLOR_RGB2BGR)
             sets_info, processed_image = classify_and_find_sets_from_array(
                 image_cv,
@@ -289,22 +334,28 @@ else:
             )
             st.session_state.processed_image = processed_image
             st.session_state.sets_info = sets_info
+            # Check and provide user feedback
+            cards = detect_cards_from_image(image_cv, card_detection_model)
+            if not cards:
+                st.sidebar.warning("No cards detected. Please verify that this is a valid Set game board.")
+            elif not sets_info:
+                st.sidebar.warning("Cards detected but no valid sets found.")
+            else:
+                st.sidebar.success("Sets detected!")
         except Exception as e:
             st.error("⚠️ An error occurred during processing:")
             st.text(traceback.format_exc())
         finally:
             loading_message.empty()
 
-    # Display using columns; images are scaled in the UI via the width parameter.
-    left_col, mid_col, right_col = st.columns([3, 1, 3])
+    # Layout for desktop: two columns; on mobile they stack automatically.
+    left_col, right_col = st.columns(2)
     with left_col:
         st.subheader("Original Image")
         st.image(original_image, width=400, output_format="JPEG")
-    with mid_col:
-        st.markdown(
-            "<div style='text-align: center; font-size: 2rem; margin-top: 140px;'>➡️</div>",
-            unsafe_allow_html=True,
-        )
+    # Display arrow between images (different arrow for mobile vs desktop)
+    st.markdown('<div class="desktop-arrow">➡️</div>', unsafe_allow_html=True)
+    st.markdown('<div class="mobile-arrow">⬇️</div>', unsafe_allow_html=True)
     with right_col:
         st.subheader("Detected Sets")
         if "processed_image" in st.session_state and st.session_state.processed_image is not None:
