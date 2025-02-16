@@ -25,7 +25,7 @@ from typing import Tuple, List, Dict
 # =============================================================================
 # Device Detection via Query Parameter (reloads page once)
 # =============================================================================
-query_params = st.query_params()
+query_params = st.query_params  # Use as a property, not a function.
 if "device" not in query_params:
     device_js = """
     <script>
