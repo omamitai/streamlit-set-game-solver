@@ -25,7 +25,7 @@ from typing import Tuple, List, Dict
 # =============================================================================
 # Device Detection via Query Parameter (reloads page once)
 # =============================================================================
-query_params = st.experimental_get_query_params()
+query_params = st.query_params()
 if "device" not in query_params:
     device_js = """
     <script>
@@ -37,8 +37,6 @@ if "device" not in query_params:
     components.html(device_js, height=0)
     st.stop()
 device = query_params["device"][0]
-
-# Set a flag based on detected device.
 is_mobile = (device == "mobile")
 
 # =============================================================================
@@ -315,7 +313,7 @@ def classify_and_find_sets_from_array(
     return sets_found, final_image
 
 # =============================================================================
-# DISPLAY: Show the original image persistently and then process the image.
+# DISPLAY: Original Image & Detected Sets (Original remains visible)
 # =============================================================================
 if st.session_state.uploaded_file is None:
     st.info("Please upload an image using the appropriate uploader.")
@@ -333,7 +331,7 @@ else:
         detected_placeholder = col2.empty()
 
     # =============================================================================
-    # IMAGE PROCESSING (triggered by button on desktop or automatically on mobile)
+    # IMAGE PROCESSING (Desktop via button; Mobile automatically)
     # =============================================================================
     run_processing = is_mobile or find_sets_clicked
     if run_processing:
