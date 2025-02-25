@@ -710,99 +710,81 @@ def reset_session_state():
     if mobile_param == 'true':
         st.query_params['mobile'] = 'true'
 
-# =============================================================================
-# MOBILE DETECTION
-# =============================================================================
 def detect_mobile():
-    """Detect mobile devices using a combination of methods for reliability"""
-    # First method: Check user agent for common mobile keywords using JavaScript
-    mobile_detector_html = """
+    """Simple mobile detection based on user agent or session state"""
+    # Add JavaScript to detect screen size
+    st.markdown("""
     <script>
-        // Simple mobile detection using multiple signals
-        function detectMobile() {
-            // Check for common mobile user agent patterns
-            const ua = navigator.userAgent.toLowerCase();
-            const isMobileUserAgent = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini|mobile|tablet/i.test(ua);
-            
-            // Check viewport width
-            const isMobileViewport = window.innerWidth <= 991;
-            
-            // Combine signals
-            const isMobile = isMobileUserAgent || isMobileViewport;
-            
-            // Store in sessionStorage
-            sessionStorage.setItem('isMobile', isMobile ? 'true' : 'false');
-            
-            // Add class to body for CSS targeting
-            if (isMobile) {
-                document.body.classList.add('mobile-view');
-            }
-            
-            // Set URL parameter for Streamlit to detect
-            if (isMobile && !window.location.search.includes('mobile=true')) {
-                const newUrl = window.location.pathname + '?mobile=true' + window.location.hash;
-                window.history.replaceState({}, '', newUrl);
-                
-                // Force reload if necessary
-                if (!document.body.classList.contains('mobile-detected')) {
-                    document.body.classList.add('mobile-detected');
-                    // Only reload if page just loaded and hasn't been interacted with
-                    if (performance.now() < 2000) {
-                        location.reload();
-                    }
-                }
-            }
-            
-            return isMobile;
+        // Detect mobile based on screen width
+        const isMobile = window.innerWidth <= 991;
+        if (isMobile) {
+            document.body.classList.add('mobile-view');
         }
-        
-        // Run detection on page load
-        detectMobile();
-        
-        // Also run on resize
-        window.addEventListener('resize', function() {
-            detectMobile();
-        });
     </script>
-    """
-    st.markdown(mobile_detector_html, unsafe_allow_html=True)
+    """, unsafe_allow_html=True)
     
-    # Second method: Check URL parameter (set by the JavaScript)
+    # Try to detect mobile based on user agent in request header
+    try:
+        # Attempt to access user agent from request headers
+        if hasattr(st, "request"):
+            request_headers = getattr(st, "request", None)
+            if request_headers and hasattr(request_headers, "headers"):
+                user_agent = request_headers.headers.get("User-Agent", "").lower()
+                if "mobile" in user_agent or "android" in user_agent or "iphone" in user_agent:
+                    return True
+    except:
+        pass
+    
+    # Simple check for common mobile/touch devices via screen width
+    # For simplicity, we use a fixed "mobile" parameter that can be toggled via URL
     params = st.query_params
-    if 'mobile' in params and params['mobile'] == 'true':
+    if params.get("mobile", [False])[0]:
         return True
-    
-    # Third method: Hardcoded check for common mobile screen widths (best-effort fallback)
-    # Force mobile mode for typical mobile screen widths
-    return True  # Always return True to ensure mobile layout is used
+        
+    # Fallback to session state
+    return st.session_state.get("is_mobile", False)
 
 # =============================================================================
 # MOBILE LAYOUT
 # =============================================================================
 def render_mobile_layout():
-    """Render the mobile-optimized layout"""
-    # Mobile uploader section - always show this prominently with direct HTML
+    """Render the mobile-optimized layout with auto-processing"""
+    # Ensure sidebar is hidden for mobile
     st.markdown(
-        f'''
-        <div style="text-align: center; margin-bottom: 20px; padding: 20px; background: linear-gradient(90deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%); border-radius: 12px;">
-            <h3 style="margin-bottom: 15px; color: #7C3AED;">📱 Upload SET Game Image</h3>
+        """
+        <style>
+        section[data-testid="stSidebar"] {display: none !important;}
+        div[data-testid="stSidebarNav"] {display: none !important;}
+        </style>
+        """, 
+        unsafe_allow_html=True
+    )
+    
+    # Mobile uploader section with clear styling
+    st.markdown(
+        '''
+        <div style="text-align: center; margin-bottom: 20px; padding: 15px; 
+                    background: linear-gradient(90deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%); 
+                    border-radius: 12px;">
+            <h3 style="margin-bottom: 10px; color: #7C3AED;">📱 Upload SET Game Image</h3>
+            <p style="font-size: 0.9rem; color: #666;">Image will be processed automatically after upload</p>
         </div>
         ''', 
         unsafe_allow_html=True
     )
     
-    # Force a clear file uploader with a unique key
+    # File uploader with clear label
     mobile_uploaded_file = st.file_uploader(
-        label="Upload your SET image",
+        label="Upload your SET game photo",
         type=["png", "jpg", "jpeg"],
-        key=f"mobile_uploader_{random.randint(1000, 9999)}",
+        key=f"mobile_uploader_{st.session_state.get('uploader_key', 'default')}",
         help="Take a photo or upload an image of your SET game board"
     )
     
-    # If new file is uploaded, reset processing state
+    # Auto-process when a new file is uploaded
     if mobile_uploaded_file is not None and mobile_uploaded_file != st.session_state.get("uploaded_file", None):
         # Reset state for new file
-        for key in ['processed', 'processed_image', 'sets_info', 'original_image',
+        for key in ['processed', 'processed_image', 'sets_info',
                    'no_cards_detected', 'no_sets_found']:
             if key in st.session_state:
                 if key in ['processed', 'no_cards_detected', 'no_sets_found']:
@@ -818,19 +800,12 @@ def render_mobile_layout():
             image = Image.open(mobile_uploaded_file)
             image = optimize_image(image)
             st.session_state.original_image = image
+            
+            # Auto-start processing (no button needed)
+            st.session_state.start_processing = True
+            st.rerun()  # Force rerun to show loading state
         except Exception as e:
             st.error(f"Failed to load image: {str(e)}")
-    
-    # Process button for mobile - only show if an image is uploaded
-    if mobile_uploaded_file is not None:
-        if st.button("🔎 Find Sets", key="mobile_process_button", use_container_width=True):
-            # Clear previous results and error flags
-            st.session_state.processed = False
-            st.session_state.processed_image = None
-            st.session_state.sets_info = None
-            st.session_state.no_cards_detected = False
-            st.session_state.no_sets_found = False 
-            st.session_state.start_processing = True
     
     # Show original image if available
     if st.session_state.get("original_image", None) is not None:
@@ -868,13 +843,13 @@ def render_mobile_layout():
         # Show processed results if available
         elif st.session_state.get("processed", False):
             if st.session_state.get("no_cards_detected", False):
-                render_error_message("Hmm... I couldn't detect any cards. Make sure your image shows a SET game board clearly.")
+                render_error_message("No cards were detected. Please try a clearer image of a SET game board.")
             elif st.session_state.get("no_sets_found", False):
                 st.markdown('<div class="image-container">', unsafe_allow_html=True)
                 processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
                 st.image(processed_img, caption="Processed Image", use_container_width=True)
                 st.markdown('</div>', unsafe_allow_html=True)
-                render_warning_message("I found cards but no valid SETs in this board. The dealer might need to add more cards!")
+                render_warning_message("Cards were found but no valid SETs in this board. Try adding more cards!")
             elif st.session_state.get("processed_image", None) is not None:
                 st.markdown('<div class="image-container">', unsafe_allow_html=True)
                 processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
@@ -883,13 +858,10 @@ def render_mobile_layout():
                        use_container_width=True)
                 st.markdown('</div>', unsafe_allow_html=True)
             
-            # Reset button for mobile
-            st.button("⟳ Analyze New Image", key="mobile_reset_button", use_container_width=True, 
-                     on_click=reset_session_state)
-        
-        # Show processing message if not yet processed
-        elif not st.session_state.get("processed", False):
-            render_process_message()
+            # Reset button for mobile - below the image results
+            if st.button("⟳ Try Another Image", key="mobile_reset_button", use_container_width=True):
+                reset_session_state()
+                st.rerun()
 
 # =============================================================================
 # DESKTOP LAYOUT
@@ -1029,37 +1001,42 @@ def main():
     # Load CSS
     load_css()
     
-    # First check user agent with our JavaScript function
-    is_mobile = detect_mobile()
-    
-    # Store in session state for persistence
-    st.session_state.is_mobile = True  # Always use mobile layout for now
-    
-    # Force mobile for everyone temporarily to debug
-    is_mobile = True
-    
     # If reset is pending, clear everything
     if st.session_state.get("should_reset", False):
         st.session_state.should_reset = False
         st.rerun()
     
+    # Check for mobile parameter in URL
+    params = st.query_params
+    if "mobile" in params:
+        is_mobile = params["mobile"] == "true"
+    else:
+        # Otherwise use basic detection (this could be enhanced)
+        import re
+        user_agent = st.get_user_info().get("user_agent", "")
+        is_mobile = bool(re.search(r'Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini', user_agent))
+    
+    # Store in session state
+    st.session_state.is_mobile = is_mobile
+    
     # Render header
     render_header()
     
-    # Aggressively hide sidebar with direct HTML approach
-    st.markdown(
-        """
-        <style>
-        [data-testid="stSidebar"] {display: none !important;}
-        .css-1d391kg, .css-1oe6wy4, [data-testid="stSidebarNav"] {display: none !important;}
-        .sidebar .sidebar-content {display: none !important;}
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
-    
-    # For now, only use the mobile layout for everyone until we fix the issues
-    render_mobile_layout()
+    # Choose layout based on detected device
+    if is_mobile:
+        # Hide sidebar for mobile
+        st.markdown(
+            """
+            <style>
+            [data-testid="stSidebar"] {display: none !important;}
+            div[data-testid="stSidebarNav"] {display: none !important;}
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+        render_mobile_layout()
+    else:
+        render_desktop_layout()
 
 if __name__ == "__main__":
     main()
