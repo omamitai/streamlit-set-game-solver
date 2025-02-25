@@ -282,6 +282,9 @@ def load_css():
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         background: white;
         border: 1px solid rgba(0, 0, 0, 0.05);
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
     }}
     
     /* Processing placeholder */
@@ -882,51 +885,72 @@ def classify_and_find_sets_from_array(
     """
     start_time = time.time()
     
+    # Reset flags at the beginning
+    st.session_state.no_cards_detected = False
+    st.session_state.no_sets_found = False
+    
     # Check if rotation is needed
     processed_image, was_rotated = check_and_rotate_input_image(board_image, card_detector)
     
+    # Debug log
+    #st.write(f"Image shape: {processed_image.shape}")
+    
     # Check if cards are detected
-    cards = detect_cards_from_image(processed_image, card_detector)
-    if not cards:
-        st.session_state.no_cards_detected = True
+    try:
+        cards = detect_cards_from_image(processed_image, card_detector)
+        #st.write(f"Detected {len(cards)} cards")
+        
+        if not cards:
+            st.session_state.no_cards_detected = True
+            end_time = time.time()
+            st.session_state.detection_time = end_time - start_time
+            return [], processed_image
+        
+        # Classify cards and find sets
+        card_df = classify_cards_from_board_image(
+            processed_image, card_detector, shape_detector, fill_model, shape_model
+        )
+        
+        #st.write(f"Card DataFrame size: {len(card_df)}")
+        
+        # Handle empty dataframe - no valid cards detected
+        if card_df.empty:
+            st.session_state.no_cards_detected = True
+            end_time = time.time()
+            st.session_state.detection_time = end_time - start_time
+            return [], processed_image
+        
+        # Find all valid sets
+        sets_found = find_sets(card_df)
+        
+        #st.write(f"Found {len(sets_found)} sets")
+        
+        # Check if sets are found
+        if not sets_found:
+            st.session_state.no_sets_found = True
+            end_time = time.time()
+            st.session_state.detection_time = end_time - start_time
+            return [], processed_image
+        
+        # Draw sets on the image
+        annotated_image = draw_sets_on_image(processed_image.copy(), sets_found)
+        
+        # Restore original orientation if needed
+        final_image = restore_original_orientation(annotated_image, was_rotated)
+        
         end_time = time.time()
         st.session_state.detection_time = end_time - start_time
-        return [], processed_image
-    
-    # Classify cards and find sets
-    card_df = classify_cards_from_board_image(
-        processed_image, card_detector, shape_detector, fill_model, shape_model
-    )
-    
-    # Handle empty dataframe - no valid cards detected
-    if card_df.empty:
-        st.session_state.no_cards_detected = True
+        
+        return sets_found, final_image
+        
+    except Exception as e:
+        st.error(f"Error in card detection: {str(e)}")
+        traceback.print_exc()
         end_time = time.time()
         st.session_state.detection_time = end_time - start_time
-        return [], processed_image
-    
-    # Find all valid sets
-    sets_found = find_sets(card_df)
-    
-    # Check if sets are found
-    if not sets_found:
-        st.session_state.no_sets_found = True
-        end_time = time.time()
-        st.session_state.detection_time = end_time - start_time
-        return [], processed_image
-    
-    # Draw sets on the image
-    annotated_image = draw_sets_on_image(processed_image.copy(), sets_found)
-    
-    # Restore original orientation if needed
-    final_image = restore_original_orientation(annotated_image, was_rotated)
-    
-    end_time = time.time()
-    st.session_state.detection_time = end_time - start_time
-    
-    return sets_found, final_image
+        return [], board_image
 
-def optimize_image(image: Image.Image, max_size: int = 1200) -> Image.Image:
+def optimize_image(image: Image.Image, max_size: int = 800) -> Image.Image:
     """
     Resize large images to improve performance while maintaining aspect ratio.
     Returns the optimized PIL Image.
@@ -1109,12 +1133,35 @@ def render_stats_box(sets_info: List[dict], detection_time: float):
 # =============================================================================
 def render_mobile_layout():
     """Render the mobile-optimized layout with auto-processing"""
-    # Ensure sidebar is hidden for mobile
+    # Aggressively ensure sidebar is completely hidden for mobile
     st.markdown(
         """
         <style>
-        section[data-testid="stSidebar"] {display: none !important;}
-        div[data-testid="stSidebarNav"] {display: none !important;}
+        /* Hide sidebar using multiple approaches for certainty */
+        section[data-testid="stSidebar"] {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            visibility: hidden !important;
+            z-index: -1 !important;
+            opacity: 0 !important;
+        }
+        div[data-testid="stSidebarNav"] {
+            display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+        }
+        /* Expand main content area to full width */
+        .main .block-container {
+            max-width: 100% !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
         </style>
         """, 
         unsafe_allow_html=True
@@ -1180,8 +1227,16 @@ def render_mobile_layout():
             render_loader()
             
             try:
-                # Process image with models
+                # Process image with models (ensuring they exist)
+                if not all([card_detection_model, shape_detection_model, fill_model, shape_model]):
+                    raise Exception("Models not properly loaded")
+                    
                 image_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_RGB2BGR)
+                
+                # Extra validation
+                if image_cv.size == 0 or min(image_cv.shape) < 10:
+                    raise Exception("Invalid image dimensions")
+                
                 sets_info, processed_image = classify_and_find_sets_from_array(
                     image_cv, card_detection_model, shape_detection_model, fill_model, shape_model
                 )
@@ -1436,22 +1491,26 @@ def main():
     render_header()
     
     # Load models with error handling if not already loaded
-    global card_detection_model, shape_detection_model, fill_model, shape_model, models_loaded
+    global card_detection_model, shape_detection_model, fill_model, shape_model
     
     if not st.session_state.get("models_loaded", False):
         try:
             with st.spinner("Loading detection models..."):
                 shape_model, fill_model = load_classification_models()
                 card_detection_model, shape_detection_model = load_detection_models()
-                models_loaded = all([shape_model, fill_model, card_detection_model, shape_detection_model])
-                st.session_state.models_loaded = models_loaded
+                
+                # Verify models loaded successfully
+                if all([shape_model, fill_model, card_detection_model, shape_detection_model]):
+                    st.session_state.models_loaded = True
+                else:
+                    raise Exception("One or more models failed to load")
         except Exception as e:
             error_msg = f"Failed to load models: {str(e)}"
             st.session_state.error_message = error_msg
             render_message(error_msg, "error")
             return
     else:
-        models_loaded = True
+        # Models already loaded - retrieve from cache
         shape_model, fill_model = load_classification_models()
         card_detection_model, shape_detection_model = load_detection_models()
     
