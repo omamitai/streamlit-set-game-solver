@@ -231,9 +231,8 @@ def load_css():
     .system-message p {{
         font-size: 1.1rem;
         font-weight: 400;
-        color: #666666; /* Changed to gray to match subtitle */
+        color: #666666;
         margin: 0;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     }}
     
     /* Error messages */
@@ -265,29 +264,46 @@ def load_css():
         color: #F59E0B;
     }}
     
-    /* Mobile uploader styling - make it more prominent and centered */
+    /* Mobile uploader styling */
     .mobile-uploader {{
-        background: linear-gradient(90deg, rgba(124, 58, 237, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
-        padding: 1rem;
+        background: linear-gradient(90deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+        padding: 1.2rem;
         border-radius: 12px;
-        margin: 1rem 0;
+        margin: 0.8rem 0 1.5rem 0;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         text-align: center;
     }}
     
     .mobile-uploader h3 {{
         color: {SET_COLORS["primary"]};
-        margin-bottom: 1rem;
+        margin-bottom: 0.8rem;
         font-size: 1.2rem;
     }}
     
-    /* For mobile devices */
+    /* Mobile-specific styles */
     @media (max-width: 991px) {{
-        /* Hide sidebar on mobile */
+        /* Completely hide sidebar on mobile */
         section[data-testid="stSidebar"] {{
             display: none !important;
+            width: 0 !important;
+            height: 0 !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            visibility: hidden !important;
         }}
         
+        /* Override Streamlit's default container width */
+        .main .block-container {{
+            max-width: 100% !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            padding-top: 1rem !important;
+        }}
+        
+        /* Header adjustments */
         .set-header h1 {{ 
             font-size: 1.8rem; 
         }}
@@ -296,25 +312,40 @@ def load_css():
             font-size: 0.9rem; 
         }}
         
-        /* More compact for mobile */
         .set-header {{
             padding: 0.8rem;
-            margin-bottom: 0.8rem;
+            margin-bottom: 1rem;
         }}
         
-        /* Mobile layout adjustments */
-        .mobile-container {{
-            padding: 0.5rem;
-            margin-bottom: 0.5rem;
-        }}
-        
+        /* Button adjustments for touch */
         .stButton>button {{
-            padding: 0.6rem 1rem;
+            padding: 0.8rem 1rem;
+            font-size: 1rem;
+            height: auto;
+            min-height: 3rem;
         }}
         
-        /* Mobile images */
+        /* Ensure images are fully responsive */
         .image-container img {{
+            width: 100% !important;
+            height: auto !important;
             max-width: 100% !important;
+        }}
+        
+        /* Tighter message spacing */
+        .system-message, .error-message, .warning-message {{
+            margin: 1rem 0;
+            padding: 1rem;
+        }}
+        
+        /* Better loader sizing */
+        .loader-container {{
+            height: 150px;
+        }}
+        
+        .loader-dot {{
+            width: 12px;
+            height: 12px;
         }}
     }}
     </style>
@@ -367,6 +398,7 @@ except Exception as e:
 # UTILITY & PROCESSING FUNCTIONS
 # =============================================================================
 def check_and_rotate_input_image(board_image: np.ndarray, detector: YOLO) -> Tuple[np.ndarray, bool]:
+    """Check if image needs rotation and rotate if needed"""
     card_results = detector(board_image)
     card_boxes = card_results[0].boxes.xyxy.cpu().numpy().astype(int)
     if card_boxes.size == 0:
@@ -378,11 +410,13 @@ def check_and_rotate_input_image(board_image: np.ndarray, detector: YOLO) -> Tup
     return board_image, False
 
 def restore_original_orientation(image: np.ndarray, was_rotated: bool) -> np.ndarray:
+    """Restore the original orientation of the image"""
     if was_rotated:
         return cv2.rotate(image, cv2.ROTATE_90_COUNTERCLOCKWISE)
     return image
 
 def predict_color(shape_image: np.ndarray) -> str:
+    """Predict the color of a shape using HSV color filtering"""
     hsv_image = cv2.cvtColor(shape_image, cv2.COLOR_BGR2HSV)
     green_mask = cv2.inRange(hsv_image, np.array([40, 50, 50]), np.array([80, 255, 255]))
     purple_mask = cv2.inRange(hsv_image, np.array([120, 50, 50]), np.array([160, 255, 255]))
@@ -399,6 +433,7 @@ def predict_color(shape_image: np.ndarray) -> str:
 def predict_card_features(card_image: np.ndarray, shape_detector: YOLO,
                           fill_model: tf.keras.Model, shape_model: tf.keras.Model,
                           box: List[int]) -> Dict:
+    """Extract features from a single card"""
     shape_results = shape_detector(card_image)
     card_h, card_w = card_image.shape[:2]
     card_area = card_w * card_h
@@ -407,11 +442,14 @@ def predict_card_features(card_image: np.ndarray, shape_detector: YOLO,
         for x1, y1, x2, y2 in shape_results[0].boxes.xyxy.cpu().numpy()
         if (x2 - x1) * (y2 - y1) > 0.03 * card_area
     ]
+    
     if not filtered_boxes:
         return {'count': 0, 'color': 'unknown', 'fill': 'unknown', 'shape': 'unknown', 'box': box}
+    
     fill_input_shape = fill_model.input_shape[1:3]
     shape_input_shape = shape_model.input_shape[1:3]
     fill_imgs, shape_imgs, color_list = [], [], []
+    
     for fb in filtered_boxes:
         x1, y1, x2, y2 = fb
         shape_img = card_image[y1:y2, x1:x2]
@@ -420,17 +458,21 @@ def predict_card_features(card_image: np.ndarray, shape_detector: YOLO,
         fill_imgs.append(fill_img)
         shape_imgs.append(shape_img_resized)
         color_list.append(predict_color(shape_img))
+    
     fill_imgs = np.array(fill_imgs)
     shape_imgs = np.array(shape_imgs)
     fill_preds = fill_model.predict(fill_imgs, batch_size=len(fill_imgs))
     shape_preds = shape_model.predict(shape_imgs, batch_size=len(shape_imgs))
+    
     fill_labels_list = ['empty', 'full', 'striped']
     shape_labels_list = ['diamond', 'oval', 'squiggle']
     predicted_fill = [fill_labels_list[np.argmax(pred)] for pred in fill_preds]
     predicted_shape = [shape_labels_list[np.argmax(pred)] for pred in shape_preds]
+    
     color_label = max(set(color_list), key=color_list.count)
     fill_label = max(set(predicted_fill), key=predicted_fill.count)
     shape_label = max(set(predicted_shape), key=predicted_shape.count)
+    
     return {
         'count': len(filtered_boxes),
         'color': color_label,
@@ -440,12 +482,14 @@ def predict_card_features(card_image: np.ndarray, shape_detector: YOLO,
     }
 
 def is_set(cards: List[dict]) -> bool:
+    """Check if 3 cards form a valid set"""
     for feature in ['Count', 'Color', 'Fill', 'Shape']:
         if len({card[feature] for card in cards}) not in [1, 3]:
             return False
     return True
 
 def find_sets(card_df: pd.DataFrame) -> List[dict]:
+    """Find all valid sets in the cards"""
     sets_found = []
     for combo in combinations(card_df.iterrows(), 3):
         cards = [entry[1] for entry in combo]
@@ -460,6 +504,7 @@ def find_sets(card_df: pd.DataFrame) -> List[dict]:
     return sets_found
 
 def detect_cards_from_image(board_image: np.ndarray, detector: YOLO) -> List[tuple]:
+    """Detect cards in the board image"""
     card_results = detector(board_image)
     card_boxes = card_results[0].boxes.xyxy.cpu().numpy().astype(int)
     return [
@@ -470,6 +515,7 @@ def detect_cards_from_image(board_image: np.ndarray, detector: YOLO) -> List[tup
 def classify_cards_from_board_image(board_image: np.ndarray, card_detector: YOLO,
                                       shape_detector: YOLO, fill_model: tf.keras.Model,
                                       shape_model: tf.keras.Model) -> pd.DataFrame:
+    """Classify all cards detected in the board image"""
     cards = detect_cards_from_image(board_image, card_detector)
     card_data = []
     for card_image, box in cards:
@@ -484,23 +530,28 @@ def classify_cards_from_board_image(board_image: np.ndarray, card_detector: YOLO
     return pd.DataFrame(card_data)
 
 def draw_sets_on_image(board_image: np.ndarray, sets_info: List[dict]) -> np.ndarray:
+    """Draw rectangles and labels around sets on the image"""
     colors = [
         (255, 0, 0), (0, 255, 0), (0, 0, 255),
         (255, 255, 0), (255, 0, 255), (0, 255, 255)
     ]
     base_thickness = 8
     base_expansion = 5
+    
     for index, set_info in enumerate(sets_info):
         color = colors[index % len(colors)]
         thickness = base_thickness + 2 * index
         expansion = base_expansion + 15 * index
+        
         for i, card in enumerate(set_info["cards"]):
             x1, y1, x2, y2 = card["Coordinates"]
             x1_exp = max(0, x1 - expansion)
             y1_exp = max(0, y1 - expansion)
             x2_exp = min(board_image.shape[1], x2 + expansion)
             y2_exp = min(board_image.shape[0], y2 + expansion)
+            
             cv2.rectangle(board_image, (x1_exp, y1_exp), (x2_exp, y2_exp), color, thickness)
+            
             if i == 0:
                 cv2.putText(
                     board_image, f"Set {index + 1}", (x1_exp, y1_exp - 10),
@@ -515,6 +566,8 @@ def classify_and_find_sets_from_array(
     fill_model: tf.keras.Model,
     shape_model: tf.keras.Model
 ) -> tuple:
+    """Process the board image to find sets"""
+    # Check if rotation is needed
     processed_image, was_rotated = check_and_rotate_input_image(board_image, card_detector)
     
     # Check if cards are detected
@@ -523,17 +576,19 @@ def classify_and_find_sets_from_array(
         st.session_state.no_cards_detected = True
         return [], processed_image
     
+    # Classify cards and find sets
     card_df = classify_cards_from_board_image(processed_image, card_detector, shape_detector, fill_model, shape_model)
     sets_found = find_sets(card_df)
     
     # Check if sets are found
     if not sets_found:
         st.session_state.no_sets_found = True
-        # Just return the original processed image since there are no sets to draw
         return [], processed_image
     
+    # Draw sets on the image
     annotated_image = draw_sets_on_image(processed_image.copy(), sets_found)
     final_image = restore_original_orientation(annotated_image, was_rotated)
+    
     return sets_found, final_image
 
 def optimize_image(image, max_size=1200):
@@ -549,6 +604,9 @@ def optimize_image(image, max_size=1200):
         return image.resize((new_width, new_height), Image.LANCZOS)
     return image
 
+# =============================================================================
+# UI COMPONENT FUNCTIONS
+# =============================================================================
 def render_loader():
     """Render a SET-themed loader"""
     loader_html = """
@@ -589,6 +647,16 @@ def render_process_message():
     """
     return st.markdown(message_html, unsafe_allow_html=True)
 
+def render_header():
+    """Render the SET-themed header"""
+    header_html = """
+    <div class="set-header">
+        <h1>🎴 SET Game Detector</h1>
+        <p>Upload an image of a SET game board and detect all valid sets</p>
+    </div>
+    """
+    st.markdown(header_html, unsafe_allow_html=True)
+
 def reset_session_state():
     """Reset all session state variables to their initial values"""
     # Create a list of all session state keys that need to be preserved
@@ -624,7 +692,7 @@ def reset_session_state():
     # Clear caches to force model reloading if needed
     st.cache_data.clear()
     
-    # Modern approach to clear URL params
+    # Clear URL params
     st.query_params.clear()
 
 # =============================================================================
@@ -634,7 +702,7 @@ def detect_mobile():
     """Use JavaScript to detect mobile devices"""
     mobile_detector_html = """
     <script>
-        // Simple mobile detection based on viewport width
+        // Mobile detection based on viewport width
         function isMobileDevice() {
             return (window.innerWidth <= 991);
         }
@@ -642,6 +710,11 @@ def detect_mobile():
         // Set a flag in sessionStorage
         if (isMobileDevice()) {
             sessionStorage.setItem('isMobile', 'true');
+            // Add message to page for debug
+            const mobileMsg = document.createElement('div');
+            mobileMsg.style.display = 'none';
+            mobileMsg.id = 'mobile-detected';
+            document.body.appendChild(mobileMsg);
         } else {
             sessionStorage.setItem('isMobile', 'false');
         }
@@ -650,31 +723,275 @@ def detect_mobile():
         if (isMobileDevice()) {
             document.body.classList.add('mobile-view');
         }
+        
+        // Tell Streamlit that we're finished with the mobile detection
+        window.parent.postMessage({
+            type: "streamlit:setComponentValue",
+            value: isMobileDevice()
+        }, "*");
     </script>
     """
     st.markdown(mobile_detector_html, unsafe_allow_html=True)
     
-    # We're using the session state for simplicity
-    # In a production app, you'd want to use the JavaScript result
-    return st.session_state.get("is_mobile", False)
+    # Check user agent or viewport size for mobile detection
+    # On mobile, most browsers viewport width will be under 991px
+    is_mobile = st.session_state.get("is_mobile", False)
+    
+    # For reliable mobile detection in Streamlit, we also check the user agent
+    ctx = st.get_script_run_ctx()
+    if ctx is not None:
+        session_info = st.runtime.get_instance().get_client_state()
+        if session_info and "userAgentData" in session_info:
+            user_agent = session_info["userAgentData"].get("brands", "")
+            is_mobile = "Mobile" in user_agent or is_mobile
+    
+    return is_mobile
 
 # =============================================================================
-# HEADER
+# MOBILE LAYOUT
 # =============================================================================
-def render_header():
-    """Render the SET-themed header"""
-    header_html = """
-    <div class="set-header">
-        <h1>🎴 SET Game Detector</h1>
-        <p>Upload an image of a SET game board and detect all valid sets</p>
-    </div>
-    """
-    st.markdown(header_html, unsafe_allow_html=True)
+def render_mobile_layout():
+    """Render the mobile-optimized layout"""
+    # Mobile uploader section - always show this prominently
+    st.markdown('<div class="mobile-uploader">', unsafe_allow_html=True)
+    st.markdown('<h3>📱 Upload SET Game Image</h3>', unsafe_allow_html=True)
+    
+    mobile_uploaded_file = st.file_uploader(
+        label="Upload SET image (mobile)",
+        type=["png", "jpg", "jpeg"],
+        key=f"mobile_uploader_{st.session_state.uploader_key}",
+        label_visibility="collapsed",
+        help="Take a photo or upload an image of your SET game board"
+    )
+    st.markdown('</div>', unsafe_allow_html=True)
+    
+    # If new file is uploaded, reset processing state
+    if mobile_uploaded_file is not None and mobile_uploaded_file != st.session_state.get("uploaded_file", None):
+        # Reset state for new file
+        for key in ['processed', 'processed_image', 'sets_info', 'original_image',
+                   'no_cards_detected', 'no_sets_found']:
+            if key in st.session_state:
+                if key in ['processed', 'no_cards_detected', 'no_sets_found']:
+                    st.session_state[key] = False
+                else:
+                    st.session_state[key] = None
+        
+        # Set the new file
+        st.session_state.uploaded_file = mobile_uploaded_file
+        
+        # Start fresh with the new image
+        try:
+            image = Image.open(mobile_uploaded_file)
+            image = optimize_image(image)
+            st.session_state.original_image = image
+        except Exception as e:
+            st.error(f"Failed to load image: {str(e)}")
+    
+    # Process button for mobile - only show if an image is uploaded
+    if mobile_uploaded_file is not None:
+        if st.button("🔎 Find Sets", key="mobile_process_button", use_container_width=True):
+            # Clear previous results and error flags
+            st.session_state.processed = False
+            st.session_state.processed_image = None
+            st.session_state.sets_info = None
+            st.session_state.no_cards_detected = False
+            st.session_state.no_sets_found = False 
+            st.session_state.start_processing = True
+    
+    # Show original image if available
+    if st.session_state.get("original_image", None) is not None:
+        st.markdown('<div class="image-container">', unsafe_allow_html=True)
+        st.image(st.session_state.original_image, 
+               caption="Original Image", 
+               use_column_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Processing or results display
+        if st.session_state.get("start_processing", False):
+            # Show loading animation
+            render_loader()
+            
+            try:
+                # Process image with models
+                image_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_RGB2BGR)
+                sets_info, processed_image = classify_and_find_sets_from_array(
+                    image_cv, card_detection_model, shape_detection_model, fill_model, shape_model
+                )
+                
+                # Update session state
+                st.session_state.processed_image = processed_image
+                st.session_state.sets_info = sets_info
+                st.session_state.processed = True
+                st.session_state.start_processing = False
+                
+                # Force refresh
+                st.rerun()
+            except Exception as e:
+                st.error("⚠️ An error occurred during processing:")
+                st.code(traceback.format_exc())
+                st.session_state.start_processing = False
+        
+        # Show processed results if available
+        elif st.session_state.get("processed", False):
+            if st.session_state.get("no_cards_detected", False):
+                render_error_message("Hmm... I couldn't detect any cards. Make sure your image shows a SET game board clearly.")
+            elif st.session_state.get("no_sets_found", False):
+                st.markdown('<div class="image-container">', unsafe_allow_html=True)
+                processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
+                st.image(processed_img, caption="Processed Image", use_column_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+                render_warning_message("I found cards but no valid SETs in this board. The dealer might need to add more cards!")
+            elif st.session_state.get("processed_image", None) is not None:
+                st.markdown('<div class="image-container">', unsafe_allow_html=True)
+                processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
+                st.image(processed_img, 
+                       caption=f"Detected {len(st.session_state.sets_info)} Sets", 
+                       use_column_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Reset button for mobile
+            st.button("⟳ Analyze New Image", key="mobile_reset_button", use_container_width=True, 
+                     on_click=reset_session_state)
+        
+        # Show processing message if not yet processed
+        elif not st.session_state.get("processed", False):
+            render_process_message()
+
+# =============================================================================
+# DESKTOP LAYOUT
+# =============================================================================
+def render_desktop_layout():
+    """Render the desktop layout with sidebar and two columns"""
+    # Setup the sidebar for desktop upload
+    with st.sidebar:
+        st.markdown('<h3 style="text-align: center;">Upload Your Image</h3>', unsafe_allow_html=True)
+        
+        # Handle file uploading - detect changes
+        uploaded_file = st.file_uploader(
+            label="Upload SET image",
+            type=["png", "jpg", "jpeg"],
+            label_visibility="collapsed",
+            help="Upload a photo of your SET game board",
+            key=f"desktop_uploader_{st.session_state.uploader_key}"
+        )
+        
+        # If new file is uploaded, reset processing state
+        if uploaded_file is not None and uploaded_file != st.session_state.get("uploaded_file", None):
+            # Reset state when new file is uploaded
+            for key in ['processed', 'processed_image', 'sets_info', 'original_image', 
+                       'no_cards_detected', 'no_sets_found']:
+                if key in st.session_state:
+                    if key in ['processed', 'no_cards_detected', 'no_sets_found']:
+                        st.session_state[key] = False
+                    else:
+                        st.session_state[key] = None
+            
+            # Set the new file
+            st.session_state.uploaded_file = uploaded_file
+            
+            # Start fresh with the new image
+            try:
+                image = Image.open(uploaded_file)
+                image = optimize_image(image)
+                st.session_state.original_image = image
+            except Exception as e:
+                st.error(f"Failed to load image: {str(e)}")
+        
+        # Process button in sidebar
+        if uploaded_file is not None:
+            if st.button("🔎 Find Sets", use_container_width=True):
+                # Clear previous results and error flags
+                st.session_state.processed = False
+                st.session_state.processed_image = None
+                st.session_state.sets_info = None
+                st.session_state.no_cards_detected = False
+                st.session_state.no_sets_found = False
+                st.session_state.start_processing = True
+    
+    # Create two equal columns for the main content
+    col1, col2 = st.columns([1, 1])
+    
+    # Original image column
+    with col1:
+        # Show original image if available
+        if st.session_state.get("original_image", None) is not None:
+            st.markdown('<div class="image-container">', unsafe_allow_html=True)
+            st.image(st.session_state.original_image, 
+                   caption="Original Image", 
+                   use_column_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+    
+    # Results column
+    with col2:
+        if st.session_state.get("start_processing", False):
+            # Show loading animation
+            render_loader()
+            
+            try:
+                # Convert image for processing
+                image_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_RGB2BGR)
+                
+                # Process image with models
+                sets_info, processed_image = classify_and_find_sets_from_array(
+                    image_cv,
+                    card_detection_model,
+                    shape_detection_model,
+                    fill_model,
+                    shape_model,
+                )
+                
+                # Update session state
+                st.session_state.processed_image = processed_image
+                st.session_state.sets_info = sets_info
+                st.session_state.processed = True
+                st.session_state.start_processing = False
+                
+                # Force refresh
+                st.rerun()
+            except Exception as e:
+                st.error("⚠️ An error occurred during processing:")
+                st.code(traceback.format_exc())
+                st.session_state.start_processing = False
+                
+        # Show processed image if available
+        elif st.session_state.get("processed", False):
+            if st.session_state.get("no_cards_detected", False):
+                # Show error message
+                render_error_message("Hmm... I couldn't detect any cards. Make sure your image shows a SET game board clearly.")
+                
+            elif st.session_state.get("no_sets_found", False):
+                # Show the processed image without sets
+                st.markdown('<div class="image-container">', unsafe_allow_html=True)
+                processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
+                st.image(processed_img, 
+                       caption="Processed Image", 
+                       use_column_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+                # Show warning message
+                render_warning_message("I found cards but no valid SETs in this board. The dealer might need to add more cards!")
+                
+            elif st.session_state.get("processed_image", None) is not None:
+                # Show the processed image with detected sets
+                st.markdown('<div class="image-container">', unsafe_allow_html=True)
+                processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
+                st.image(processed_img, 
+                       caption=f"Detected {len(st.session_state.sets_info)} Sets", 
+                       use_column_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Reset button - completely clears app state
+            st.button("⟳ Analyze New Image", use_container_width=True, on_click=reset_session_state)
+                
+        # Show a styled message to prompt the user to process
+        elif st.session_state.get("original_image", None) is not None and not st.session_state.get("processed", False):
+            render_process_message()
 
 # =============================================================================
 # MAIN APP
 # =============================================================================
 def main():
+    """Main application function"""
     # Load CSS
     load_css()
     
@@ -690,263 +1007,11 @@ def main():
     # Render header
     render_header()
     
-    # Handle desktop vs mobile layout
+    # Handle layout based on device type
     if is_mobile:
-        # MOBILE LAYOUT
-        # Mobile uploader section - always show this
-        st.markdown('<div class="mobile-uploader">', unsafe_allow_html=True)
-        st.markdown('<h3>Upload Your Image</h3>', unsafe_allow_html=True)
-        mobile_uploaded_file = st.file_uploader(
-            label="Upload SET image (mobile)",
-            type=["png", "jpg", "jpeg"],
-            key=f"mobile_uploader_{st.session_state.uploader_key}",
-            label_visibility="collapsed",
-            help="Upload a photo of your SET game board"
-        )
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        # If new file is uploaded, reset everything
-        if mobile_uploaded_file is not None and mobile_uploaded_file != st.session_state.get("uploaded_file", None):
-            # Reset state for new file
-            for key in ['processed', 'processed_image', 'sets_info', 'original_image',
-                       'no_cards_detected', 'no_sets_found']:
-                if key in st.session_state:
-                    if key in ['processed', 'no_cards_detected', 'no_sets_found']:
-                        st.session_state[key] = False
-                    else:
-                        st.session_state[key] = None
-            
-            # Set the new file
-            st.session_state.uploaded_file = mobile_uploaded_file
-            
-            # Start fresh with the new image
-            try:
-                image = Image.open(mobile_uploaded_file)
-                image = optimize_image(image)
-                st.session_state.original_image = image
-            except Exception as e:
-                st.error(f"Failed to load image: {str(e)}")
-        
-        # Process button for mobile
-        if mobile_uploaded_file is not None:
-            if st.button("🔎 Find Sets", key="mobile_button"):
-                # Clear previous results and error flags
-                st.session_state.processed = False
-                st.session_state.processed_image = None
-                st.session_state.sets_info = None
-                st.session_state.no_cards_detected = False
-                st.session_state.no_sets_found = False 
-                st.session_state.start_processing = True
-        
-        # Show original image if available
-        if st.session_state.get("original_image", None) is not None:
-            st.markdown('<div class="image-container">', unsafe_allow_html=True)
-            st.image(st.session_state.original_image, 
-                   caption="Original Image", 
-                   use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Processing or results display
-            if st.session_state.get("start_processing", False):
-                # Show loading animation
-                render_loader()
-                
-                try:
-                    # Process image with models
-                    image_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_RGB2BGR)
-                    sets_info, processed_image = classify_and_find_sets_from_array(
-                        image_cv, card_detection_model, shape_detection_model, fill_model, shape_model
-                    )
-                    
-                    # Update session state
-                    st.session_state.processed_image = processed_image
-                    st.session_state.sets_info = sets_info
-                    st.session_state.processed = True
-                    st.session_state.start_processing = False
-                    
-                    # Force refresh
-                    st.rerun()
-                except Exception as e:
-                    st.error("⚠️ An error occurred during processing:")
-                    st.code(traceback.format_exc())
-                    st.session_state.start_processing = False
-            
-            # Show processed results if available
-            elif st.session_state.get("processed", False):
-                if st.session_state.get("no_cards_detected", False):
-                    render_error_message("Hmm... are you sure this is a SET game board? I couldn't detect any cards.")
-                elif st.session_state.get("no_sets_found", False):
-                    st.markdown('<div class="image-container">', unsafe_allow_html=True)
-                    processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
-                    st.image(processed_img, caption="Processed Image", use_container_width=True)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                    render_warning_message("I found cards but no valid SETs in this board. The dealer might need to add more cards!")
-                elif st.session_state.get("processed_image", None) is not None:
-                    st.markdown('<div class="image-container">', unsafe_allow_html=True)
-                    processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
-                    st.image(processed_img, 
-                           caption=f"Detected {len(st.session_state.sets_info)} Sets", 
-                           use_container_width=True)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                
-                # Reset button for mobile
-                if st.button("⟳ Analyze New Image", key="mobile_reset"):
-                    reset_session_state()
-                    st.rerun()
-            
-            # Show processing message
-            elif not st.session_state.get("processed", False):
-                render_process_message()
-                
-                # Process button (if not already shown)
-                if st.session_state.get("uploaded_file", None) is not None:
-                    if st.button("🔎 Find Sets", key="mobile_process"):
-                        st.session_state.start_processing = True
-                        st.rerun()
+        render_mobile_layout()
     else:
-        # DESKTOP LAYOUT
-        # Create two equal columns (no arrow column anymore)
-        col1, col2 = st.columns([1, 1])
-        
-        # Setup the sidebar for desktop upload
-        with st.sidebar:
-            st.markdown('<h3 style="text-align: center;">Upload Your Image</h3>', unsafe_allow_html=True)
-            
-            # Handle file uploading - detect changes
-            uploaded_file = st.file_uploader(
-                label="Upload SET image",
-                type=["png", "jpg", "jpeg"],
-                label_visibility="collapsed",
-                help="Upload a photo of your SET game board",
-                key=f"file_uploader_{st.session_state.uploader_key}"  # Dynamic key for reset
-            )
-            
-            # If new file is uploaded, reset everything
-            if uploaded_file is not None and uploaded_file != st.session_state.get("uploaded_file", None):
-                # Reset state when new file is uploaded
-                for key in ['processed', 'processed_image', 'sets_info', 'original_image', 
-                           'no_cards_detected', 'no_sets_found']:
-                    if key in st.session_state:
-                        if key in ['processed', 'no_cards_detected', 'no_sets_found']:
-                            st.session_state[key] = False
-                        else:
-                            st.session_state[key] = None
-                
-                # Set the new file
-                st.session_state.uploaded_file = uploaded_file
-                
-                # Start fresh with the new image
-                try:
-                    image = Image.open(uploaded_file)
-                    image = optimize_image(image)
-                    st.session_state.original_image = image
-                except Exception as e:
-                    st.error(f"Failed to load image: {str(e)}")
-            
-            # Process button
-            if uploaded_file is not None:
-                if st.button("🔎 Find Sets"):
-                    # Clear previous results and error flags
-                    st.session_state.processed = False
-                    st.session_state.processed_image = None
-                    st.session_state.sets_info = None
-                    st.session_state.no_cards_detected = False
-                    st.session_state.no_sets_found = False
-                    st.session_state.start_processing = True
-        
-        # Original image column
-        with col1:
-            # Show original image if available
-            if st.session_state.get("original_image", None) is not None:
-                st.markdown('<div class="image-container">', unsafe_allow_html=True)
-                st.image(st.session_state.original_image, 
-                       caption="Original Image", 
-                       use_container_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-        
-        # Results column
-        with col2:
-            if st.session_state.get("start_processing", False):
-                # Show smaller loading animation
-                render_loader()
-                
-                try:
-                    # Convert image for processing - FIXED COLOR CONVERSION
-                    image_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_RGB2BGR)
-                    
-                    # Process image with models
-                    sets_info, processed_image = classify_and_find_sets_from_array(
-                        image_cv,
-                        card_detection_model,
-                        shape_detection_model,
-                        fill_model,
-                        shape_model,
-                    )
-                    
-                    # Update session state
-                    st.session_state.processed_image = processed_image
-                    st.session_state.sets_info = sets_info
-                    st.session_state.processed = True
-                    st.session_state.start_processing = False
-                    
-                    # Force refresh
-                    st.rerun()
-                except Exception as e:
-                    st.error("⚠️ An error occurred during processing:")
-                    st.code(traceback.format_exc())
-                    st.session_state.start_processing = False
-                    
-            # Show processed image if available
-            elif st.session_state.get("processed", False):
-                if st.session_state.get("no_cards_detected", False):
-                    # Show the original image with an error message
-                    st.markdown('<div class="image-container">', unsafe_allow_html=True)
-                    st.image(st.session_state.original_image, 
-                           caption="Original Image", 
-                           use_container_width=True)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                    
-                    # Show error message
-                    render_error_message("Hmm... are you sure this is a SET game board? I couldn't detect any cards.")
-                    
-                elif st.session_state.get("no_sets_found", False):
-                    # Show the processed image without sets
-                    st.markdown('<div class="image-container">', unsafe_allow_html=True)
-                    processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
-                    st.image(processed_img, 
-                           caption="Processed Image", 
-                           use_container_width=True)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                    
-                    # Show warning message
-                    render_warning_message("I found cards but no valid SETs in this board. The dealer might need to add more cards!")
-                    
-                elif st.session_state.get("processed_image", None) is not None:
-                    # Show the processed image with detected sets
-                    st.markdown('<div class="image-container">', unsafe_allow_html=True)
-                    processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
-                    st.image(processed_img, 
-                           caption=f"Detected {len(st.session_state.sets_info)} Sets", 
-                           use_container_width=True)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                
-                # Reset button - Important: completely clears app state
-                if st.button("⟳ Analyze New Image"):
-                    # Clear UI immediately
-                    with col1:
-                        st.empty()
-                    with col2:
-                        st.empty()
-                    
-                    # Reset session state
-                    reset_session_state()
-                    
-                    # Make sure UI reloads completely
-                    st.rerun()
-                    
-            # Show a styled message to prompt the user to process
-            elif st.session_state.get("original_image", None) is not None and not st.session_state.get("processed", False):
-                render_process_message()
+        render_desktop_layout()
 
 if __name__ == "__main__":
     main()
