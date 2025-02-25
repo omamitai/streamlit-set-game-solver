@@ -136,7 +136,7 @@ def load_css():
     }}
     
     .set-header h1 {{
-        font-size: 2.8rem;
+        font-size: 2.2rem;
         margin-bottom: 0.2rem;
         background: linear-gradient(90deg, var(--purple) 0%, var(--primary) 50%, var(--accent) 100%);
         -webkit-background-clip: text;
@@ -945,7 +945,7 @@ def optimize_image(image: Image.Image, max_size: int = 1200) -> Image.Image:
 # =============================================================================
 # UI COMPONENT FUNCTIONS
 # =============================================================================
-def render_loader(message: str = "Processing your SET game image..."):
+def render_loader(message: str = ""):
     """Render a SET-themed loader with custom message"""
     loader_html = f"""
     <div class="loader-container">
@@ -954,7 +954,7 @@ def render_loader(message: str = "Processing your SET game image..."):
             <div class="loader-dot loader-dot-2"></div>
             <div class="loader-dot loader-dot-3"></div>
         </div>
-        <div class="loader-text">{message}</div>
+        {f'<div class="loader-text">{message}</div>' if message else ''}
     </div>
     """
     return st.markdown(loader_html, unsafe_allow_html=True)
@@ -1283,17 +1283,8 @@ def render_desktop_layout():
                 st.session_state.start_processing = True
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # Show instructions in sidebar
-            st.markdown(
-                '''
-                <div class="instruction-text">
-                    <p>1. Upload a clear image of your SET game board</p>
-                    <p>2. Click "Find Sets" to process</p>
-                    <p>3. View detected sets highlighted on your image</p>
-                </div>
-                ''',
-                unsafe_allow_html=True
-            )
+            # Sidebar content space
+            # Empty space where instructions used to be
             
             # Show GPU info if available
             if 'gpu_info' in st.session_state:
@@ -1348,7 +1339,7 @@ def render_desktop_layout():
                 sets_info, processed_image = classify_and_find_sets_from_array(
                     image_cv,
                     card_detection_model,
-                    shape_detector_model,
+                    shape_detection_model,
                     fill_model,
                     shape_model,
                 )
