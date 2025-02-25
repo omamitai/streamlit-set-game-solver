@@ -198,8 +198,8 @@ def load_css():
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        height: 300px;
-        gap: 1.5rem;
+        height: 180px;
+        gap: 1rem;
     }}
     
     .loader {{
@@ -246,12 +246,14 @@ def load_css():
     
     /* Image container */
     .image-container {{
-        margin-top: 0.5rem;
+        margin-top: 0.3rem;
+        margin-bottom: 0.5rem;
         position: relative;
         border-radius: 12px;
         overflow: hidden;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
+        max-height: 40vh;
     }}
     
     .image-container:hover {{
@@ -274,45 +276,88 @@ def load_css():
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(90deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
-        padding: 1.5rem;
+        background: linear-gradient(90deg, rgba(124, 58, 237, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+        padding: 0.8rem;
         border-radius: 12px;
         text-align: center;
-        margin: 2rem 0;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        margin: 0.8rem 0;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
     }}
     
     /* Image placeholder - improved styles */
     .image-placeholder {{
-        background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
-        border: 1px solid rgba(124, 58, 237, 0.15);
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.03) 0%, rgba(236, 72, 153, 0.03) 100%);
+        border: 2px dashed rgba(124, 58, 237, 0.2);
         border-radius: 12px;
-        height: 280px;
+        height: 200px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        margin: 1rem 0;
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        margin: 0.5rem 0;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
         transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
     }}
     
     .image-placeholder:hover {{
-        border-color: rgba(124, 58, 237, 0.3);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+        border-color: rgba(124, 58, 237, 0.4);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+    }}
+    
+    .image-placeholder::before {{
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+            to bottom right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.1) 50%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        transform: rotate(30deg);
+        animation: shimmer 3s infinite linear;
+        z-index: 1;
+    }}
+    
+    @keyframes shimmer {{
+        from {{ transform: translateX(-100%) rotate(30deg); }}
+        to {{ transform: translateX(100%) rotate(30deg); }}
     }}
     
     .image-placeholder-icon {{
-        font-size: 2.2rem;
-        margin-bottom: 1rem;
+        font-size: 2rem;
+        margin-bottom: 0.75rem;
         color: rgba(124, 58, 237, 0.4);
+        background: rgba(124, 58, 237, 0.1);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 2;
+        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15);
     }}
     
     .image-placeholder-text {{
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         color: #6B7280;
         max-width: 80%;
         text-align: center;
+        position: relative;
+        z-index: 2;
+        font-weight: 500;
+        background: rgba(255, 255, 255, 0.7);
+        padding: 0.3rem 0.6rem;
+        border-radius: 4px;
+        margin-top: 0.5rem;
     }}
     
     .system-message p {{
@@ -425,7 +470,7 @@ def load_css():
         
         /* More compact loader for mobile */
         .loader-container {{
-            height: 200px;
+            height: 150px;
         }}
         
         /* Adjust system message for mobile */
@@ -1006,7 +1051,7 @@ def render_loader():
             <div class="loader-dot loader-dot-2"></div>
             <div class="loader-dot loader-dot-3"></div>
         </div>
-        <div class="loader-text">Processing your image...</div>
+        <div class="loader-text">Finding sets...</div>
     </div>
     """
     return st.markdown(loader_html, unsafe_allow_html=True)
@@ -1030,7 +1075,7 @@ def render_warning_message(message):
     return st.markdown(warning_html, unsafe_allow_html=True)
 
 def render_success_message(message):
-    """Render a styled success message"""
+    """Render a styled success message (kept for potential future use)"""
     success_html = f"""
     <div class="success-message">
         <p>{message}</p>
@@ -1051,7 +1096,7 @@ def render_image_placeholder(message="Your processed image will appear here"):
     """Render a placeholder for where the image will appear"""
     placeholder_html = f"""
     <div class="image-placeholder">
-        <div class="image-placeholder-icon">📷</div>
+        <div class="image-placeholder-icon">🎴</div>
         <div class="image-placeholder-text">{message}</div>
     </div>
     """
@@ -1105,7 +1150,66 @@ def render_mobile_interface():
     
     # Only show uploader if no file is uploaded yet
     if not st.session_state.get("uploaded_file", None):
-        st.markdown('<h3 style="text-align: center;">Upload Your Image</h3>', unsafe_allow_html=True)
+        # Custom mobile-friendly uploader styling
+        mobile_upload_css = """
+        <style>
+        /* Custom mobile uploader */
+        [data-testid="stFileUploader"] {
+            margin-bottom: 0.5rem !important;
+        }
+        
+        [data-testid="stFileUploadDropzone"] {
+            min-height: 100px !important;
+            padding: 10px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border: 2px dashed rgba(124, 58, 237, 0.3) !important;
+            background-color: rgba(124, 58, 237, 0.02) !important;
+            border-radius: 12px !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        [data-testid="stFileUploadDropzone"]:hover {
+            border-color: rgba(124, 58, 237, 0.5) !important;
+            background-color: rgba(124, 58, 237, 0.05) !important;
+        }
+        
+        [data-testid="stFileUploadDropzone"] p {
+            font-size: 0.85rem !important;
+            line-height: 1.2 !important;
+            margin-top: 0.25rem !important;
+            margin-bottom: 0.25rem !important;
+        }
+        
+        [data-testid="stFileUploadDropzone"] svg {
+            height: 28px !important;
+            width: 28px !important;
+            color: rgba(124, 58, 237, 0.6) !important;
+        }
+        
+        /* Make the whole upload area more prominent */
+        .mobile-upload-container {
+            background: rgba(124, 58, 237, 0.05);
+            border-radius: 12px;
+            padding: 0.8rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+        </style>
+        """
+        st.markdown(mobile_upload_css, unsafe_allow_html=True)
+        
+        st.markdown('<div class="mobile-upload-container">', unsafe_allow_html=True)
+        st.markdown('<h3 style="text-align: center; margin-top: 0; padding-top: 0;">Take a Photo of Your SET Game</h3>', unsafe_allow_html=True)
+        
+        # Custom instruction for mobile users
+        st.markdown("""
+        <div style="text-align: center; margin-bottom: 0.5rem; font-size: 0.9rem; color: #666;">
+            Tap below to take a photo or upload from your gallery
+        </div>
+        """, unsafe_allow_html=True)
         
         # Mobile file uploader
         mobile_uploaded_file = st.file_uploader(
@@ -1115,9 +1219,10 @@ def render_mobile_interface():
             label_visibility="collapsed",
             help="Upload a photo of your SET game board"
         )
+        st.markdown('</div>', unsafe_allow_html=True)
         
         # Show placeholder when no image is uploaded yet
-        render_image_placeholder("Upload an image to get started")
+        render_image_placeholder("Your SET game will appear here")
         
         # Handle new file upload
         if mobile_uploaded_file is not None and mobile_uploaded_file != st.session_state.get("uploaded_file", None):
@@ -1143,9 +1248,7 @@ def render_mobile_interface():
                 # Automatic processing on mobile with slight delay for UI responsiveness
                 st.session_state.start_processing = True
                 
-                # Show upload success message briefly before processing
-                st.success("Image uploaded successfully!")
-                time.sleep(0.5)  # Brief pause to show the success message
+                # Skip success message as requested
                 st.rerun()
             except Exception as e:
                 st.error(f"Failed to load image: {str(e)}")
@@ -1199,12 +1302,10 @@ def render_mobile_interface():
                 processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
                 st.image(
                     processed_img, 
-                    caption=f"Found {len(st.session_state.sets_info)} SETs", 
+                    caption=f"Found {len(st.session_state.sets_info)} SET{'s' if len(st.session_state.sets_info) != 1 else ''}", 
                     use_container_width=True
                 )
                 st.markdown('</div>', unsafe_allow_html=True)
-                
-                render_success_message(f"Successfully found {len(st.session_state.sets_info)} SET{'s' if len(st.session_state.sets_info) != 1 else ''}!")
             
             # Reset button
             if st.button("⟳ Analyze New Image", key="mobile_reset"):
@@ -1352,12 +1453,10 @@ def render_desktop_interface():
                 processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
                 st.image(
                     processed_img, 
-                    caption=f"Found {len(st.session_state.sets_info)} SETs", 
+                    caption=f"Found {len(st.session_state.sets_info)} SET{'s' if len(st.session_state.sets_info) != 1 else ''}", 
                     use_container_width=True
                 )
                 st.markdown('</div>', unsafe_allow_html=True)
-                
-                render_success_message(f"Successfully found {len(st.session_state.sets_info)} SET{'s' if len(st.session_state.sets_info) != 1 else ''}!")
             
             # Reset button
             if st.button("⟳ Analyze New Image", key="desktop_reset"):
