@@ -65,8 +65,6 @@ if "no_sets_found" not in st.session_state:
     st.session_state.no_sets_found = False
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = "initial"
-if "image_height" not in st.session_state:
-    st.session_state.image_height = 400
 
 # =============================================================================
 # CSS STYLING
@@ -162,21 +160,6 @@ def load_css():
         opacity: 0.9;
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
-    }}
-    
-    /* Direction arrow - positioned in middle of cards */
-    .direction-arrow {{
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        /* We'll set margin-top dynamically via inline style instead of fixed 200px */
-        height: fit-content;
-    }}
-    
-    .direction-arrow svg {{
-        width: 40px;
-        height: 40px;
-        filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.5));
     }}
     
     /* Loading animation */
@@ -282,6 +265,22 @@ def load_css():
         color: #F59E0B;
     }}
     
+    /* Mobile uploader styling - make it more prominent and centered */
+    .mobile-uploader {{
+        background: linear-gradient(90deg, rgba(124, 58, 237, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+        padding: 1rem;
+        border-radius: 12px;
+        margin: 1rem 0;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        text-align: center;
+    }}
+    
+    .mobile-uploader h3 {{
+        color: {SET_COLORS["primary"]};
+        margin-bottom: 1rem;
+        font-size: 1.2rem;
+    }}
+    
     /* For mobile devices */
     @media (max-width: 991px) {{
         /* Hide sidebar on mobile */
@@ -301,13 +300,6 @@ def load_css():
         .set-header {{
             padding: 0.8rem;
             margin-bottom: 0.8rem;
-        }}
-        
-        /* Adjust arrow for mobile */
-        .mobile-arrow {{
-            transform: rotate(90deg);
-            margin: 1rem auto !important;
-            width: 40px !important;
         }}
         
         /* Mobile layout adjustments */
@@ -570,35 +562,6 @@ def render_loader():
     """
     return st.markdown(loader_html, unsafe_allow_html=True)
 
-def render_arrow(direction="horizontal", image_height=None):
-    """Render a SET-themed direction arrow with dynamic positioning"""
-    class_name = "mobile-arrow" if direction == "vertical" else ""
-    
-    # Calculate the margin-top based on image height if provided
-    margin_style = ""
-    if image_height is not None:
-        # Center the arrow vertically to match the image height
-        # This calculates half the image height, adjusting for the arrow's own height
-        margin_top = max(50, image_height / 2 - 20)  # 20px is half the arrow height
-        margin_style = f"style='margin-top: {margin_top}px;'"
-    
-    arrow_html = f"""
-    <div class="direction-arrow {class_name}" {margin_style}>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="url(#gradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <defs>
-                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stop-color="{SET_COLORS["purple"]}" />
-                    <stop offset="50%" stop-color="{SET_COLORS["primary"]}" />
-                    <stop offset="100%" stop-color="{SET_COLORS["accent"]}" />
-                </linearGradient>
-            </defs>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-            <polyline points="12 5 19 12 12 19"></polyline>
-        </svg>
-    </div>
-    """
-    return st.markdown(arrow_html, unsafe_allow_html=True)
-
 def render_error_message(message):
     """Render a styled error message"""
     error_html = f"""
@@ -648,7 +611,6 @@ def reset_session_state():
     st.session_state.sets_info = None
     st.session_state.no_cards_detected = False
     st.session_state.no_sets_found = False
-    st.session_state.image_height = 400  # Default image height
     
     # Force file uploader to reset by generating a new random key
     st.session_state.uploader_key = str(random.randint(1000, 9999))
@@ -731,51 +693,50 @@ def main():
     # Handle desktop vs mobile layout
     if is_mobile:
         # MOBILE LAYOUT
-        # Only show mobile uploader if no file is uploaded yet
-        if not st.session_state.get("uploaded_file", None):
-            st.markdown('<h3 style="text-align: center;">Upload Your Image</h3>', unsafe_allow_html=True)
-            mobile_uploaded_file = st.file_uploader(
-                label="Upload SET image (mobile)",
-                type=["png", "jpg", "jpeg"],
-                key=f"mobile_uploader_{st.session_state.uploader_key}",
-                label_visibility="collapsed",
-                help="Upload a photo of your SET game board"
-            )
+        # Mobile uploader section - always show this
+        st.markdown('<div class="mobile-uploader">', unsafe_allow_html=True)
+        st.markdown('<h3>Upload Your Image</h3>', unsafe_allow_html=True)
+        mobile_uploaded_file = st.file_uploader(
+            label="Upload SET image (mobile)",
+            type=["png", "jpg", "jpeg"],
+            key=f"mobile_uploader_{st.session_state.uploader_key}",
+            label_visibility="collapsed",
+            help="Upload a photo of your SET game board"
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # If new file is uploaded, reset everything
+        if mobile_uploaded_file is not None and mobile_uploaded_file != st.session_state.get("uploaded_file", None):
+            # Reset state for new file
+            for key in ['processed', 'processed_image', 'sets_info', 'original_image',
+                       'no_cards_detected', 'no_sets_found']:
+                if key in st.session_state:
+                    if key in ['processed', 'no_cards_detected', 'no_sets_found']:
+                        st.session_state[key] = False
+                    else:
+                        st.session_state[key] = None
             
-            # If new file is uploaded, reset everything
-            if mobile_uploaded_file is not None and mobile_uploaded_file != st.session_state.get("uploaded_file", None):
-                # Reset state for new file
-                for key in ['processed', 'processed_image', 'sets_info', 'original_image',
-                           'no_cards_detected', 'no_sets_found']:
-                    if key in st.session_state:
-                        if key in ['processed', 'no_cards_detected', 'no_sets_found']:
-                            st.session_state[key] = False
-                        else:
-                            st.session_state[key] = None
-                
-                # Set the new file
-                st.session_state.uploaded_file = mobile_uploaded_file
-                
-                # Start fresh with the new image
-                try:
-                    image = Image.open(mobile_uploaded_file)
-                    image = optimize_image(image)
-                    st.session_state.original_image = image
-                    # Store image height for mobile layout
-                    st.session_state.image_height = image.height
-                except Exception as e:
-                    st.error(f"Failed to load image: {str(e)}")
+            # Set the new file
+            st.session_state.uploaded_file = mobile_uploaded_file
             
-            # Process button for mobile
-            if mobile_uploaded_file is not None:
-                if st.button("🔎 Find Sets", key="mobile_button"):
-                    # Clear previous results and error flags
-                    st.session_state.processed = False
-                    st.session_state.processed_image = None
-                    st.session_state.sets_info = None
-                    st.session_state.no_cards_detected = False
-                    st.session_state.no_sets_found = False 
-                    st.session_state.start_processing = True
+            # Start fresh with the new image
+            try:
+                image = Image.open(mobile_uploaded_file)
+                image = optimize_image(image)
+                st.session_state.original_image = image
+            except Exception as e:
+                st.error(f"Failed to load image: {str(e)}")
+        
+        # Process button for mobile
+        if mobile_uploaded_file is not None:
+            if st.button("🔎 Find Sets", key="mobile_button"):
+                # Clear previous results and error flags
+                st.session_state.processed = False
+                st.session_state.processed_image = None
+                st.session_state.sets_info = None
+                st.session_state.no_cards_detected = False
+                st.session_state.no_sets_found = False 
+                st.session_state.start_processing = True
         
         # Show original image if available
         if st.session_state.get("original_image", None) is not None:
@@ -784,9 +745,6 @@ def main():
                    caption="Original Image", 
                    use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Add vertical arrow for mobile
-            render_arrow(direction="vertical")
             
             # Processing or results display
             if st.session_state.get("start_processing", False):
@@ -847,7 +805,8 @@ def main():
                         st.rerun()
     else:
         # DESKTOP LAYOUT
-        col1, col_arrow, col2 = st.columns([5, 1, 5])
+        # Create two equal columns (no arrow column anymore)
+        col1, col2 = st.columns([1, 1])
         
         # Setup the sidebar for desktop upload
         with st.sidebar:
@@ -881,8 +840,6 @@ def main():
                     image = Image.open(uploaded_file)
                     image = optimize_image(image)
                     st.session_state.original_image = image
-                    # Store image height for arrow positioning
-                    st.session_state.image_height = image.height
                 except Exception as e:
                     st.error(f"Failed to load image: {str(e)}")
             
@@ -906,13 +863,6 @@ def main():
                        caption="Original Image", 
                        use_container_width=True)
                 st.markdown('</div>', unsafe_allow_html=True)
-        
-        # Arrow column - only show if an image is uploaded
-        with col_arrow:
-            if st.session_state.get("original_image", None) is not None:
-                # Get image height for dynamic positioning
-                image_height = st.session_state.get("image_height", 400)
-                render_arrow(image_height=image_height)
         
         # Results column
         with col2:
@@ -986,8 +936,6 @@ def main():
                     with col1:
                         st.empty()
                     with col2:
-                        st.empty()
-                    with col_arrow:
                         st.empty()
                     
                     # Reset session state
