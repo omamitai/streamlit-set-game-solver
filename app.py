@@ -20,13 +20,10 @@ from ultralytics import YOLO
 from itertools import combinations
 from pathlib import Path
 from typing import Tuple, List, Dict
-import base64
-from io import BytesIO
 
 # =============================================================================
-# CONFIGURATION & DEVICE DETECTION
+# CONFIGURATION 
 # =============================================================================
-
 st.set_page_config(layout="wide", page_title="SET Game Detector")
 
 # Define SET theme colors
@@ -42,7 +39,6 @@ SET_COLORS = {
 # =============================================================================
 # CSS STYLING
 # =============================================================================
-
 def load_css():
     """Load custom CSS with responsive design"""
     css = f"""
@@ -63,7 +59,7 @@ def load_css():
         margin-bottom: 1.5rem;
         position: relative;
         background: linear-gradient(90deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
-        padding: 1.5rem;
+        padding: 1rem;
         border-radius: 12px;
     }}
     
@@ -85,7 +81,7 @@ def load_css():
     .set-card {{
         background-color: rgba(255, 255, 255, 0.05);
         border-radius: 12px;
-        padding: 1.5rem;
+        padding: 1rem;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
         height: 100%;
@@ -103,7 +99,7 @@ def load_css():
     .upload-area {{
         border: 2px dashed rgba(124, 58, 237, 0.5);
         border-radius: 12px;
-        padding: 2rem;
+        padding: 1.5rem;
         text-align: center;
         transition: all 0.3s ease;
         background-color: rgba(124, 58, 237, 0.05);
@@ -141,7 +137,7 @@ def load_css():
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 2rem 0;
+        margin: 1rem 0;
     }}
     
     .loader-dot {{
@@ -182,62 +178,20 @@ def load_css():
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
     }}
     
-    /* Results summary */
-    .results-summary {{
-        margin-top: 1rem;
-        background-color: rgba(255, 255, 255, 0.05);
-        border-radius: 8px;
-        padding: 1rem;
-    }}
-    
-    .set-item {{
-        margin-bottom: 0.5rem;
-        padding: 0.5rem;
-        background-color: rgba(124, 58, 237, 0.1);
-        border-radius: 6px;
-    }}
-    
-    /* Download button */
-    .download-btn {{
-        display: inline-block;
-        background: linear-gradient(90deg, {SET_COLORS["primary"]} 0%, {SET_COLORS["accent"]} 100%);
-        color: white;
-        text-decoration: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        width: 100%;
-        margin-top: 1rem;
-        text-align: center;
-    }}
-    
-    .download-btn:hover {{
-        opacity: 0.9;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
-    }}
-    
-    /* Responsive adjustments */
-    /* Desktop */
-    @media (min-width: 992px) {{
-        .mobile-uploader {{ display: none; }}
-        .desktop-view {{ display: block; }}
-    }}
-    
-    /* Mobile */
+    /* For mobile devices */
     @media (max-width: 991px) {{
-        .desktop-uploader {{ display: none; }}
-        .mobile-view {{ display: block; }}
-        .set-header h1 {{ font-size: 2rem; }}
-        .set-header p {{ font-size: 1rem; }}
-    }}
-    
-    /* Hide Streamlit elements */
-    .mobile-view .block-container {{
-        padding-top: 1rem;
-        max-width: 100%;
+        /* Hide sidebar on mobile */
+        section[data-testid="stSidebar"] {{
+            display: none;
+        }}
+        
+        .set-header h1 {{ 
+            font-size: 2rem; 
+        }}
+        
+        .set-header p {{ 
+            font-size: 1rem; 
+        }}
     }}
     </style>
     """
@@ -246,7 +200,6 @@ def load_css():
 # =============================================================================
 # MODEL LOADING
 # =============================================================================
-
 base_dir = Path("models")
 characteristics_path = base_dir / "Characteristics" / "11022025"
 shape_path = base_dir / "Shape" / "15052024"
@@ -280,7 +233,6 @@ except Exception as e:
 # =============================================================================
 # UTILITY & PROCESSING FUNCTIONS
 # =============================================================================
-
 def check_and_rotate_input_image(board_image: np.ndarray, detector: YOLO) -> Tuple[np.ndarray, bool]:
     card_results = detector(board_image)
     card_boxes = card_results[0].boxes.xyxy.cpu().numpy().astype(int)
@@ -450,14 +402,6 @@ def optimize_image(image, max_size=1200):
         return image.resize((new_width, new_height), Image.LANCZOS)
     return image
 
-def get_image_download_link(img, filename="set_detected.jpg", text="Download Result"):
-    """Generate a download link for an image"""
-    buffered = BytesIO()
-    img.save(buffered, format="JPEG", quality=90)
-    img_str = base64.b64encode(buffered.getvalue()).decode()
-    href = f'<a href="data:image/jpeg;base64,{img_str}" download="{filename}" class="download-btn">{text}</a>'
-    return href
-
 def render_loader():
     """Render a SET-themed loader"""
     loader_html = """
@@ -505,199 +449,119 @@ def main():
     # Load CSS
     load_css()
     
-    # CSS for responsive detection
-    st.markdown("""
-    <style>
-    .mobile-view, .desktop-view {
-        display: none;
-    }
-    @media (max-width: 991px) {
-        .mobile-view {
-            display: block;
-        }
-        /* Hide sidebar on mobile */
-        section[data-testid="stSidebar"] {
-            display: none;
-        }
-    }
-    @media (min-width: 992px) {
-        .desktop-view {
-            display: block;
-        }
-    }
-    </style>
-    """, unsafe_allow_html=True)
-    
     render_header()
     
-    # DESKTOP VERSION - File uploader in sidebar
+    # Create columns for layout immediately
+    col1, col2 = st.columns(2)
+    
+    # Setup the sidebar for desktop upload
     with st.sidebar:
-        st.markdown('<div class="desktop-uploader">', unsafe_allow_html=True)
         st.markdown('<h3 style="text-align: center;">Upload Your Image</h3>', unsafe_allow_html=True)
         
         # File uploader in sidebar for desktop
         uploaded_file = st.file_uploader("", type=["png", "jpg", "jpeg"], 
-                                        help="Upload a photo of your SET game board",
-                                        key="desktop_uploader")
-        
-        # Optimization toggle
-        optimize = st.checkbox("Optimize image for faster processing", value=True)
+                                        help="Upload a photo of your SET game board")
         
         if uploaded_file is not None:
             st.session_state.uploaded_file = uploaded_file
             # Process button
-            if st.button("🔎 Find Sets", key="find_sets_desktop"):
+            if st.button("🔎 Find Sets"):
                 st.session_state.start_processing = True
-                
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        # SET Game explanation in sidebar
-        with st.expander("How does SET work?"):
-            st.markdown("""
-                <div style="background-color: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px;">
-                    <p>In SET, each card has 4 features:</p>
-                    <ul>
-                        <li><strong>Number:</strong> 1, 2, or 3 shapes</li>
-                        <li><strong>Color:</strong> Red, Green, or Purple</li>
-                        <li><strong>Shape:</strong> Diamond, Oval, or Squiggle</li>
-                        <li><strong>Fill:</strong> Empty, Striped, or Solid</li>
-                    </ul>
-                    <p>A valid set consists of 3 cards where each feature is either <strong>all the same</strong> or <strong>all different</strong> across all cards.</p>
-                </div>
-            """, unsafe_allow_html=True)
     
-    # MOBILE VERSION - File uploader in main content
-    st.markdown('<div class="mobile-uploader">', unsafe_allow_html=True)
-    mobile_uploaded_file = st.file_uploader("Upload SET Game Image", type=["png", "jpg", "jpeg"], 
-                                      help="Upload a photo of your SET game board",
-                                      key="mobile_uploader")
+    # For mobile view - Create a file uploader only for mobile
+    is_mobile = False
+    try:
+        # Check if we're on mobile by testing window width (this is just a CSS check)
+        is_mobile = st.session_state.get('mobile_detected', False)
+    except:
+        pass
     
-    if mobile_uploaded_file is not None:
-        st.session_state.uploaded_file = mobile_uploaded_file
-        mobile_optimize = st.checkbox("Optimize image", value=True, key="mobile_optimize")
+    # Only show mobile uploader if we've detected mobile
+    if is_mobile:
+        mobile_uploaded_file = st.file_uploader("Upload SET Game Image", type=["png", "jpg", "jpeg"])
         
-        # Process button for mobile
-        if st.button("🔎 Find Sets", key="find_sets_mobile"):
-            st.session_state.start_processing = True
+        if mobile_uploaded_file is not None:
+            st.session_state.uploaded_file = mobile_uploaded_file
             
-    # SET Game explanation for mobile
-    with st.expander("How does SET work?"):
-        st.markdown("""
-            <div style="background-color: rgba(255, 255, 255, 0.05); padding: 1rem; border-radius: 8px;">
-                <p>In SET, each card has 4 features:</p>
-                <ul>
-                    <li><strong>Number:</strong> 1, 2, or 3 shapes</li>
-                    <li><strong>Color:</strong> Red, Green, or Purple</li>
-                    <li><strong>Shape:</strong> Diamond, Oval, or Squiggle</li>
-                    <li><strong>Fill:</strong> Empty, Striped, or Solid</li>
-                </ul>
-                <p>A valid set consists of 3 cards where each feature is either <strong>all the same</strong> or <strong>all different</strong> across all cards.</p>
-            </div>
-        """, unsafe_allow_html=True)
+            # Process button for mobile
+            if st.button("🔎 Find Sets", key="mobile_button"):
+                st.session_state.start_processing = True
     
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # RESULTS DISPLAY (Same for both mobile and desktop)
-    if st.session_state.uploaded_file is not None:
-        # Load image if needed
-        if st.session_state.original_image is None:
+    # MAIN CONTENT AREA
+    # Always set up the layout with columns first
+    with col1:
+        # Original image placeholder
+        if st.session_state.uploaded_file is not None and st.session_state.original_image is None:
             try:
                 image = Image.open(st.session_state.uploaded_file)
-                should_optimize = optimize if 'optimize' in locals() else mobile_optimize if 'mobile_optimize' in locals() else True
-                if should_optimize:
-                    image = optimize_image(image)
+                # Always optimize the image
+                image = optimize_image(image)
                 st.session_state.original_image = image
             except Exception as e:
                 st.error(f"Failed to load image: {str(e)}")
         
-        # Display images
-        if st.session_state.processed and st.session_state.processed_image is not None:
-            # If processing is complete, show results side by side
-            col1, col2 = st.columns(2)
-            
-            with col1:
-                st.markdown('<div class="image-container">', unsafe_allow_html=True)
-                st.image(st.session_state.original_image, 
-                       caption="Original Image", 
-                       use_container_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-            
-            with col2:
-                st.markdown('<div class="image-container">', unsafe_allow_html=True)
-                processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
-                st.image(processed_img, 
-                       caption=f"Detected {len(st.session_state.sets_info)} Sets", 
-                       use_container_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-                
-                # Add download button
-                processed_pil = Image.fromarray(processed_img)
-                st.markdown(get_image_download_link(processed_pil, text="⬇️ Download Result"), unsafe_allow_html=True)
-            
-            # Show detected sets information
-            if st.session_state.sets_info:
-                st.markdown('<div class="results-summary">', unsafe_allow_html=True)
-                st.markdown(f"### {len(st.session_state.sets_info)} Sets Found")
-                
-                # Display key details about each set
-                for i, set_info in enumerate(st.session_state.sets_info):
-                    with st.expander(f"Set {i+1} Details"):
-                        for j, card in enumerate(set_info["cards"]):
-                            st.markdown(f"""
-                            <div class="set-item">
-                                <strong>Card {j+1}:</strong> 
-                                {card["Count"]} {card["Color"]} {card["Fill"]} {card["Shape"]}
-                            </div>
-                            """, unsafe_allow_html=True)
-                
-                st.markdown('</div>', unsafe_allow_html=True)
-                
-                # Reset button
-                if st.button("⟳ Analyze Another Image"):
-                    st.session_state.processed = False
-                    st.session_state.original_image = None
-                    st.session_state.processed_image = None
-                    st.session_state.sets_info = None
-                    st.session_state.uploaded_file = None
-                    st.session_state.start_processing = False
-                    st.experimental_rerun()
-            
-        elif not st.session_state.processed:
-            # If not yet processed, show original image
+        # Show original image if available
+        if st.session_state.original_image is not None:
+            st.markdown('<div class="image-container">', unsafe_allow_html=True)
             st.image(st.session_state.original_image, 
                    caption="Original Image", 
                    use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+        else:
+            # Placeholder when no image is uploaded
+            st.info("Please upload an image to detect sets")
+    
+    with col2:
+        # Processing result placeholder
+        if st.session_state.start_processing:
+            # Show loading animation while processing
+            render_loader()
             
-            # Check if processing should start
-            if st.session_state.start_processing:
-                try:
-                    with st.spinner("Detecting sets..."):
-                        render_loader()
-                        
-                        # Convert image for processing
-                        image_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_RGB2BGR)
-                        
-                        # Process image with models
-                        sets_info, processed_image = classify_and_find_sets_from_array(
-                            image_cv,
-                            card_detection_model,
-                            shape_detection_model,
-                            fill_model,
-                            shape_model,
-                        )
-                        
-                        # Update session state
-                        st.session_state.processed_image = processed_image
-                        st.session_state.sets_info = sets_info
-                        st.session_state.processed = True
-                        st.session_state.start_processing = False
-                        
-                        # Force refresh to show results
-                        st.experimental_rerun()
-                except Exception as e:
-                    st.error("⚠️ An error occurred during processing:")
-                    st.code(traceback.format_exc())
+            try:
+                with st.spinner("Detecting sets..."):
+                    # Convert image for processing
+                    image_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_RGB2BGR)
+                    
+                    # Process image with models
+                    sets_info, processed_image = classify_and_find_sets_from_array(
+                        image_cv,
+                        card_detection_model,
+                        shape_detection_model,
+                        fill_model,
+                        shape_model,
+                    )
+                    
+                    # Update session state
+                    st.session_state.processed_image = processed_image
+                    st.session_state.sets_info = sets_info
+                    st.session_state.processed = True
                     st.session_state.start_processing = False
+                    
+                    # Force refresh - use st.rerun() instead of experimental_rerun
+                    st.rerun()
+            except Exception as e:
+                st.error("⚠️ An error occurred during processing:")
+                st.code(traceback.format_exc())
+                st.session_state.start_processing = False
+        
+        # Show processed image if available
+        if st.session_state.processed and st.session_state.processed_image is not None:
+            st.markdown('<div class="image-container">', unsafe_allow_html=True)
+            processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
+            st.image(processed_img, 
+                   caption=f"Detected {len(st.session_state.sets_info)} Sets", 
+                   use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Reset button
+            if st.button("⟳ Analyze Another Image"):
+                st.session_state.processed = False
+                st.session_state.original_image = None
+                st.session_state.processed_image = None
+                st.session_state.sets_info = None
+                st.session_state.uploaded_file = None
+                st.session_state.start_processing = False
+                st.rerun() # Using st.rerun() instead of experimental_rerun
 
 if __name__ == "__main__":
     main()
