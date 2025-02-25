@@ -198,7 +198,7 @@ def load_css():
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        height: 180px;
+        height: 140px;
         gap: 1rem;
     }}
     
@@ -215,13 +215,6 @@ def load_css():
         border-radius: 50%;
         display: inline-block;
         animation: loader 1.5s infinite ease-in-out both;
-    }}
-    
-    .loader-text {{
-        font-size: 1.1rem;
-        color: {SET_COLORS["primary"]};
-        font-weight: 500;
-        margin-top: 1rem;
     }}
     
     .loader-dot-1 {{
@@ -470,7 +463,7 @@ def load_css():
         
         /* More compact loader for mobile */
         .loader-container {{
-            height: 150px;
+            height: 120px;
         }}
         
         /* Adjust system message for mobile */
@@ -481,6 +474,21 @@ def load_css():
         
         .system-message p {{
             font-size: 1rem;
+        }}
+        
+        /* Mobile-friendly file uploader */
+        .mobile-upload-container {{
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+            padding: 1.2rem;
+            border-radius: 12px;
+            margin: 0.8rem 0 1.5rem 0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            text-align: center;
+        }}
+        
+        /* Center placeholder icon on mobile */
+        .image-placeholder-icon {{
+            margin: 0 auto 0.75rem auto;
         }}
     }}
     </style>
@@ -682,6 +690,26 @@ def detect_mobile():
             max-width: 100% !important;
             padding-left: 1rem !important;
             padding-right: 1rem !important;
+        }
+        
+        /* Improve file uploader appearance */
+        [data-testid="stFileUploadDropzone"] {
+            min-height: 120px !important;
+            padding: 15px !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            border: 2px dashed rgba(124, 58, 237, 0.3) !important;
+            background-color: rgba(124, 58, 237, 0.05) !important;
+            border-radius: 12px !important;
+            transition: all 0.3s ease !important;
+        }
+        
+        [data-testid="stFileUploadDropzone"]:hover,
+        [data-testid="stFileUploadDropzone"]:active {
+            border-color: rgba(124, 58, 237, 0.6) !important;
+            background-color: rgba(124, 58, 237, 0.08) !important;
         }
     }
     </style>
@@ -1043,7 +1071,7 @@ def render_header():
     st.markdown(header_html, unsafe_allow_html=True)
 
 def render_loader():
-    """Render a SET-themed loader"""
+    """Render a SET-themed loader without text"""
     loader_html = """
     <div class="loader-container">
         <div class="loader">
@@ -1051,7 +1079,6 @@ def render_loader():
             <div class="loader-dot loader-dot-2"></div>
             <div class="loader-dot loader-dot-3"></div>
         </div>
-        <div class="loader-text">Finding sets...</div>
     </div>
     """
     return st.markdown(loader_html, unsafe_allow_html=True)
@@ -1191,7 +1218,7 @@ def render_mobile_interface():
         
         /* Make the whole upload area more prominent */
         .mobile-upload-container {
-            background: rgba(124, 58, 237, 0.05);
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
             border-radius: 12px;
             padding: 0.8rem;
             margin-bottom: 1rem;
@@ -1393,7 +1420,7 @@ def render_desktop_interface():
     # Results column
     with col2:
         if st.session_state.get("start_processing", False):
-            # Show loading
+            # Show loading animation without text
             render_loader()
             
             # Process image
