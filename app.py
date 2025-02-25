@@ -293,6 +293,40 @@ def load_css():
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     }}
     
+    /* Image placeholder */
+    .image-placeholder {{
+        background: linear-gradient(90deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+        border-radius: 12px;
+        height: 300px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin: 1rem 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        transition: all 0.3s ease;
+    }}
+    
+    .image-placeholder:hover {{
+        transform: translateY(-3px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    }}
+    
+    .image-placeholder-icon {{
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(90deg, {SET_COLORS["purple"]} 0%, {SET_COLORS["primary"]} 50%, {SET_COLORS["accent"]} 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }}
+    
+    .image-placeholder-text {{
+        font-size: 1.1rem;
+        color: {SET_COLORS["text"]};
+        opacity: 0.7;
+    }}
+    
     .system-message p {{
         font-size: 1.1rem;
         font-weight: 500;
@@ -494,98 +528,94 @@ def detect_mobile():
     Use JavaScript to detect mobile devices and store the result in session state
     This function injects JavaScript to detect mobile devices and sets a flag in
     localStorage that we can read later.
+    
+    Returns:
+        bool: True if device is detected as mobile, False otherwise
     """
-    # Create a more reliable mobile detection script
+    # Create a more reliable mobile detection script with immediate execution
     mobile_detector_js = """
     <script>
-        function detectMobile() {
-            // More comprehensive mobile detection
-            const isMobile = (
-                // Check viewport
-                window.innerWidth <= 991 ||
-                // Check user agent strings for mobile browsers
-                /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                // Check touch capability
-                ('ontouchstart' in window) || (navigator.maxTouchPoints > 0)
-            );
-            
-            // Store in localStorage for persistence
-            localStorage.setItem('isMobile', isMobile ? 'true' : 'false');
-            
-            // Add a class to body for CSS targeting
-            if (isMobile) {
-                document.body.classList.add('mobile-view');
+        (function() {
+            // Improved mobile detection function
+            function detectMobile() {
+                // More comprehensive mobile detection
+                const isMobile = (
+                    // Check viewport (most reliable method)
+                    window.innerWidth <= 991 ||
+                    // Check user agent strings for mobile browsers
+                    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+                    // Check touch capability
+                    ('ontouchstart' in window) || (navigator.maxTouchPoints > 0)
+                );
                 
-                // Hide sidebar completely via CSS
-                const style = document.createElement('style');
-                style.textContent = `
-                    section[data-testid="stSidebar"] { 
-                        display: none !important;
-                        width: 0 !important;
-                        height: 0 !important;
-                        position: absolute !important;
-                        z-index: -1000 !important;
-                        opacity: 0 !important;
-                        pointer-events: none !important;
-                    }
-                `;
-                document.head.appendChild(style);
+                // Store in localStorage for persistence between refreshes
+                localStorage.setItem('isMobile', isMobile ? 'true' : 'false');
+                
+                // Add a class to body for CSS targeting
+                if (isMobile) {
+                    document.body.classList.add('mobile-view');
+                    
+                    // Hide sidebar completely via CSS
+                    const style = document.createElement('style');
+                    style.innerHTML = `
+                        section[data-testid="stSidebar"] { 
+                            display: none !important;
+                            width: 0 !important;
+                            height: 0 !important;
+                            position: absolute !important;
+                            z-index: -1000 !important;
+                            opacity: 0 !important;
+                            pointer-events: none !important;
+                            visibility: hidden !important;
+                        }
+                        
+                        [data-testid="stSidebarNavItems"] {
+                            display: none !important;
+                        }
+                    `;
+                    document.head.appendChild(style);
+                }
+                
+                return isMobile;
             }
             
-            // Create a custom event to communicate with Streamlit
-            const event = new CustomEvent('mobileDetect', { detail: { isMobile } });
-            window.dispatchEvent(event);
+            // Run detection immediately
+            const isMobile = detectMobile();
             
-            return isMobile;
-        }
-        
-        // Run detection on load
-        window.addEventListener('load', detectMobile);
-        
-        // Run detection on resize (with debounce)
-        let resizeTimer;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(detectMobile, 300);
-        });
-        
-        // Check if already set from previous detection
-        const storedValue = localStorage.getItem('isMobile');
-        if (storedValue === 'true') {
-            document.body.classList.add('mobile-view');
+            // Also run on window load to ensure DOM is ready
+            window.addEventListener('load', detectMobile);
             
-            // Hide sidebar immediately
-            const style = document.createElement('style');
-            style.textContent = `
-                section[data-testid="stSidebar"] { 
-                    display: none !important;
-                    width: 0 !important;
-                    height: 0 !important;
-                    position: absolute !important;
-                    z-index: -1000 !important;
-                    opacity: 0 !important;
-                    pointer-events: none !important;
-                }
-            `;
-            document.head.appendChild(style);
-        }
+            // Run detection on resize (with debounce for performance)
+            let resizeTimer;
+            window.addEventListener('resize', () => {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(detectMobile, 300);
+            });
+            
+            // Make the result available to Streamlit via sessionStorage
+            sessionStorage.setItem('streamlit:isMobile', isMobile ? 'true' : 'false');
+        })();
     </script>
     """
     st.markdown(mobile_detector_js, unsafe_allow_html=True)
     
-    # Basic detection based on platform - as a fallback
-    # This is a simple heuristic that works in most cases
+    # Multiple detection methods for reliability
+    
+    # 1. Check platform (OS detection)
     platform_string = platform.platform().lower()
     platform_is_mobile = any(mobile_os in platform_string for mobile_os in ['android', 'ios', 'iphone'])
     
-    # Check user agent (this is available in some Streamlit environments)
+    # 2. Check user agent (this is available in some Streamlit environments)
     user_agent = os.environ.get('HTTP_USER_AGENT', '').lower()
     ua_is_mobile = any(mobile_kw in user_agent for mobile_kw in ['android', 'iphone', 'ipad', 'mobile'])
     
-    # Default to the most conservative estimate
-    is_mobile = platform_is_mobile or ua_is_mobile or st.session_state.get("is_mobile", False)
+    # 3. Check if we've already detected mobile in this session
+    session_is_mobile = st.session_state.get("is_mobile", False)
     
-    # Store in session state
+    # Combine all detection methods - if any method indicates mobile, treat as mobile
+    is_mobile = platform_is_mobile or ua_is_mobile or session_is_mobile
+    
+    # Store in session state for persistence
     st.session_state.is_mobile = is_mobile
     
     return is_mobile
@@ -927,16 +957,15 @@ def render_header():
     """
     st.markdown(header_html, unsafe_allow_html=True)
 
-def render_loader(message="Processing image..."):
-    """Render a SET-themed loader with message"""
-    loader_html = f"""
+def render_loader():
+    """Render a SET-themed loader"""
+    loader_html = """
     <div class="loader-container">
         <div class="loader">
             <div class="loader-dot loader-dot-1"></div>
             <div class="loader-dot loader-dot-2"></div>
             <div class="loader-dot loader-dot-3"></div>
         </div>
-        <div class="loader-text">{message}</div>
     </div>
     """
     return st.markdown(loader_html, unsafe_allow_html=True)
@@ -1004,21 +1033,17 @@ def render_process_message():
     """
     return st.markdown(message_html, unsafe_allow_html=True)
 
-def render_set_explanation():
-    """Render an explanation of what makes a valid SET"""
-    explanation_html = """
-    <div class="set-explanation">
-        <h4>What makes a valid SET?</h4>
-        <p>A SET consists of 3 cards where each feature is either all the same or all different:</p>
-        <ul>
-            <li><strong>Count:</strong> All 1, all 2, or all 3</li>
-            <li><strong>Color:</strong> All red, all green, all purple, or one of each</li>
-            <li><strong>Fill:</strong> All empty, all striped, all solid, or one of each</li>
-            <li><strong>Shape:</strong> All ovals, all diamonds, all squiggles, or one of each</li>
-        </ul>
+def render_image_placeholder(message="Your processed image will appear here"):
+    """Render a placeholder for where the image will appear"""
+    placeholder_html = f"""
+    <div class="image-placeholder">
+        <div class="image-placeholder-icon">🖼️</div>
+        <div class="image-placeholder-text">{message}</div>
     </div>
     """
-    return st.markdown(explanation_html, unsafe_allow_html=True)
+    return st.markdown(placeholder_html, unsafe_allow_html=True)
+
+# Removed render_set_explanation function as requested
 
 # =============================================================================
 # IMAGE PROCESSING
@@ -1097,6 +1122,9 @@ def main():
                 help="Upload a photo of your SET game board"
             )
             
+            # Show placeholder when no image is uploaded yet
+            render_image_placeholder("Upload an image to get started")
+            
             # Handle new file upload
             if mobile_uploaded_file is not None and mobile_uploaded_file != st.session_state.get("uploaded_file", None):
                 # Reset state for new file
@@ -1118,7 +1146,8 @@ def main():
                     st.session_state.original_image = image
                     st.session_state.image_height = image.height
                     
-                    # Automatically start processing on mobile
+                    # Automatically start processing on mobile (after a very short delay)
+                    # This delay makes the UI feel more responsive to the user
                     st.session_state.start_processing = True
                     st.rerun()
                 except Exception as e:
@@ -1140,7 +1169,7 @@ def main():
             # Processing state
             if st.session_state.get("start_processing", False):
                 # Show loading animation
-                render_loader("Detecting cards and finding SETs...")
+                render_loader()
                 
                 # Process image
                 process_image()
@@ -1184,8 +1213,7 @@ def main():
                     # Show success message with count
                     render_success_message(f"Successfully found {len(st.session_state.sets_info)} SET{'s' if len(st.session_state.sets_info) != 1 else ''} in this game board!")
                     
-                    # Add SET explanation
-                    render_set_explanation()
+                    # Removed SET explanation
                 
                 # Reset button
                 if st.button("⟳ Analyze New Image", key="mobile_reset"):
@@ -1194,6 +1222,10 @@ def main():
             
             # Show process button if needed
             elif not st.session_state.get("processed", False) and not st.session_state.get("processing_complete", False):
+                # Show placeholder for the processed image
+                render_image_placeholder("Processed image will appear here")
+                
+                # Show processing message
                 render_process_message()
                 
                 if st.button("🔎 Find Sets", key="mobile_process"):
@@ -1251,9 +1283,7 @@ def main():
                     st.session_state.start_processing = True
                     st.rerun()
             
-            # Show SET explanation in sidebar
-            if uploaded_file is not None:
-                render_set_explanation()
+            # Removed SET explanation
         
         # Original image column
         with col1:
@@ -1265,24 +1295,30 @@ def main():
                     use_container_width=True
                 )
                 st.markdown('</div>', unsafe_allow_html=True)
+            else:
+                # Show placeholder for original image
+                render_image_placeholder("Upload an image to get started")
         
         # Arrow column
         with col_arrow:
-            if st.session_state.get("original_image", None) is not None:
-                image_height = st.session_state.get("image_height", 400)
-                render_arrow(image_height=image_height)
+            # Always show the arrow, even with placeholders
+            image_height = st.session_state.get("image_height", 400)
+            render_arrow(image_height=image_height)
         
         # Results column
         with col2:
             if st.session_state.get("start_processing", False):
                 # Show loading
-                render_loader("Detecting cards and finding SETs...")
+                render_loader()
                 
                 # Process image
                 process_image()
                 
                 # Force refresh after processing
                 st.rerun()
+            elif not st.session_state.get("processed", False) and not st.session_state.get("original_image", None):
+                # Show placeholder for results when no image is uploaded
+                render_image_placeholder("Results will appear here")
             
             # Show processing error if any
             elif st.session_state.get("processing_error", None):
@@ -1347,6 +1383,10 @@ def main():
             
             # Show message to process
             elif st.session_state.get("original_image", None) is not None and not st.session_state.get("processed", False):
+                # Show placeholder for the processed image
+                render_image_placeholder("Processed image will appear here")
+                
+                # Show processing message
                 render_process_message()
 
 if __name__ == "__main__":
