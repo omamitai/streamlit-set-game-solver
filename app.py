@@ -27,8 +27,6 @@ from itertools import combinations
 from pathlib import Path
 import time
 import random
-import base64
-import re
 from typing import Tuple, List, Dict, Union, Optional
 
 # =============================================================================
@@ -604,7 +602,7 @@ def check_and_rotate_input_image(board_image: np.ndarray, detector: YOLO) -> Tup
         return board_image, False
     except Exception as e:
         # If any error occurs, return the original image
-        st.warning(f"Orientation check failed: {str(e)}")
+        print(f"Orientation check failed: {str(e)}")
         return board_image, False
 
 def restore_original_orientation(image: np.ndarray, was_rotated: bool) -> np.ndarray:
@@ -885,15 +883,16 @@ def classify_and_find_sets_from_array(
     """
     start_time = time.time()
     
-    # Reset flags at the beginning
+    # Reset flags at the beginning to prevent false positives
     st.session_state.no_cards_detected = False
     st.session_state.no_sets_found = False
     
     # Check if rotation is needed
     processed_image, was_rotated = check_and_rotate_input_image(board_image, card_detector)
     
-    # Check if cards are detected
+    # Wrap card detection in try-except for better error handling
     try:
+        # Check if cards are detected
         cards = detect_cards_from_image(processed_image, card_detector)
         
         if not cards:
@@ -907,7 +906,7 @@ def classify_and_find_sets_from_array(
             processed_image, card_detector, shape_detector, fill_model, shape_model
         )
         
-        # Handle empty dataframe - no valid cards detected
+        # Additional check for empty dataframe after classification
         if card_df.empty:
             st.session_state.no_cards_detected = True
             end_time = time.time()
@@ -936,11 +935,15 @@ def classify_and_find_sets_from_array(
         return sets_found, final_image
         
     except Exception as e:
-        st.error(f"Error in card detection: {str(e)}")
+        # Log the error but don't crash the application
+        print(f"Error in card detection: {str(e)}")
         traceback.print_exc()
+        
         end_time = time.time()
         st.session_state.detection_time = end_time - start_time
-        return [], board_image
+        st.session_state.no_cards_detected = True
+        
+        return [], processed_image
 
 def optimize_image(image: Image.Image, max_size: int = 800) -> Image.Image:
     """
@@ -961,7 +964,7 @@ def optimize_image(image: Image.Image, max_size: int = 800) -> Image.Image:
 # =============================================================================
 # UI COMPONENT FUNCTIONS
 # =============================================================================
-def render_loader(message: str = ""):
+def render_loader(message: str = "Analyzing game board..."):
     """Render a SET-themed loader with custom message"""
     loader_html = f"""
     <div class="loader-container">
