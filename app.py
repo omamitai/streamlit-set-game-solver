@@ -37,6 +37,25 @@ SET_COLORS = {
 }
 
 # =============================================================================
+# INITIALIZE SESSION STATE - Moved to top to ensure initialization before access
+# =============================================================================
+# Initialize all session state variables with default values
+if "processed" not in st.session_state:
+    st.session_state.processed = False
+if "start_processing" not in st.session_state:
+    st.session_state.start_processing = False
+if "uploaded_file" not in st.session_state:
+    st.session_state.uploaded_file = None
+if "original_image" not in st.session_state:
+    st.session_state.original_image = None
+if "processed_image" not in st.session_state:
+    st.session_state.processed_image = None
+if "sets_info" not in st.session_state:
+    st.session_state.sets_info = None
+if "is_mobile" not in st.session_state:
+    st.session_state.is_mobile = False
+
+# =============================================================================
 # CSS STYLING
 # =============================================================================
 def load_css():
@@ -281,25 +300,34 @@ card_path = base_dir / "Card" / "16042024"
 
 @st.cache_resource(show_spinner=False)
 def load_classification_models() -> Tuple[tf.keras.Model, tf.keras.Model]:
-    shape_model = load_model(str(characteristics_path / "shape_model.keras"))
-    fill_model = load_model(str(characteristics_path / "fill_model.keras"))
-    return shape_model, fill_model
+    try:
+        shape_model = load_model(str(characteristics_path / "shape_model.keras"))
+        fill_model = load_model(str(characteristics_path / "fill_model.keras"))
+        return shape_model, fill_model
+    except Exception as e:
+        st.error(f"Error loading classification models: {str(e)}")
+        return None, None
 
 @st.cache_resource(show_spinner=False)
 def load_detection_models() -> Tuple[YOLO, YOLO]:
-    shape_detection_model = YOLO(str(shape_path / "best.pt"))
-    shape_detection_model.conf = 0.5
-    card_detection_model = YOLO(str(card_path / "best.pt"))
-    card_detection_model.conf = 0.5
-    if torch.cuda.is_available():
-        card_detection_model.to("cuda")
-        shape_detection_model.to("cuda")
-    return card_detection_model, shape_detection_model
+    try:
+        shape_detection_model = YOLO(str(shape_path / "best.pt"))
+        shape_detection_model.conf = 0.5
+        card_detection_model = YOLO(str(card_path / "best.pt"))
+        card_detection_model.conf = 0.5
+        if torch.cuda.is_available():
+            card_detection_model.to("cuda")
+            shape_detection_model.to("cuda")
+        return card_detection_model, shape_detection_model
+    except Exception as e:
+        st.error(f"Error loading detection models: {str(e)}")
+        return None, None
 
+# Load models with error handling
 try:
     shape_model, fill_model = load_classification_models()
     card_detection_model, shape_detection_model = load_detection_models()
-    models_loaded = True
+    models_loaded = all([shape_model, fill_model, card_detection_model, shape_detection_model])
 except Exception as e:
     st.error(f"Error loading models: {str(e)}")
     models_loaded = False
@@ -518,6 +546,15 @@ def render_empty_message():
     """
     return st.markdown(message_html, unsafe_allow_html=True)
 
+def reset_session_state():
+    """Reset all session state variables to their initial values"""
+    st.session_state.processed = False
+    st.session_state.start_processing = False
+    st.session_state.uploaded_file = None
+    st.session_state.original_image = None
+    st.session_state.processed_image = None
+    st.session_state.sets_info = None
+
 # =============================================================================
 # HEADER
 # =============================================================================
@@ -538,15 +575,7 @@ def main():
     # Load CSS
     load_css()
     
-    # Detect if we're on mobile
-    is_mobile = False
-    try:
-        # Check if window width is small via CSS media query
-        # This is handled in CSS now, we just set a flag for layout logic
-        is_mobile = st.session_state.get('is_mobile', False)
-    except:
-        pass
-    
+    # Render header
     render_header()
     
     # Create columns for desktop layout first (even if we're on mobile)
@@ -558,8 +587,12 @@ def main():
         st.markdown('<h3 style="text-align: center;">Upload Your Image</h3>', unsafe_allow_html=True)
         
         # File uploader in sidebar for desktop
-        uploaded_file = st.file_uploader("", type=["png", "jpg", "jpeg"], 
-                                       help="Upload a photo of your SET game board")
+        uploaded_file = st.file_uploader(
+            label="Upload SET image",  # Added label to fix warning
+            type=["png", "jpg", "jpeg"],
+            label_visibility="collapsed",  # Hide the label visually
+            help="Upload a photo of your SET game board"
+        )
         
         if uploaded_file is not None:
             st.session_state.uploaded_file = uploaded_file
@@ -572,12 +605,18 @@ def main():
                 st.session_state.start_processing = True
     
     # For mobile view - additional file uploader
+    is_mobile = st.session_state.is_mobile
+    
     if is_mobile:
         # Only show mobile uploader if no file is uploaded yet
-        if st.session_state.uploaded_file is None:
-            mobile_uploaded_file = st.file_uploader("Upload SET Game Image", 
-                                                 type=["png", "jpg", "jpeg"],
-                                                 key="mobile_uploader")
+        if not st.session_state.uploaded_file:
+            mobile_uploaded_file = st.file_uploader(
+                label="Upload SET image (mobile)",  # Added label to fix warning
+                type=["png", "jpg", "jpeg"],
+                key="mobile_uploader",
+                label_visibility="collapsed",  # Hide the label visually
+                help="Upload a photo of your SET game board"
+            )
             
             if mobile_uploaded_file is not None:
                 st.session_state.uploaded_file = mobile_uploaded_file
@@ -659,13 +698,9 @@ def main():
             
             # Reset button
             if st.button("⟳ Analyze Another Image"):
-                # Reset ALL state variables
-                for key in ['processed', 'original_image', 'processed_image', 
-                           'sets_info', 'uploaded_file', 'start_processing']:
-                    if key in st.session_state:
-                        st.session_state[key] = None if key != 'processed' and key != 'start_processing' else False
-                
-                # Properly reset to the beginning state
+                # Reset ALL state variables using the dedicated function
+                reset_session_state()
+                # Force refresh
                 st.rerun()
                 
         # Show a placeholder before processing if image is uploaded
