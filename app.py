@@ -1091,6 +1091,10 @@ def process_image():
         st.session_state.processing_error = str(e)
         st.session_state.start_processing = False
         st.session_state.processing_complete = True
+        # Log the full traceback for debugging
+        import traceback
+        traceback_str = traceback.format_exc()
+        print(f"Error in process_image: {traceback_str}")
 
 # =============================================================================
 # MAIN APP LAYOUT & LOGIC
