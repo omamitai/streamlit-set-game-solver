@@ -21,6 +21,8 @@ from itertools import combinations
 from pathlib import Path
 from typing import Tuple, List, Dict
 import base64
+import random
+import time
 
 # =============================================================================
 # CONFIGURATION 
@@ -61,6 +63,8 @@ if "no_cards_detected" not in st.session_state:
     st.session_state.no_cards_detected = False
 if "no_sets_found" not in st.session_state:
     st.session_state.no_sets_found = False
+if "uploader_key" not in st.session_state:
+    st.session_state.uploader_key = "initial"
 
 # =============================================================================
 # CSS STYLING
@@ -249,7 +253,7 @@ def load_css():
         background-clip: text;
         -webkit-text-fill-color: transparent;
         margin: 0;
-        font-family: 'Poppins', sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     }}
     
     /* Error messages */
@@ -612,11 +616,15 @@ def render_process_message():
 
 def reset_session_state():
     """Reset all session state variables to their initial values"""
-    # Create a brand new empty session state
-    for key in list(st.session_state.keys()):
-        # Skip non-app related keys (like widgets)
-        if key not in ['is_mobile']:
-            # Delete the key from session state
+    # Create a list of all session state keys that need to be preserved
+    preserved_keys = ['is_mobile']
+    
+    # Identify all keys that should be removed
+    keys_to_remove = [key for key in st.session_state.keys() if key not in preserved_keys]
+    
+    # Delete all non-preserved keys
+    for key in keys_to_remove:
+        if key in st.session_state:
             del st.session_state[key]
     
     # Now reinitialize with clean defaults
@@ -628,11 +636,21 @@ def reset_session_state():
     st.session_state.sets_info = None
     st.session_state.no_cards_detected = False
     st.session_state.no_sets_found = False
+    
+    # Force file uploader to reset by generating a new random key
+    st.session_state.uploader_key = str(random.randint(1000, 9999))
+    
+    # Signal to the app that a full reset is needed
     st.session_state.should_reset = True
     
-    # This forces a complete cleanup of the cache
+    # Add a timestamp to force a complete refresh
+    st.session_state.reset_timestamp = time.time()
+    
+    # Clear caches to force model reloading if needed
     st.cache_data.clear()
-    st.cache_resource.clear()
+    
+    # Modern approach to clear URL params
+    st.query_params.clear()
 
 # =============================================================================
 # HEADER
@@ -674,7 +692,8 @@ def main():
             label="Upload SET image",
             type=["png", "jpg", "jpeg"],
             label_visibility="collapsed",
-            help="Upload a photo of your SET game board"
+            help="Upload a photo of your SET game board",
+            key=f"file_uploader_{st.session_state.uploader_key}"  # Dynamic key for reset
         )
         
         # If new file is uploaded, reset everything
@@ -719,7 +738,7 @@ def main():
             mobile_uploaded_file = st.file_uploader(
                 label="Upload SET image (mobile)",
                 type=["png", "jpg", "jpeg"],
-                key="mobile_uploader",
+                key=f"mobile_uploader_{st.session_state.uploader_key}",  # Dynamic key for reset
                 label_visibility="collapsed",
                 help="Upload a photo of your SET game board"
             )
@@ -849,19 +868,16 @@ def main():
             
             # Reset button - Important: completely clears app state
             if st.button("⟳ Analyze New Image"):
-                # Set a flag to tell streamlit we want to reset
+                # Clear UI immediately
+                with col1:
+                    st.empty()
+                with col2:
+                    st.empty()
+                with col_arrow:
+                    st.empty()
+                
+                # Reset session state
                 reset_session_state()
-                
-                # More aggressive cleanup
-                for key in list(st.session_state.keys()):
-                    if key != 'is_mobile':
-                        del st.session_state[key]
-                
-                st.experimental_set_query_params()  # Clear URL params
-                
-                # Extra safety to make sure both images are cleared
-                st.session_state.original_image = None
-                st.session_state.uploaded_file = None
                 
                 # Make sure UI reloads completely
                 st.rerun()
