@@ -37,6 +37,7 @@ SET_COLORS = {
     "red": "#EF4444",
     "green": "#10B981",
     "purple": "#8B5CF6",
+    "text_gray": "#666666",  # Added gray color for text to match subtitle
 }
 
 # =============================================================================
@@ -65,6 +66,8 @@ if "no_sets_found" not in st.session_state:
     st.session_state.no_sets_found = False
 if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = "initial"
+if "image_heights" not in st.session_state:
+    st.session_state.image_heights = {"left": 0, "right": 0}
 
 # =============================================================================
 # CSS STYLING
@@ -167,9 +170,7 @@ def load_css():
         display: flex;
         justify-content: center;
         align-items: center;
-        /* Position for the middle of images, not the column */
-        margin-top: 200px;
-        height: fit-content;
+        height: 100%;
     }}
     
     .direction-arrow svg {{
@@ -236,7 +237,7 @@ def load_css():
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: linear-gradient(90deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+        background: linear-gradient(90deg, rgba(124, 58, 237, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
         padding: 1.2rem;
         border-radius: 12px;
         text-align: center;
@@ -247,11 +248,7 @@ def load_css():
     .system-message p {{
         font-size: 1.1rem;
         font-weight: 400;
-        opacity: 0.8;
-        background: linear-gradient(90deg, {SET_COLORS["purple"]} 0%, {SET_COLORS["primary"]} 50%, {SET_COLORS["accent"]} 100%);
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: {SET_COLORS["text_gray"]};
         margin: 0;
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     }}
@@ -283,6 +280,52 @@ def load_css():
         margin: 0;
         font-weight: 500;
         color: #F59E0B;
+    }}
+    
+    /* Tooltip styling */
+    .tooltip {{
+        position: relative;
+        display: inline-block;
+        cursor: help;
+    }}
+    
+    .tooltip .tooltiptext {{
+        visibility: hidden;
+        width: 200px;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 8px;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -100px;
+        opacity: 0;
+        transition: opacity 0.3s;
+        font-size: 0.8rem;
+    }}
+    
+    .tooltip:hover .tooltiptext {{
+        visibility: visible;
+        opacity: 1;
+    }}
+    
+    /* Info badge */
+    .info-badge {{
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background-color: {SET_COLORS["primary"]};
+        color: white;
+        font-size: 12px;
+        font-weight: bold;
+        margin-left: 6px;
+        cursor: help;
     }}
     
     /* For mobile devices */
@@ -520,25 +563,51 @@ def classify_and_find_sets_from_array(
     fill_model: tf.keras.Model,
     shape_model: tf.keras.Model
 ) -> tuple:
+    # Create progress indicators
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    # Stage 1: Image orientation check
+    status_text.text("Stage 1/4: Analyzing image orientation...")
+    progress_bar.progress(10)
     processed_image, was_rotated = check_and_rotate_input_image(board_image, card_detector)
     
-    # Check if cards are detected
+    # Stage 2: Card detection
+    status_text.text("Stage 2/4: Detecting cards...")
+    progress_bar.progress(30)
     cards = detect_cards_from_image(processed_image, card_detector)
     if not cards:
+        progress_bar.progress(100)
+        status_text.empty()
         st.session_state.no_cards_detected = True
         return [], processed_image
     
+    # Stage 3: Card classification and feature extraction
+    status_text.text("Stage 3/4: Analyzing card features...")
+    progress_bar.progress(50)
     card_df = classify_cards_from_board_image(processed_image, card_detector, shape_detector, fill_model, shape_model)
+    
+    # Stage 4: Find valid sets
+    status_text.text("Stage 4/4: Finding valid SETs...")
+    progress_bar.progress(70)
     sets_found = find_sets(card_df)
     
-    # Check if sets are found
     if not sets_found:
+        progress_bar.progress(100)
+        status_text.empty()
         st.session_state.no_sets_found = True
-        # Just return the original processed image since there are no sets to draw
         return [], processed_image
     
+    # Stage 5: Visualize results
+    status_text.text("Finalizing results...")
+    progress_bar.progress(90)
     annotated_image = draw_sets_on_image(processed_image.copy(), sets_found)
     final_image = restore_original_orientation(annotated_image, was_rotated)
+    
+    # Complete
+    progress_bar.progress(100)
+    status_text.empty()
+    
     return sets_found, final_image
 
 def optimize_image(image, max_size=1200):
@@ -568,7 +637,7 @@ def render_loader():
     return st.markdown(loader_html, unsafe_allow_html=True)
 
 def render_arrow(direction="horizontal"):
-    """Render a SET-themed direction arrow"""
+    """Render a SET-themed direction arrow that dynamically adjusts to image heights"""
     class_name = "mobile-arrow" if direction == "vertical" else ""
     arrow_html = f"""
     <div class="direction-arrow {class_name}">
@@ -614,6 +683,15 @@ def render_process_message():
     """
     return st.markdown(message_html, unsafe_allow_html=True)
 
+def render_tooltip(text, tooltip_text):
+    """Render a tooltip with help text"""
+    tooltip_html = f"""
+    <div class="tooltip">{text}
+        <span class="tooltiptext">{tooltip_text}</span>
+    </div>
+    """
+    return st.markdown(tooltip_html, unsafe_allow_html=True)
+
 def reset_session_state():
     """Reset all session state variables to their initial values"""
     # Create a list of all session state keys that need to be preserved
@@ -636,6 +714,7 @@ def reset_session_state():
     st.session_state.sets_info = None
     st.session_state.no_cards_detected = False
     st.session_state.no_sets_found = False
+    st.session_state.image_heights = {"left": 0, "right": 0}
     
     # Force file uploader to reset by generating a new random key
     st.session_state.uploader_key = str(random.randint(1000, 9999))
@@ -665,6 +744,25 @@ def render_header():
     """
     st.markdown(header_html, unsafe_allow_html=True)
 
+def render_set_explainer():
+    """Render an explanation of SET game rules"""
+    with st.expander("How does SET work?"):
+        st.markdown("""
+        ### SET Game Rules
+        
+        Each card in SET has four features:
+        - **Count**: 1, 2, or 3 shapes
+        - **Color**: red, green, or purple
+        - **Fill**: empty, striped, or solid
+        - **Shape**: diamond, oval, or squiggle
+        
+        A valid SET consists of 3 cards where for each feature, all cards are either:
+        - All the same OR
+        - All different
+        
+        This app uses computer vision to detect all valid SETs in an uploaded image.
+        """)
+
 # =============================================================================
 # MAIN APP
 # =============================================================================
@@ -686,6 +784,9 @@ def main():
     # Setup the sidebar for desktop upload
     with st.sidebar:
         st.markdown('<h3 style="text-align: center;">Upload Your Image</h3>', unsafe_allow_html=True)
+        
+        # Add SET game explainer
+        render_set_explainer()
         
         # Handle file uploading - detect changes
         uploaded_file = st.file_uploader(
@@ -720,7 +821,7 @@ def main():
         
         # Process button
         if uploaded_file is not None:
-            if st.button("🔎 Find Sets"):
+            if st.button("🔎 Find Sets", help="Process the image to find all valid SETs"):
                 # Clear previous results and error flags
                 st.session_state.processed = False
                 st.session_state.processed_image = None
@@ -767,7 +868,7 @@ def main():
             
             # Process button for mobile
             if mobile_uploaded_file is not None:
-                if st.button("🔎 Find Sets", key="mobile_button"):
+                if st.button("🔎 Find Sets", key="mobile_button", help="Process the image to find all valid SETs"):
                     # Clear previous results and error flags
                     st.session_state.processed = False
                     st.session_state.processed_image = None
@@ -803,14 +904,12 @@ def main():
     # Results column
     with col2:
         if st.session_state.get("start_processing", False):
-            # Show smaller loading animation
-            render_loader()
-            
+            # Processing has started - show progress
             try:
                 # Convert image for processing - FIXED COLOR CONVERSION
                 image_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_RGB2BGR)
                 
-                # Process image with models
+                # Process image with models - now with progress indicators
                 sets_info, processed_image = classify_and_find_sets_from_array(
                     image_cv,
                     card_detection_model,
@@ -865,9 +964,20 @@ def main():
                        caption=f"Detected {len(st.session_state.sets_info)} Sets", 
                        use_container_width=True)
                 st.markdown('</div>', unsafe_allow_html=True)
+                
+                # Add a download button for the processed image
+                processed_pil = Image.fromarray(processed_img)
+                buf = processed_pil.tobytes()
+                st.download_button(
+                    label="📥 Download Results Image",
+                    data=buf,
+                    file_name="set_detection_result.jpg",
+                    mime="image/jpeg",
+                    help="Download the image with detected SETs"
+                )
             
             # Reset button - Important: completely clears app state
-            if st.button("⟳ Analyze New Image"):
+            if st.button("⟳ Analyze New Image", help="Reset the app and upload a new image"):
                 # Clear UI immediately
                 with col1:
                     st.empty()
