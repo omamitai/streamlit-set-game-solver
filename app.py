@@ -132,18 +132,52 @@ def load_css():
         box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
     }}
     
+    /* Center message */
+    .center-message {{
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        text-align: center;
+        padding: 2rem;
+        background-color: rgba(255, 255, 255, 0.03);
+        border-radius: 12px;
+    }}
+    
+    /* Direction arrow */
+    .direction-arrow {{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 1rem 0;
+    }}
+    
+    .direction-arrow svg {{
+        width: 50px;
+        height: 50px;
+        filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.5));
+    }}
+    
     /* Loading animation */
+    .loader-container {{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+        min-height: 200px;
+    }}
+    
     .loader {{
         display: flex;
         align-items: center;
         justify-content: center;
-        margin: 1rem 0;
     }}
     
     .loader-dot {{
-        width: 12px;
-        height: 12px;
-        margin: 0 5px;
+        width: 15px;
+        height: 15px;
+        margin: 0 8px;
         border-radius: 50%;
         display: inline-block;
         animation: loader 1.5s infinite ease-in-out both;
@@ -186,11 +220,33 @@ def load_css():
         }}
         
         .set-header h1 {{ 
-            font-size: 2rem; 
+            font-size: 1.8rem; 
         }}
         
         .set-header p {{ 
-            font-size: 1rem; 
+            font-size: 0.9rem; 
+        }}
+        
+        /* More compact for mobile */
+        .set-header {{
+            padding: 0.8rem;
+            margin-bottom: 0.8rem;
+        }}
+        
+        /* Adjust arrow for mobile */
+        .mobile-arrow {{
+            transform: rotate(90deg);
+            margin: 0.5rem 0;
+        }}
+        
+        /* Mobile layout adjustments */
+        .mobile-container {{
+            padding: 0.5rem;
+            margin-bottom: 0.5rem;
+        }}
+        
+        .stButton>button {{
+            padding: 0.6rem 1rem;
         }}
     }}
     </style>
@@ -405,13 +461,58 @@ def optimize_image(image, max_size=1200):
 def render_loader():
     """Render a SET-themed loader"""
     loader_html = """
-    <div class="loader">
-        <div class="loader-dot loader-dot-1"></div>
-        <div class="loader-dot loader-dot-2"></div>
-        <div class="loader-dot loader-dot-3"></div>
+    <div class="loader-container">
+        <div class="loader">
+            <div class="loader-dot loader-dot-1"></div>
+            <div class="loader-dot loader-dot-2"></div>
+            <div class="loader-dot loader-dot-3"></div>
+        </div>
     </div>
     """
     return st.markdown(loader_html, unsafe_allow_html=True)
+
+def render_arrow(direction="horizontal"):
+    """Render a SET-themed direction arrow"""
+    class_name = "mobile-arrow" if direction == "vertical" else ""
+    arrow_html = f"""
+    <div class="direction-arrow {class_name}">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="url(#gradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <defs>
+                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="{SET_COLORS["purple"]}" />
+                    <stop offset="50%" stop-color="{SET_COLORS["primary"]}" />
+                    <stop offset="100%" stop-color="{SET_COLORS["accent"]}" />
+                </linearGradient>
+            </defs>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+    </div>
+    """
+    return st.markdown(arrow_html, unsafe_allow_html=True)
+
+def render_empty_message():
+    """Render a centered empty state message"""
+    message_html = """
+    <div class="center-message">
+        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="url(#gradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <defs>
+                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#7C3AED" />
+                    <stop offset="50%" stop-color="#8B5CF6" />
+                    <stop offset="100%" stop-color="#EC4899" />
+                </linearGradient>
+            </defs>
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <circle cx="15.5" cy="8.5" r="1.5"></circle>
+            <circle cx="15.5" cy="15.5" r="1.5"></circle>
+            <circle cx="8.5" cy="15.5" r="1.5"></circle>
+        </svg>
+        <p style="margin-top: 1rem; font-size: 1.1rem;">Please upload an image to detect sets</p>
+    </div>
+    """
+    return st.markdown(message_html, unsafe_allow_html=True)
 
 # =============================================================================
 # INITIALIZE SESSION STATE
@@ -449,10 +550,16 @@ def main():
     # Load CSS
     load_css()
     
-    render_header()
+    # Detect if we're on mobile
+    is_mobile = False
+    try:
+        # Check if window width is small via CSS media query
+        # This is handled in CSS now, we just set a flag for layout logic
+        is_mobile = st.session_state.get('is_mobile', False)
+    except:
+        pass
     
-    # Create columns for layout immediately
-    col1, col2 = st.columns(2)
+    render_header()
     
     # Setup the sidebar for desktop upload
     with st.sidebar:
@@ -468,58 +575,48 @@ def main():
             if st.button("🔎 Find Sets"):
                 st.session_state.start_processing = True
     
-    # For mobile view - Create a file uploader only for mobile
-    is_mobile = False
-    try:
-        # Check if we're on mobile by testing window width (this is just a CSS check)
-        is_mobile = st.session_state.get('mobile_detected', False)
-    except:
-        pass
-    
-    # Only show mobile uploader if we've detected mobile
+    # Create a more compact layout for mobile
     if is_mobile:
-        mobile_uploaded_file = st.file_uploader("Upload SET Game Image", type=["png", "jpg", "jpeg"])
-        
-        if mobile_uploaded_file is not None:
-            st.session_state.uploaded_file = mobile_uploaded_file
+        # For mobile, stack elements vertically
+        if st.session_state.uploaded_file is None:
+            # Show mobile file uploader
+            mobile_uploaded_file = st.file_uploader("Upload SET Game Image", 
+                                                 type=["png", "jpg", "jpeg"],
+                                                 key="mobile_uploader")
             
-            # Process button for mobile
-            if st.button("🔎 Find Sets", key="mobile_button"):
-                st.session_state.start_processing = True
-    
-    # MAIN CONTENT AREA
-    # Always set up the layout with columns first
-    with col1:
-        # Original image placeholder
+            if mobile_uploaded_file is not None:
+                st.session_state.uploaded_file = mobile_uploaded_file
+                
+                # Process button for mobile
+                if st.button("🔎 Find Sets", key="mobile_button"):
+                    st.session_state.start_processing = True
+        
+        # Load and display image if uploaded
         if st.session_state.uploaded_file is not None and st.session_state.original_image is None:
             try:
                 image = Image.open(st.session_state.uploaded_file)
-                # Always optimize the image
                 image = optimize_image(image)
                 st.session_state.original_image = image
             except Exception as e:
                 st.error(f"Failed to load image: {str(e)}")
         
-        # Show original image if available
+        # Display original image
         if st.session_state.original_image is not None:
-            st.markdown('<div class="image-container">', unsafe_allow_html=True)
+            st.markdown('<div class="image-container mobile-container">', unsafe_allow_html=True)
             st.image(st.session_state.original_image, 
                    caption="Original Image", 
                    use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
-        else:
-            # Placeholder when no image is uploaded
-            st.info("Please upload an image to detect sets")
-    
-    with col2:
-        # Processing result placeholder
-        if st.session_state.start_processing:
-            # Show loading animation while processing
-            render_loader()
             
-            try:
-                with st.spinner("Detecting sets..."):
-                    # Convert image for processing
+            # Show vertical arrow for mobile
+            render_arrow("vertical")
+            
+            # Processing or display results
+            if st.session_state.start_processing:
+                render_loader()
+                
+                try:
+                    # Convert image for processing without spinner text
                     image_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_RGB2BGR)
                     
                     # Process image with models
@@ -537,31 +634,120 @@ def main():
                     st.session_state.processed = True
                     st.session_state.start_processing = False
                     
-                    # Force refresh - use st.rerun() instead of experimental_rerun
+                    # Force refresh
                     st.rerun()
-            except Exception as e:
-                st.error("⚠️ An error occurred during processing:")
-                st.code(traceback.format_exc())
-                st.session_state.start_processing = False
-        
-        # Show processed image if available
-        if st.session_state.processed and st.session_state.processed_image is not None:
-            st.markdown('<div class="image-container">', unsafe_allow_html=True)
-            processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
-            st.image(processed_img, 
-                   caption=f"Detected {len(st.session_state.sets_info)} Sets", 
-                   use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+                except Exception as e:
+                    st.error("⚠️ An error occurred during processing:")
+                    st.code(traceback.format_exc())
+                    st.session_state.start_processing = False
             
-            # Reset button
-            if st.button("⟳ Analyze Another Image"):
-                st.session_state.processed = False
-                st.session_state.original_image = None
-                st.session_state.processed_image = None
-                st.session_state.sets_info = None
-                st.session_state.uploaded_file = None
-                st.session_state.start_processing = False
-                st.rerun() # Using st.rerun() instead of experimental_rerun
+            # Show processed image if available
+            if st.session_state.processed and st.session_state.processed_image is not None:
+                st.markdown('<div class="image-container mobile-container">', unsafe_allow_html=True)
+                processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
+                st.image(processed_img, 
+                       caption=f"Detected {len(st.session_state.sets_info)} Sets", 
+                       use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+                # Reset button
+                if st.button("⟳ Analyze Another Image", key="mobile_reset"):
+                    # Reset all state
+                    st.session_state.processed = False
+                    st.session_state.original_image = None
+                    st.session_state.processed_image = None
+                    st.session_state.sets_info = None
+                    st.session_state.uploaded_file = None
+                    st.session_state.start_processing = False
+                    st.rerun()
+        else:
+            render_empty_message()
+    else:
+        # DESKTOP LAYOUT
+        # Create columns for desktop layout
+        col1, col_arrow, col2 = st.columns([5, 1, 5])
+        
+        with col1:
+            # Original image
+            if st.session_state.uploaded_file is not None and st.session_state.original_image is None:
+                try:
+                    image = Image.open(st.session_state.uploaded_file)
+                    image = optimize_image(image)
+                    st.session_state.original_image = image
+                except Exception as e:
+                    st.error(f"Failed to load image: {str(e)}")
+            
+            # Show original image if available
+            if st.session_state.original_image is not None:
+                st.markdown('<div class="image-container">', unsafe_allow_html=True)
+                st.image(st.session_state.original_image, 
+                       caption="Original Image", 
+                       use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+            else:
+                render_empty_message()
+        
+        # Arrow between columns
+        with col_arrow:
+            # Only show arrow if image is loaded
+            if st.session_state.original_image is not None:
+                render_arrow()
+        
+        with col2:
+            # Processing result or placeholder
+            if st.session_state.start_processing:
+                # Show loading animation (no text)
+                render_loader()
+                
+                try:
+                    # Process the image
+                    image_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_RGB2BGR)
+                    
+                    sets_info, processed_image = classify_and_find_sets_from_array(
+                        image_cv,
+                        card_detection_model,
+                        shape_detection_model,
+                        fill_model,
+                        shape_model,
+                    )
+                    
+                    # Update session state
+                    st.session_state.processed_image = processed_image
+                    st.session_state.sets_info = sets_info
+                    st.session_state.processed = True
+                    st.session_state.start_processing = False
+                    
+                    # Force refresh
+                    st.rerun()
+                except Exception as e:
+                    st.error("⚠️ An error occurred during processing:")
+                    st.code(traceback.format_exc())
+                    st.session_state.start_processing = False
+            
+            # Show processed image if available
+            if st.session_state.processed and st.session_state.processed_image is not None:
+                st.markdown('<div class="image-container">', unsafe_allow_html=True)
+                processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
+                st.image(processed_img, 
+                       caption=f"Detected {len(st.session_state.sets_info)} Sets", 
+                       use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+                # Reset button
+                if st.button("⟳ Analyze Another Image"):
+                    # Reset all state
+                    st.session_state.processed = False
+                    st.session_state.original_image = None
+                    st.session_state.processed_image = None
+                    st.session_state.sets_info = None
+                    st.session_state.uploaded_file = None
+                    st.session_state.start_processing = False
+                    st.rerun()
+            elif not st.session_state.start_processing and st.session_state.original_image is not None:
+                # Show placeholder message before processing
+                st.markdown('<div class="center-message">', unsafe_allow_html=True)
+                st.markdown('<p>Click "Find Sets" to process the image</p>', unsafe_allow_html=True)
+                st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
