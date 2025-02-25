@@ -892,13 +892,9 @@ def classify_and_find_sets_from_array(
     # Check if rotation is needed
     processed_image, was_rotated = check_and_rotate_input_image(board_image, card_detector)
     
-    # Debug log
-    #st.write(f"Image shape: {processed_image.shape}")
-    
     # Check if cards are detected
     try:
         cards = detect_cards_from_image(processed_image, card_detector)
-        #st.write(f"Detected {len(cards)} cards")
         
         if not cards:
             st.session_state.no_cards_detected = True
@@ -911,8 +907,6 @@ def classify_and_find_sets_from_array(
             processed_image, card_detector, shape_detector, fill_model, shape_model
         )
         
-        #st.write(f"Card DataFrame size: {len(card_df)}")
-        
         # Handle empty dataframe - no valid cards detected
         if card_df.empty:
             st.session_state.no_cards_detected = True
@@ -922,8 +916,6 @@ def classify_and_find_sets_from_array(
         
         # Find all valid sets
         sets_found = find_sets(card_df)
-        
-        #st.write(f"Found {len(sets_found)} sets")
         
         # Check if sets are found
         if not sets_found:
@@ -1224,7 +1216,7 @@ def render_mobile_layout():
         # Processing or results display
         if st.session_state.get("start_processing", False):
             # Show loading animation
-            render_loader()
+            render_loader("Analyzing game board...")
             
             try:
                 # Process image with models (ensuring they exist)
@@ -1263,7 +1255,7 @@ def render_mobile_layout():
             elif st.session_state.get("no_sets_found", False):
                 st.markdown('<div class="image-container">', unsafe_allow_html=True)
                 processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
-                st.image(processed_img, caption="Processed Image", use_container_width=True)
+                st.image(processed_img, caption="No sets found", use_container_width=True)
                 st.markdown('</div>', unsafe_allow_html=True)
                 render_message("Cards were found but no valid SETs in this board. Try adding more cards!", "warning")
             elif st.session_state.get("processed_image", None) is not None:
@@ -1338,9 +1330,6 @@ def render_desktop_layout():
                 st.session_state.start_processing = True
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # Sidebar content space
-            # Empty space where instructions used to be
-            
             # Show GPU info if available
             if 'gpu_info' in st.session_state:
                 st.markdown(
@@ -1384,7 +1373,7 @@ def render_desktop_layout():
         
         if st.session_state.get("start_processing", False):
             # Show loading animation
-            render_loader()
+            render_loader("Analyzing game board...")
             
             try:
                 # Convert image for processing
