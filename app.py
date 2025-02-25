@@ -20,7 +20,7 @@ from ultralytics import YOLO
 from itertools import combinations
 from pathlib import Path
 from typing import Tuple, List, Dict
-import time  # For rerun handling
+import base64
 
 # =============================================================================
 # CONFIGURATION 
@@ -232,9 +232,12 @@ def load_css():
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        background: linear-gradient(90deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+        padding: 1.2rem;
+        border-radius: 12px;
         text-align: center;
-        height: 200px;
-        margin-top: 3rem;
+        margin: 2rem 0;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     }}
     
     .system-message p {{
@@ -244,7 +247,7 @@ def load_css():
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
-        padding: 0.5rem 1rem;
+        margin: 0;
     }}
     
     /* Error messages */
@@ -607,21 +610,27 @@ def render_process_message():
 
 def reset_session_state():
     """Reset all session state variables to their initial values"""
-    keys_to_reset = [
-        'processed', 'start_processing', 'uploaded_file', 
-        'original_image', 'processed_image', 'sets_info',
-        'no_cards_detected', 'no_sets_found'
-    ]
+    # Create a brand new empty session state
+    for key in list(st.session_state.keys()):
+        # Skip non-app related keys (like widgets)
+        if key not in ['is_mobile']:
+            # Delete the key from session state
+            del st.session_state[key]
     
-    for key in keys_to_reset:
-        if key in st.session_state:
-            if key in ['processed', 'start_processing', 'no_cards_detected', 'no_sets_found']:
-                st.session_state[key] = False
-            else:
-                st.session_state[key] = None
-                
-    # Set a flag to indicate we need to reset
+    # Now reinitialize with clean defaults
+    st.session_state.processed = False
+    st.session_state.start_processing = False
+    st.session_state.uploaded_file = None
+    st.session_state.original_image = None
+    st.session_state.processed_image = None
+    st.session_state.sets_info = None
+    st.session_state.no_cards_detected = False
+    st.session_state.no_sets_found = False
     st.session_state.should_reset = True
+    
+    # This forces a complete cleanup of the cache
+    st.cache_data.clear()
+    st.cache_resource.clear()
 
 # =============================================================================
 # HEADER
@@ -644,7 +653,7 @@ def main():
     load_css()
     
     # If reset is pending, clear everything
-    if st.session_state.should_reset:
+    if st.session_state.get("should_reset", False):
         st.session_state.should_reset = False
         st.rerun()
     
@@ -667,7 +676,7 @@ def main():
         )
         
         # If new file is uploaded, reset everything
-        if uploaded_file is not None and uploaded_file != st.session_state.uploaded_file:
+        if uploaded_file is not None and uploaded_file != st.session_state.get("uploaded_file", None):
             # Reset state when new file is uploaded
             for key in ['processed', 'processed_image', 'sets_info', 'original_image', 
                        'no_cards_detected', 'no_sets_found']:
@@ -700,11 +709,11 @@ def main():
                 st.session_state.start_processing = True
     
     # For mobile view - additional file uploader
-    is_mobile = st.session_state.is_mobile
+    is_mobile = st.session_state.get("is_mobile", False)
     
     if is_mobile:
         # Only show mobile uploader if no file is uploaded yet
-        if not st.session_state.uploaded_file:
+        if not st.session_state.get("uploaded_file", None):
             mobile_uploaded_file = st.file_uploader(
                 label="Upload SET image (mobile)",
                 type=["png", "jpg", "jpeg"],
@@ -714,7 +723,7 @@ def main():
             )
             
             # If new file is uploaded, reset everything
-            if mobile_uploaded_file is not None and mobile_uploaded_file != st.session_state.uploaded_file:
+            if mobile_uploaded_file is not None and mobile_uploaded_file != st.session_state.get("uploaded_file", None):
                 # Reset state for new file
                 for key in ['processed', 'processed_image', 'sets_info', 'original_image',
                            'no_cards_detected', 'no_sets_found']:
@@ -747,7 +756,7 @@ def main():
                     st.session_state.start_processing = True
     
     # Load image if uploaded but not yet loaded
-    if st.session_state.uploaded_file is not None and st.session_state.original_image is None:
+    if st.session_state.get("uploaded_file", None) is not None and st.session_state.get("original_image", None) is None:
         try:
             image = Image.open(st.session_state.uploaded_file)
             image = optimize_image(image)
@@ -758,7 +767,7 @@ def main():
     # Original image column
     with col1:
         # Show original image if available
-        if st.session_state.original_image is not None:
+        if st.session_state.get("original_image", None) is not None:
             st.markdown('<div class="image-container">', unsafe_allow_html=True)
             st.image(st.session_state.original_image, 
                    caption="Original Image", 
@@ -767,18 +776,18 @@ def main():
     
     # Arrow column - only show if an image is uploaded
     with col_arrow:
-        if st.session_state.original_image is not None:
+        if st.session_state.get("original_image", None) is not None:
             render_arrow()
     
     # Results column
     with col2:
-        if st.session_state.start_processing:
+        if st.session_state.get("start_processing", False):
             # Show smaller loading animation
             render_loader()
             
             try:
                 # Convert image for processing without spinner text
-                image_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_RGB2BGR)
+                image_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_BGR2BGR)
                 
                 # Process image with models
                 sets_info, processed_image = classify_and_find_sets_from_array(
@@ -803,8 +812,8 @@ def main():
                 st.session_state.start_processing = False
                 
         # Show processed image if available
-        elif st.session_state.processed:
-            if st.session_state.no_cards_detected:
+        elif st.session_state.get("processed", False):
+            if st.session_state.get("no_cards_detected", False):
                 # Show the original image with an error message
                 st.markdown('<div class="image-container">', unsafe_allow_html=True)
                 st.image(st.session_state.original_image, 
@@ -815,7 +824,7 @@ def main():
                 # Show error message
                 render_error_message("Hmm... are you sure this is a SET game board? I couldn't detect any cards.")
                 
-            elif st.session_state.no_sets_found:
+            elif st.session_state.get("no_sets_found", False):
                 # Show the processed image without sets
                 st.markdown('<div class="image-container">', unsafe_allow_html=True)
                 processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
@@ -827,7 +836,7 @@ def main():
                 # Show warning message
                 render_warning_message("I found cards but no valid SETs in this board. The dealer might need to add more cards!")
                 
-            elif st.session_state.processed_image is not None:
+            elif st.session_state.get("processed_image", None) is not None:
                 # Show the processed image with detected sets
                 st.markdown('<div class="image-container">', unsafe_allow_html=True)
                 processed_img = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
@@ -836,12 +845,20 @@ def main():
                        use_container_width=True)
                 st.markdown('</div>', unsafe_allow_html=True)
             
-            # Reset button
+            # Reset button - Important: completely clears app state
             if st.button("⟳ Analyze New Image"):
-                reset_session_state()  # Call our dedicated reset function
+                # Set a flag to tell streamlit we want to reset
+                reset_session_state()
+                
+                # Force a completely fresh state
+                st.session_state.clear()
+                st.experimental_set_query_params()  # Clear URL params
+                
+                # Make sure UI reloads completely
+                st.rerun()
                 
         # Show a styled message to prompt the user to process
-        elif st.session_state.original_image is not None and not st.session_state.processed:
+        elif st.session_state.get("original_image", None) is not None and not st.session_state.get("processed", False):
             render_process_message()
 
 if __name__ == "__main__":
