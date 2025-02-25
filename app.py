@@ -5,6 +5,9 @@ SET Game Detector Streamlit App
 This app detects valid sets from an uploaded image of a Set game board.
 It uses computer vision and machine learning models for card detection
 and feature classification, then highlights the detected sets on the image.
+
+The app is designed for both desktop and mobile use, with different interfaces
+optimized for each platform.
 """
 
 import streamlit as st
@@ -189,20 +192,7 @@ def load_css():
         box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
     }}
     
-    /* Direction arrow */
-    .direction-arrow {{
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
-    }}
-    
-    .direction-arrow svg {{
-        width: 40px;
-        height: 40px;
-        filter: drop-shadow(0 0 8px rgba(124, 58, 237, 0.5));
-    }}
-    
+    # Remove direction arrow styles as requested
     /* Loading animation */
     .loader-container {{
         display: flex;
@@ -293,38 +283,37 @@ def load_css():
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
     }}
     
-    /* Image placeholder */
+    /* Image placeholder - improved styles */
     .image-placeholder {{
-        background: linear-gradient(90deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+        border: 1px solid rgba(124, 58, 237, 0.15);
         border-radius: 12px;
-        height: 300px;
+        height: 280px;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
         margin: 1rem 0;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
         transition: all 0.3s ease;
     }}
     
     .image-placeholder:hover {{
-        transform: translateY(-3px);
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+        border-color: rgba(124, 58, 237, 0.3);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     }}
     
     .image-placeholder-icon {{
-        font-size: 3rem;
+        font-size: 2.2rem;
         margin-bottom: 1rem;
-        background: linear-gradient(90deg, {SET_COLORS["purple"]} 0%, {SET_COLORS["primary"]} 50%, {SET_COLORS["accent"]} 100%);
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: rgba(124, 58, 237, 0.4);
     }}
     
     .image-placeholder-text {{
-        font-size: 1.1rem;
-        color: {SET_COLORS["text"]};
-        opacity: 0.7;
+        font-size: 0.95rem;
+        color: #6B7280;
+        max-width: 80%;
+        text-align: center;
     }}
     
     .system-message p {{
@@ -420,12 +409,7 @@ def load_css():
             margin-bottom: 1rem;
         }}
         
-        /* Adjust arrow for mobile */
-        .mobile-arrow {{
-            transform: rotate(90deg);
-            margin: 1.5rem auto !important;
-            width: 40px !important;
-        }}
+        /* Remove mobile arrow styles */
         
         /* Mobile layout adjustments */
         .mobile-container {{
@@ -525,97 +509,156 @@ def ensure_models_loaded():
 # =============================================================================
 def detect_mobile():
     """
-    Use JavaScript to detect mobile devices and store the result in session state
-    This function injects JavaScript to detect mobile devices and sets a flag in
-    localStorage that we can read later.
+    Enhanced mobile detection with aggressive sidebar hiding
     
     Returns:
         bool: True if device is detected as mobile, False otherwise
     """
-    # Create a more reliable mobile detection script with immediate execution
+    # Improved mobile detection script
     mobile_detector_js = """
     <script>
         (function() {
-            // Improved mobile detection function
+            // Aggressive sidebar hiding for mobile
+            function hideSidebar() {
+                const style = document.createElement('style');
+                style.innerHTML = `
+                    /* Hide sidebar completely */
+                    [data-testid="stSidebar"] { 
+                        display: none !important;
+                        width: 0 !important;
+                        height: 0 !important;
+                        position: absolute !important;
+                        left: -9999px !important;
+                        z-index: -1000 !important;
+                        opacity: 0 !important;
+                        pointer-events: none !important;
+                        visibility: hidden !important;
+                    }
+                    
+                    /* Hide sidebar elements */
+                    [data-testid="stSidebarNavItems"] {
+                        display: none !important;
+                    }
+                    
+                    /* Force main content width */
+                    [data-testid="stAppViewContainer"] > section:first-child {
+                        min-width: 100% !important;
+                        max-width: 100% !important;
+                    }
+                    
+                    .main .block-container {
+                        max-width: 100% !important;
+                        padding-left: 1rem !important;
+                        padding-right: 1rem !important; 
+                        padding-top: 1rem !important;
+                    }
+                `;
+                document.head.appendChild(style);
+                
+                // Also try to find and remove sidebar DOM elements
+                setTimeout(() => {
+                    const sidebar = document.querySelector('[data-testid="stSidebar"]');
+                    if (sidebar) {
+                        sidebar.style.display = 'none';
+                        sidebar.style.width = '0';
+                        sidebar.style.height = '0';
+                        sidebar.style.position = 'absolute';
+                        sidebar.style.left = '-9999px';
+                    }
+                }, 100);
+            }
+            
+            // Improved mobile detection
             function detectMobile() {
-                // More comprehensive mobile detection
                 const isMobile = (
-                    // Check viewport (most reliable method)
+                    // Width-based detection (most reliable)
                     window.innerWidth <= 991 ||
-                    // Check user agent strings for mobile browsers
+                    // User agent detection
                     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
-                    // Check touch capability
+                    // Touch capability detection
                     ('ontouchstart' in window) || (navigator.maxTouchPoints > 0)
                 );
                 
-                // Store in localStorage for persistence between refreshes
+                // Save to localStorage for persistence
                 localStorage.setItem('isMobile', isMobile ? 'true' : 'false');
                 
-                // Add a class to body for CSS targeting
+                // Add body class for CSS targeting
                 if (isMobile) {
                     document.body.classList.add('mobile-view');
-                    
-                    // Hide sidebar completely via CSS
-                    const style = document.createElement('style');
-                    style.innerHTML = `
-                        section[data-testid="stSidebar"] { 
-                            display: none !important;
-                            width: 0 !important;
-                            height: 0 !important;
-                            position: absolute !important;
-                            z-index: -1000 !important;
-                            opacity: 0 !important;
-                            pointer-events: none !important;
-                            visibility: hidden !important;
-                        }
-                        
-                        [data-testid="stSidebarNavItems"] {
-                            display: none !important;
-                        }
-                    `;
-                    document.head.appendChild(style);
+                    hideSidebar();
                 }
                 
                 return isMobile;
             }
             
-            // Run detection immediately
+            // Run immediately
             const isMobile = detectMobile();
             
-            // Also run on window load to ensure DOM is ready
-            window.addEventListener('load', detectMobile);
+            // Run on load
+            window.addEventListener('load', () => {
+                detectMobile();
+                if (localStorage.getItem('isMobile') === 'true') {
+                    hideSidebar();
+                }
+            });
             
-            // Run detection on resize (with debounce for performance)
+            // Run on resize with debounce
             let resizeTimer;
             window.addEventListener('resize', () => {
                 clearTimeout(resizeTimer);
-                resizeTimer = setTimeout(detectMobile, 300);
+                resizeTimer = setTimeout(detectMobile, 200);
             });
             
-            // Make the result available to Streamlit via sessionStorage
-            sessionStorage.setItem('streamlit:isMobile', isMobile ? 'true' : 'false');
+            // Run repeatedly for Streamlit's dynamic loading
+            setInterval(() => {
+                if (localStorage.getItem('isMobile') === 'true') {
+                    hideSidebar();
+                }
+            }, 500);
         })();
     </script>
     """
     st.markdown(mobile_detector_js, unsafe_allow_html=True)
     
-    # Multiple detection methods for reliability
+    # Additional CSS specifically for mobile
+    mobile_css = """
+    <style>
+    @media (max-width: 991px) {
+        /* Hide hamburger menu button */
+        button[kind="header"] {
+            display: none !important;
+        }
+        
+        /* Adjust header padding */
+        header[data-testid="stHeader"] {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+        
+        /* Ensure content uses full width */
+        .block-container {
+            max-width: 100% !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+    }
+    </style>
+    """
+    st.markdown(mobile_css, unsafe_allow_html=True)
     
-    # 1. Check platform (OS detection)
+    # Use multiple detection methods for reliability
     platform_string = platform.platform().lower()
     platform_is_mobile = any(mobile_os in platform_string for mobile_os in ['android', 'ios', 'iphone'])
     
-    # 2. Check user agent (this is available in some Streamlit environments)
     user_agent = os.environ.get('HTTP_USER_AGENT', '').lower()
     ua_is_mobile = any(mobile_kw in user_agent for mobile_kw in ['android', 'iphone', 'ipad', 'mobile'])
     
-    # 3. Check if we've already detected mobile in this session
     session_is_mobile = st.session_state.get("is_mobile", False)
     
-    # Combine all detection methods - if any method indicates mobile, treat as mobile
+    # Combine all detection methods
     is_mobile = platform_is_mobile or ua_is_mobile or session_is_mobile
     
-    # Store in session state for persistence
+    # Store in session state
     st.session_state.is_mobile = is_mobile
     
     return is_mobile
@@ -970,32 +1013,7 @@ def render_loader():
     """
     return st.markdown(loader_html, unsafe_allow_html=True)
 
-def render_arrow(direction="horizontal", image_height=None):
-    """Render a SET-themed direction arrow with dynamic positioning"""
-    class_name = "mobile-arrow" if direction == "vertical" else ""
-    
-    # Calculate margin based on image height
-    margin_style = ""
-    if image_height is not None:
-        margin_top = max(50, image_height / 2 - 20)
-        margin_style = f"style='margin-top: {margin_top}px;'"
-    
-    arrow_html = f"""
-    <div class="direction-arrow {class_name}" {margin_style}>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="url(#gradient)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <defs>
-                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stop-color="{SET_COLORS["purple"]}" />
-                    <stop offset="50%" stop-color="{SET_COLORS["primary"]}" />
-                    <stop offset="100%" stop-color="{SET_COLORS["accent"]}" />
-                </linearGradient>
-            </defs>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-            <polyline points="12 5 19 12 12 19"></polyline>
-        </svg>
-    </div>
-    """
-    return st.markdown(arrow_html, unsafe_allow_html=True)
+# Remove direction arrow function as requested
 
 def render_error_message(message):
     """Render a styled error message"""
@@ -1015,14 +1033,7 @@ def render_warning_message(message):
     """
     return st.markdown(warning_html, unsafe_allow_html=True)
 
-def render_success_message(message):
-    """Render a styled success message"""
-    success_html = f"""
-    <div class="success-message">
-        <p>{message}</p>
-    </div>
-    """
-    return st.markdown(success_html, unsafe_allow_html=True)
+# Remove success message function as requested
 
 def render_process_message():
     """Render a styled system message to prompt user to process the image"""
@@ -1037,7 +1048,7 @@ def render_image_placeholder(message="Your processed image will appear here"):
     """Render a placeholder for where the image will appear"""
     placeholder_html = f"""
     <div class="image-placeholder">
-        <div class="image-placeholder-icon">🖼️</div>
+        <div class="image-placeholder-icon">📷</div>
         <div class="image-placeholder-text">{message}</div>
     </div>
     """
@@ -1146,10 +1157,13 @@ def main():
                     st.session_state.original_image = image
                     st.session_state.image_height = image.height
                     
-                    # Automatically start processing on mobile (after a very short delay)
-                    # This delay makes the UI feel more responsive to the user
-                    st.session_state.start_processing = True
-                    st.rerun()
+                # Automatic processing on mobile with slight delay for UI responsiveness
+                st.session_state.start_processing = True
+                
+                # Show upload success message briefly before processing
+                st.success("Image uploaded successfully!")
+                time.sleep(0.5)  # Brief pause to show the success message
+                st.rerun()
                 except Exception as e:
                     st.error(f"Failed to load image: {str(e)}")
         
@@ -1210,8 +1224,7 @@ def main():
                     )
                     st.markdown('</div>', unsafe_allow_html=True)
                     
-                    # Show success message with count
-                    render_success_message(f"Successfully found {len(st.session_state.sets_info)} SET{'s' if len(st.session_state.sets_info) != 1 else ''} in this game board!")
+                    # Remove success message
                     
                     # Removed SET explanation
                 
@@ -1237,8 +1250,8 @@ def main():
         # DESKTOP LAYOUT
         # =====================================================================
         
-        # Create three columns: sidebar already exists for file upload
-        col1, col_arrow, col2 = st.columns([5, 1, 5])
+        # Change layout to remove arrow column
+        col1, col2 = st.columns([1, 1])
         
         # Setup the sidebar for desktop upload
         with st.sidebar:
@@ -1299,11 +1312,7 @@ def main():
                 # Show placeholder for original image
                 render_image_placeholder("Upload an image to get started")
         
-        # Arrow column
-        with col_arrow:
-            # Always show the arrow, even with placeholders
-            image_height = st.session_state.get("image_height", 400)
-            render_arrow(image_height=image_height)
+        # Remove arrow column
         
         # Results column
         with col2:
@@ -1373,8 +1382,7 @@ def main():
                     )
                     st.markdown('</div>', unsafe_allow_html=True)
                     
-                    # Show success message with count
-                    render_success_message(f"Successfully found {len(st.session_state.sets_info)} SET{'s' if len(st.session_state.sets_info) != 1 else ''} in this game board!")
+                    # Remove success message
                 
                 # Reset button
                 if st.button("⟳ Analyze New Image", key="desktop_reset"):
