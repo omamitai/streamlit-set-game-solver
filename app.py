@@ -151,30 +151,15 @@ def load_css():
         box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
     }}
     
-    /* Empty state message */
-    .empty-message {{
-        background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
-        padding: 1.5rem;
-        border-radius: 12px;
-        text-align: center;
-        margin: 2rem 0;
-        border: 1px solid rgba(124, 58, 237, 0.2);
-    }}
-    
-    .empty-message p {{
-        font-size: 1.1rem;
-        margin: 0;
-        font-weight: 500;
-        color: #6d28d9;
-    }}
-    
     /* Direction arrow */
     .direction-arrow {{
         display: flex;
         justify-content: center;
         align-items: center;
+        position: relative;
+        top: 50%;
+        transform: translateY(-50%);
         height: 100%;
-        padding: 1rem 0;
     }}
     
     .direction-arrow svg {{
@@ -237,16 +222,31 @@ def load_css():
     
     /* Processing placeholder */
     .processing-placeholder {{
-        background-color: rgba(255, 255, 255, 0.03);
-        border-radius: 12px;
-        padding: 1.5rem;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
+        height: 200px;
+        margin-top: 3rem;
+    }}
+    
+    /* Styled action button */
+    .action-button {{
+        display: inline-block;
+        background: linear-gradient(90deg, {SET_COLORS["primary"]}, {SET_COLORS["accent"]});
+        color: white;
+        font-weight: 600;
+        padding: 0.8rem 2rem;
+        border-radius: 8px;
         text-align: center;
-        height: 70%;
-        margin-top: 2rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 6px rgba(124, 58, 237, 0.2);
+    }}
+    
+    .action-button:hover {{
+        transform: translateY(-3px);
+        box-shadow: 0 7px 14px rgba(124, 58, 237, 0.25);
     }}
     
     /* For mobile devices */
@@ -537,23 +537,32 @@ def render_arrow(direction="horizontal"):
     """
     return st.markdown(arrow_html, unsafe_allow_html=True)
 
-def render_empty_message():
-    """Render a styled empty state message"""
-    message_html = """
-    <div class="empty-message">
-        <p>Please upload an image to detect sets</p>
+def render_process_button():
+    """Render a styled button to prompt user to process the image"""
+    button_html = """
+    <div class="processing-placeholder">
+        <div class="action-button">
+            Click "Find Sets" to process the image
+        </div>
     </div>
     """
-    return st.markdown(message_html, unsafe_allow_html=True)
+    return st.markdown(button_html, unsafe_allow_html=True)
 
 def reset_session_state():
     """Reset all session state variables to their initial values"""
+    # First explicitly set critical values to None
+    if 'original_image' in st.session_state:
+        st.session_state.original_image = None
+    if 'uploaded_file' in st.session_state:
+        st.session_state.uploaded_file = None
+    if 'processed_image' in st.session_state:
+        st.session_state.processed_image = None
+    if 'sets_info' in st.session_state:
+        st.session_state.sets_info = None
+    
+    # Then set flags to their initial values
     st.session_state.processed = False
     st.session_state.start_processing = False
-    st.session_state.uploaded_file = None
-    st.session_state.original_image = None
-    st.session_state.processed_image = None
-    st.session_state.sets_info = None
 
 # =============================================================================
 # HEADER
@@ -646,9 +655,6 @@ def main():
                    caption="Original Image", 
                    use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
-        else:
-            # Show placeholder message when no image is uploaded
-            render_empty_message()
     
     # Arrow column - only show if an image is uploaded
     with col_arrow:
@@ -696,19 +702,24 @@ def main():
                    use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # Reset button
+            # Reset button - now with double-checking
             if st.button("⟳ Analyze Another Image"):
-                # Reset ALL state variables using the dedicated function
-                reset_session_state()
+                reset_session_state()  # Call our dedicated reset function
+                
+                # Force a hard refresh to ensure UI updates
+                st.cache_data.clear()  # Clear any cached data
+                st.cache_resource.clear()  # Clear any cached resources
+                
+                # Explicitly set to None again as a safeguard
+                st.session_state['original_image'] = None 
+                st.session_state['uploaded_file'] = None
+                
                 # Force refresh
                 st.rerun()
                 
-        # Show a placeholder before processing if image is uploaded
+        # Show a styled button to prompt the user to process
         elif st.session_state.original_image is not None and not st.session_state.processed:
-            # Simple placeholder that doesn't take too much space
-            st.markdown('<div class="processing-placeholder">', unsafe_allow_html=True)
-            st.markdown('<p>Click "Find Sets" to process the image</p>', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
+            render_process_button()
 
 if __name__ == "__main__":
     main()
