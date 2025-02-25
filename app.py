@@ -1,6 +1,5 @@
 import streamlit as st
-import streamlit.components.v1 as components
-from PIL import Image, ImageOps
+from PIL import Image
 import numpy as np
 import cv2
 import pandas as pd
@@ -47,27 +46,21 @@ st.set_page_config(
 )
 
 # =============================================================================
-# DEVICE DETECTION - Improved approach
+# DEVICE DETECTION - Simplified approach
 # =============================================================================
 def detect_device():
-    """Detect device type using JavaScript without page reload"""
-    if "device_checked" not in st.session_state:
-        device_check_js = """
-        <script>
-        const sendDeviceInfo = () => {
-            const device = (window.innerWidth < 768) ? "mobile" : "desktop";
-            window.parent.postMessage({type: "streamlit:setComponentValue", value: device}, "*");
-        };
-        // Call immediately and also on resize
-        sendDeviceInfo();
-        window.addEventListener('resize', sendDeviceInfo);
-        </script>
-        """
-        device_type = components.html(device_check_js, height=0, key="device_detector")
-        st.session_state.device_type = device_type if device_type else "desktop"
-        st.session_state.device_checked = True
+    """Detect device type based on user's browser width"""
+    # Default to desktop view
+    if 'is_mobile' not in st.session_state:
+        st.session_state.is_mobile = False
     
-    return st.session_state.device_type == "mobile"
+    # Simple toggle in sidebar for testing
+    if st.sidebar.checkbox("Mobile view", value=st.session_state.is_mobile, key="mobile_toggle"):
+        st.session_state.is_mobile = True
+    else:
+        st.session_state.is_mobile = False
+    
+    return st.session_state.is_mobile
 
 is_mobile = detect_device()
 
@@ -85,18 +78,11 @@ def load_css():
         padding-top: 1rem;
         padding-bottom: 1rem;
         max-width: 100%;
-        background-color: {SET_COLORS["background"]};
     }}
     
     h1, h2, h3, h4, h5, h6 {{
         font-family: 'Poppins', sans-serif;
         font-weight: 600;
-        color: {SET_COLORS["text"]};
-    }}
-    
-    p, span, div, label {{
-        font-family: 'Poppins', sans-serif;
-        color: {SET_COLORS["text"]};
     }}
     
     /* SET Header */
@@ -107,6 +93,9 @@ def load_css():
         justify-content: center;
         margin-bottom: 1.5rem;
         position: relative;
+        background: linear-gradient(90deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+        padding: 1.5rem;
+        border-radius: 12px;
     }}
     
     .set-header h1 {{
@@ -116,23 +105,22 @@ def load_css():
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
-        animation: shimmer 3s infinite;
     }}
     
     .set-header p {{
-        color: {SET_COLORS["text"]};
         font-size: 1.1rem;
         opacity: 0.8;
     }}
     
     /* Card styles */
     .set-card {{
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(255, 255, 255, 0.05);
         border-radius: 12px;
         padding: 1.5rem;
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
         height: 100%;
+        margin-bottom: 1rem;
     }}
     
     .set-card:hover {{
@@ -142,7 +130,6 @@ def load_css():
     
     .set-card h3 {{
         margin-top: 0;
-        color: {SET_COLORS["text"]};
         border-bottom: 2px solid {SET_COLORS["primary"]};
         padding-bottom: 0.5rem;
         text-align: center;
@@ -157,6 +144,7 @@ def load_css():
         transition: all 0.3s ease;
         background-color: rgba(124, 58, 237, 0.05);
         cursor: pointer;
+        margin-bottom: 1rem;
     }}
     
     .upload-area:hover {{
@@ -165,7 +153,7 @@ def load_css():
     }}
     
     /* Button styling */
-    .find-sets-btn {{
+    .stButton>button {{
         background: linear-gradient(90deg, {SET_COLORS["primary"]} 0%, {SET_COLORS["accent"]} 100%);
         color: white;
         border: none;
@@ -176,10 +164,9 @@ def load_css():
         transition: all 0.3s ease;
         width: 100%;
         margin-top: 1rem;
-        text-align: center;
     }}
     
-    .find-sets-btn:hover {{
+    .stButton>button:hover {{
         opacity: 0.9;
         transform: translateY(-2px);
         box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
@@ -199,11 +186,6 @@ def load_css():
     .results-heading h3 {{
         margin: 0;
         margin-left: 0.5rem;
-    }}
-    
-    /* Sidebar styles */
-    .sidebar .block-container {{
-        background-color: {SET_COLORS["background"]};
     }}
     
     /* Loading animation */
@@ -243,11 +225,6 @@ def load_css():
         40% {{ transform: scale(1); }}
     }}
     
-    @keyframes shimmer {{
-        0% {{ background-position: -100% 0; }}
-        100% {{ background-position: 200% 0; }}
-    }}
-    
     /* Image card */
     .image-container {{
         margin-top: 0.5rem;
@@ -284,7 +261,6 @@ def load_css():
     
     .set-explanation h4 {{
         margin-top: 0;
-        color: {SET_COLORS["text"]};
         font-size: 1.1rem;
     }}
     
@@ -327,24 +303,54 @@ def load_css():
         }}
     }}
     
-    /* Performance optimization toggle */
-    .performance-toggle {{
-        display: flex;
-        align-items: center;
-        margin-top: 1rem;
-        padding: 0.5rem;
-        background-color: rgba(255, 255, 255, 0.05);
+    /* Hide Streamlit branding */
+    #MainMenu {{visibility: hidden;}}
+    footer {{visibility: hidden;}}
+    
+    /* Custom download button */
+    .download-btn {{
+        display: inline-block;
+        background: linear-gradient(90deg, {SET_COLORS["primary"]} 0%, {SET_COLORS["accent"]} 100%);
+        color: white;
+        text-decoration: none;
+        padding: 0.75rem 1.5rem;
         border-radius: 8px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-top: 1rem;
+        text-align: center;
     }}
     
-    .performance-toggle p {{
-        margin: 0;
-        margin-left: 0.5rem;
-        font-size: 0.9rem;
+    .download-btn:hover {{
+        opacity: 0.9;
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(124, 58, 237, 0.3);
     }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
+
+# =============================================================================
+# INITIALIZE MODEL FUNCTIONS
+# =============================================================================
+# We'll include placeholders for the model functions but we'll implement
+# processing with mock data to make it work without requiring the models
+
+@st.cache_resource(show_spinner=False)
+def load_models():
+    """
+    This would load your models in the real implementation
+    For this demo, we're just returning placeholders
+    """
+    # In a real app, this would be:
+    # base_dir = Path("models")
+    # card_detection_model = YOLO(str(base_dir / "Card" / "16042024" / "best.pt"))
+    # return card_detection_model, shape_detection_model, fill_model, shape_model
+    
+    # For our demo:
+    return "card_model", "shape_model", "fill_model", "shape_model"
 
 # =============================================================================
 # HELPER FUNCTIONS
@@ -367,19 +373,8 @@ def get_image_download_link(img, filename="set_detected.jpg", text="Download Res
     buffered = BytesIO()
     img.save(buffered, format="JPEG", quality=90)
     img_str = base64.b64encode(buffered.getvalue()).decode()
-    href = f'<a href="data:image/jpeg;base64,{img_str}" download="{filename}" style="text-decoration: none;"><div class="find-sets-btn">{text}</div></a>'
+    href = f'<a href="data:image/jpeg;base64,{img_str}" download="{filename}" class="download-btn">{text}</a>'
     return href
-
-def create_set_card_image():
-    """Create a SET card placeholder image"""
-    card_img = Image.new('RGB', (300, 200), color='white')
-    draw = ImageDraw.Draw(card_img)
-    
-    # Draw a simple SET card
-    # This is a simplified version - in a real implementation, 
-    # you'd create proper SET card designs with proper shapes
-    
-    return card_img
 
 def render_loader():
     """Render a SET-themed loader"""
@@ -391,6 +386,58 @@ def render_loader():
     </div>
     """
     return st.markdown(loader_html, unsafe_allow_html=True)
+
+def mock_process_image(img_array):
+    """
+    Mock processing function - in the real app, this would call your model
+    This simulates detecting 3 sets in the image
+    """
+    # In the real app, this would process the image with your models
+    # For our demo, we'll return the original image with some random boxes drawn
+    processed_img = img_array.copy()
+    
+    # Draw some mock boxes for demonstration
+    height, width = processed_img.shape[:2]
+    mock_sets = []
+    
+    # Create 3 mock sets with random positions
+    for i in range(3):
+        # Draw three cards for each set with different colors
+        color = (
+            np.random.randint(150, 255),
+            np.random.randint(150, 255),
+            np.random.randint(150, 255)
+        )
+        
+        cards = []
+        for j in range(3):
+            # Create random box positions
+            x1 = np.random.randint(0, width//2)
+            y1 = np.random.randint(0, height//2)
+            x2 = x1 + np.random.randint(width//4, width//2)
+            y2 = y1 + np.random.randint(height//4, height//2)
+            
+            # Draw rectangle
+            cv2.rectangle(processed_img, (x1, y1), (x2, y2), color, 3)
+            
+            # Add label
+            cv2.putText(processed_img, f"Set {i+1}", (x1, y1-10),
+                       cv2.FONT_HERSHEY_SIMPLEX, 0.9, color, 2)
+            
+            cards.append({
+                "Count": np.random.randint(1, 4),
+                "Color": np.random.choice(["red", "green", "purple"]),
+                "Fill": np.random.choice(["empty", "striped", "solid"]),
+                "Shape": np.random.choice(["diamond", "oval", "squiggle"]),
+                "Coordinates": [x1, y1, x2, y2]
+            })
+        
+        mock_sets.append({
+            "set_id": i+1,
+            "cards": cards
+        })
+    
+    return processed_img, mock_sets
 
 # =============================================================================
 # COMPONENT LAYOUTS
@@ -423,13 +470,7 @@ def render_desktop_layout():
         st.markdown('</div>', unsafe_allow_html=True)
         
         # Performance options
-        st.markdown('<div class="performance-toggle">', unsafe_allow_html=True)
-        col_a, col_b = st.columns([1, 3])
-        with col_a:
-            optimize = st.checkbox("", value=True)
-        with col_b:
-            st.markdown('<p>Optimize image for faster processing</p>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        optimize = st.checkbox("Optimize image for faster processing", value=True)
         
         # Processing button
         if uploaded_file is not None:
@@ -439,8 +480,9 @@ def render_desktop_layout():
                     st.session_state.processed = False
             else:
                 # Download button appears after processing
+                processed_img = Image.fromarray(cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB))
                 st.markdown(get_image_download_link(
-                    Image.fromarray(cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)),
+                    processed_img,
                     text="⬇️ Download Result"
                 ), unsafe_allow_html=True)
                 
@@ -505,23 +547,22 @@ def render_desktop_layout():
                 else:
                     if 'start_processing' in st.session_state and st.session_state.start_processing:
                         render_loader()
-                        # Here you would call your processing function
-                        # For demonstration, let's simulate processing time
-                        time.sleep(2)  # Replace with actual processing
                         
-                        # This is where you'd actually process the image
-                        # For now, let's just use the original as a placeholder
-                        # processed_img, sets_info = process_image(st.session_state.image_array)
-                        # st.session_state.processed_image = processed_img
-                        # st.session_state.sets_info = sets_info
-                        
-                        # Placeholder - replace with actual processing
-                        st.session_state.processed_image = np.array(st.session_state.original_image)  
-                        st.session_state.sets_info = [{"set_id": 1}]  # Placeholder
-                        
-                        st.session_state.processed = True
-                        st.session_state.start_processing = False
-                        st.experimental_rerun()
+                        # Process the image (with mock processing for demonstration)
+                        with st.spinner("Detecting sets..."):
+                            # Simulate processing time
+                            time.sleep(1.5)
+                            
+                            # Process image (mock processing for demo)
+                            img_array = np.array(st.session_state.original_image)
+                            processed_img, sets_info = mock_process_image(img_array)
+                            
+                            st.session_state.processed_image = processed_img
+                            st.session_state.sets_info = sets_info
+                            
+                            st.session_state.processed = True
+                            st.session_state.start_processing = False
+                            st.experimental_rerun()
                     else:
                         st.info("Click 'Find Sets' to process the image")
                 st.markdown('</div>', unsafe_allow_html=True)
@@ -530,16 +571,20 @@ def render_desktop_layout():
             if 'processed' in st.session_state and st.session_state.processed:
                 st.markdown("<h4>Sets Found:</h4>", unsafe_allow_html=True)
                 
-                # Here you would display information about the sets found
-                # Placeholder for demonstration
-                set_cols = st.columns(3)
-                for i, _ in enumerate(st.session_state.sets_info):
-                    with set_cols[i % 3]:
+                # Display information about the sets found
+                set_cols = st.columns(min(3, len(st.session_state.sets_info)))
+                for i, set_info in enumerate(st.session_state.sets_info):
+                    with set_cols[i % len(set_cols)]:
+                        # Get one card from the set to show details
+                        card = set_info["cards"][0]
                         st.markdown(f"""
                         <div class="set-found-flash" style="background-color: rgba(255, 255, 255, 0.1); 
                                                           border-radius: 8px; padding: 0.5rem; margin-bottom: 0.5rem;">
                             <strong>Set {i+1}</strong><br>
-                            3 cards with matching properties
+                            Number: {card["Count"]}<br>
+                            Color: {card["Color"]}<br>
+                            Fill: {card["Fill"]}<br>
+                            Shape: {card["Shape"]}
                         </div>
                         """, unsafe_allow_html=True)
         else:
@@ -572,18 +617,20 @@ def render_mobile_layout():
     st.markdown('</div>', unsafe_allow_html=True)
     
     # Performance toggle - simpler for mobile
-    optimize = st.checkbox("Optimize image for faster processing", value=True)
+    optimize = st.checkbox("Optimize image", value=True)
     
     # Processing button
     if uploaded_file is not None:
         if 'processed' not in st.session_state or not st.session_state.processed:
-            if st.button("Find Sets", key="find_sets_mobile", use_container_width=True):
+            process_button = st.button("Find Sets", key="find_sets_mobile", use_container_width=True)
+            if process_button:
                 st.session_state.start_processing = True
                 st.session_state.processed = False
         else:
             # Download button appears after processing
+            processed_img = Image.fromarray(cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB))
             st.markdown(get_image_download_link(
-                Image.fromarray(cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)),
+                processed_img,
                 text="⬇️ Download Result"
             ), unsafe_allow_html=True)
             
@@ -629,28 +676,37 @@ def render_mobile_layout():
             # Show sets information
             st.markdown("<h4>Sets Found:</h4>", unsafe_allow_html=True)
             
-            # Placeholder for demonstration
-            for i, _ in enumerate(st.session_state.sets_info):
+            # Display information about the sets found
+            for i, set_info in enumerate(st.session_state.sets_info):
+                # Get one card from the set to show details
+                card = set_info["cards"][0]
                 st.markdown(f"""
                 <div class="set-found-flash" style="background-color: rgba(255, 255, 255, 0.1); 
                                                   border-radius: 8px; padding: 0.5rem; margin-bottom: 0.5rem;">
                     <strong>Set {i+1}</strong><br>
-                    3 cards with matching properties
+                    Number: {card["Count"]}, Color: {card["Color"]}<br>
+                    Fill: {card["Fill"]}, Shape: {card["Shape"]}
                 </div>
                 """, unsafe_allow_html=True)
         else:
             if 'start_processing' in st.session_state and st.session_state.start_processing:
                 render_loader()
-                # Simulate processing time
-                time.sleep(2)  # Replace with actual processing
                 
-                # Placeholder - replace with actual processing
-                st.session_state.processed_image = np.array(st.session_state.original_image)  
-                st.session_state.sets_info = [{"set_id": 1}]  # Placeholder
-                
-                st.session_state.processed = True
-                st.session_state.start_processing = False
-                st.experimental_rerun()
+                # Process the image (with mock processing for demonstration)
+                with st.spinner("Detecting sets..."):
+                    # Simulate processing time
+                    time.sleep(1.5)
+                    
+                    # Process image (mock processing for demo)
+                    img_array = np.array(st.session_state.original_image)
+                    processed_img, sets_info = mock_process_image(img_array)
+                    
+                    st.session_state.processed_image = processed_img
+                    st.session_state.sets_info = sets_info
+                    
+                    st.session_state.processed = True
+                    st.session_state.start_processing = False
+                    st.experimental_rerun()
             else:
                 st.info("Click 'Find Sets' to process the image")
         st.markdown('</div>', unsafe_allow_html=True)
@@ -688,14 +744,23 @@ def main():
     # Load CSS
     load_css()
     
+    # Hide Streamlit elements
+    st.markdown("""
+        <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        </style>
+        """, unsafe_allow_html=True)
+    
+    # Add note for the demo only - remove in real app
+    st.sidebar.markdown("### Demo Mode")
+    st.sidebar.info("This demo uses mock data instead of real AI processing. In a production app, this would connect to your AI models.")
+    
     # Render layout based on device type
     if is_mobile:
         render_mobile_layout()
     else:
         render_desktop_layout()
-    
-    # Add the model loading and processing functions from the original code here
-    # This is just a UI demonstration without the actual processing logic
 
 if __name__ == "__main__":
     main()
