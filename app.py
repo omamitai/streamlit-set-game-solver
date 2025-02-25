@@ -241,13 +241,15 @@ def load_css():
     }}
     
     .system-message p {{
-        font-size: 1.2rem;
-        font-weight: 500;
+        font-size: 1.1rem;
+        font-weight: 400;
+        opacity: 0.8;
         background: linear-gradient(90deg, {SET_COLORS["purple"]} 0%, {SET_COLORS["primary"]} 50%, {SET_COLORS["accent"]} 100%);
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
         margin: 0;
+        font-family: 'Poppins', sans-serif;
     }}
     
     /* Error messages */
@@ -786,8 +788,8 @@ def main():
             render_loader()
             
             try:
-                # Convert image for processing without spinner text
-                image_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_BGR2BGR)
+                # Convert image for processing - FIXED COLOR CONVERSION
+                image_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_RGB2BGR)
                 
                 # Process image with models
                 sets_info, processed_image = classify_and_find_sets_from_array(
@@ -850,9 +852,16 @@ def main():
                 # Set a flag to tell streamlit we want to reset
                 reset_session_state()
                 
-                # Force a completely fresh state
-                st.session_state.clear()
+                # More aggressive cleanup
+                for key in list(st.session_state.keys()):
+                    if key != 'is_mobile':
+                        del st.session_state[key]
+                
                 st.experimental_set_query_params()  # Clear URL params
+                
+                # Extra safety to make sure both images are cleared
+                st.session_state.original_image = None
+                st.session_state.uploaded_file = None
                 
                 # Make sure UI reloads completely
                 st.rerun()
