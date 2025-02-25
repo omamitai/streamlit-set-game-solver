@@ -662,6 +662,12 @@ def reset_session_state():
     # Create a list of all session state keys that need to be preserved
     preserved_keys = ['is_mobile']
     
+    # Save the values we want to preserve
+    preserved_values = {}
+    for key in preserved_keys:
+        if key in st.session_state:
+            preserved_values[key] = st.session_state[key]
+    
     # Identify all keys that should be removed
     keys_to_remove = [key for key in st.session_state.keys() if key not in preserved_keys]
     
@@ -680,6 +686,10 @@ def reset_session_state():
     st.session_state.no_cards_detected = False
     st.session_state.no_sets_found = False
     
+    # Restore preserved values
+    for key, value in preserved_values.items():
+        st.session_state[key] = value
+    
     # Force file uploader to reset by generating a new random key
     st.session_state.uploader_key = str(random.randint(1000, 9999))
     
@@ -689,17 +699,22 @@ def reset_session_state():
     # Add a timestamp to force a complete refresh
     st.session_state.reset_timestamp = time.time()
     
-    # Clear caches to force model reloading if needed
-    st.cache_data.clear()
+    # Don't clear URL params if they include mobile=true
+    params = st.query_params
+    mobile_param = params.get('mobile', None)
     
     # Clear URL params
     st.query_params.clear()
+    
+    # Restore mobile param if it was present
+    if mobile_param == 'true':
+        st.query_params['mobile'] = 'true'
 
 # =============================================================================
 # MOBILE DETECTION
 # =============================================================================
 def detect_mobile():
-    """Use JavaScript to detect mobile devices"""
+    """Use JavaScript to detect mobile devices and store result in session state"""
     mobile_detector_html = """
     <script>
         // Mobile detection based on viewport width
@@ -707,45 +722,31 @@ def detect_mobile():
             return (window.innerWidth <= 991);
         }
         
-        // Set a flag in sessionStorage
+        // Set a flag in sessionStorage that persists across page reloads
         if (isMobileDevice()) {
             sessionStorage.setItem('isMobile', 'true');
-            // Add message to page for debug
-            const mobileMsg = document.createElement('div');
-            mobileMsg.style.display = 'none';
-            mobileMsg.id = 'mobile-detected';
-            document.body.appendChild(mobileMsg);
+            document.body.classList.add('mobile-view');
         } else {
             sessionStorage.setItem('isMobile', 'false');
         }
         
-        // Add a class to the body for CSS targeting
-        if (isMobileDevice()) {
-            document.body.classList.add('mobile-view');
+        // This attempts to communicate the value back to Streamlit
+        // Fallback method using URL parameter
+        if (isMobileDevice() && !window.location.search.includes('mobile=true')) {
+            const newUrl = window.location.pathname + '?mobile=true' + window.location.hash;
+            window.history.replaceState({}, '', newUrl);
         }
-        
-        // Tell Streamlit that we're finished with the mobile detection
-        window.parent.postMessage({
-            type: "streamlit:setComponentValue",
-            value: isMobileDevice()
-        }, "*");
     </script>
     """
     st.markdown(mobile_detector_html, unsafe_allow_html=True)
     
-    # Check user agent or viewport size for mobile detection
-    # On mobile, most browsers viewport width will be under 991px
-    is_mobile = st.session_state.get("is_mobile", False)
+    # Check for mobile parameter in URL
+    params = st.query_params
+    if 'mobile' in params and params['mobile'] == 'true':
+        return True
     
-    # For reliable mobile detection in Streamlit, we also check the user agent
-    ctx = st.get_script_run_ctx()
-    if ctx is not None:
-        session_info = st.runtime.get_instance().get_client_state()
-        if session_info and "userAgentData" in session_info:
-            user_agent = session_info["userAgentData"].get("brands", "")
-            is_mobile = "Mobile" in user_agent or is_mobile
-    
-    return is_mobile
+    # Use session state as fallback
+    return st.session_state.get("is_mobile", False)
 
 # =============================================================================
 # MOBILE LAYOUT
@@ -995,8 +996,15 @@ def main():
     # Load CSS
     load_css()
     
-    # Detect mobile devices
-    is_mobile = detect_mobile()
+    # Check for mobile flag in URL query parameters first
+    params = st.query_params
+    if 'mobile' in params and params['mobile'] == 'true':
+        is_mobile = True
+    else:
+        # Then try to detect via JavaScript or use previous session state
+        is_mobile = detect_mobile()
+    
+    # Store in session state for persistence
     st.session_state.is_mobile = is_mobile
     
     # If reset is pending, clear everything
@@ -1009,6 +1017,15 @@ def main():
     
     # Handle layout based on device type
     if is_mobile:
+        # Hide sidebar with direct HTML approach as backup for CSS
+        st.markdown(
+            """
+            <style>
+            [data-testid="stSidebar"] {display: none !important;}
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
         render_mobile_layout()
     else:
         render_desktop_layout()
