@@ -1,9 +1,9 @@
 """
-SET Game Detector App
-=====================
+SET Game Detector - iOS Optimized
+================================
 
-A Streamlit application that identifies valid SETs from an uploaded image of a SET game board.
-Optimized for mobile devices with iOS-inspired design principles.
+A Streamlit application that identifies valid SETs from uploaded images of SET card games.
+Designed with Apple's Human Interface Guidelines for an optimal iPhone experience.
 """
 
 import streamlit as st
@@ -27,23 +27,24 @@ import time
 # =============================================================================
 st.set_page_config(
     page_title="SET Detector",
+    page_icon="🃏",
     layout="wide"
 )
 
 # =============================================================================
-# SET THEME COLORS
+# SET THEME COLORS - iOS Palette
 # =============================================================================
 SET_THEME = {
-    "primary": "#7C3AED",     # Purple
-    "secondary": "#10B981",   # Green
-    "accent": "#EC4899",      # Pink
-    "red": "#EF4444",         # Red
-    "green": "#10B981",       # Green
-    "purple": "#8B5CF6",      # Light purple
-    "background": "#F9F9FC",  # Light background
-    "card": "#FFFFFF",        # Card background
-    "text": "#222222",        # Text color
-    "text_muted": "#666666",  # Muted text
+    "primary": "#007AFF",     # iOS Blue
+    "secondary": "#34C759",   # iOS Green
+    "accent": "#FF2D55",      # iOS Pink
+    "red": "#FF3B30",         # iOS Red
+    "green": "#34C759",       # iOS Green
+    "purple": "#AF52DE",      # iOS Purple
+    "background": "#F2F2F7",  # iOS Light Gray
+    "card": "#FFFFFF",        # iOS White
+    "text": "#000000",        # iOS Black
+    "text_muted": "#8E8E93",  # iOS Gray
 }
 
 # =============================================================================
@@ -75,13 +76,15 @@ if "image_height" not in st.session_state:
     st.session_state.image_height = 400
 if "show_original" not in st.session_state:
     st.session_state.show_original = False
+if "app_view" not in st.session_state:
+    st.session_state.app_view = "upload"  # Possible values: "upload", "processing", "results"
 
 # =============================================================================
-# CUSTOM CSS
+# CUSTOM CSS - iOS-inspired styling
 # =============================================================================
 def load_custom_css():
     """
-    Loads custom CSS for a cohesive SET-themed UI with iOS-like aesthetics.
+    Loads custom CSS for an iOS-inspired UI following Apple's Human Interface Guidelines.
     """
     css = """
     <style>
@@ -89,352 +92,303 @@ def load_custom_css():
     @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Text:wght@400;500;600&display=swap');
 
     :root {
-        --set-primary: #7C3AED;
-        --set-secondary: #10B981;
-        --set-accent: #EC4899;
-        --set-red: #EF4444;
-        --set-green: #10B981;
-        --set-purple: #8B5CF6;
-        --set-background: #F9F9FC;
-        --set-card: #FFFFFF;
-        --set-text: #222222;
-        --set-text-muted: #666666;
+        --ios-blue: #007AFF;
+        --ios-green: #34C759;
+        --ios-red: #FF3B30;
+        --ios-pink: #FF2D55;
+        --ios-purple: #AF52DE;
+        --ios-background: #F2F2F7;
+        --ios-card: #FFFFFF;
+        --ios-text: #000000;
+        --ios-text-muted: #8E8E93;
+        --ios-border: rgba(0, 0, 0, 0.1);
     }
 
     body {
-        font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
-        background-color: var(--set-background);
-        color: var(--set-text);
+        font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
+        background-color: var(--ios-background);
+        color: var(--ios-text);
         line-height: 1.5;
         -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Custom Streamlit override */
+    /* Custom Streamlit override - zero padding for mobile */
     .main .block-container {
-        padding-top: 0.75rem;
-        padding-bottom: 1rem;
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
         padding-left: 0.5rem;
         padding-right: 0.5rem;
         max-width: 100%;
     }
 
-    /* iOS-style Header Box */
-    .set-header-minimal {
+    /* iOS-style Header */
+    .ios-header {
         display: flex;
         justify-content: center;
         align-items: center;
-        padding: 0.5rem 0.75rem;
-        margin: 0.25rem auto 0.5rem;
-        background: rgba(255, 255, 255, 0.85);
+        padding: 0.75rem;
+        margin: 0 auto 0.75rem;
+        background: rgba(255, 255, 255, 0.8);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
-        border-radius: 12px;
-        border: 1px solid rgba(124, 58, 237, 0.15);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        border-radius: 16px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
         transition: all 0.2s ease;
         max-width: 200px;
     }
     
-    .set-header-minimal:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
-        border-color: rgba(124, 58, 237, 0.25);
-    }
-    
-    .set-header-minimal h1 {
-        font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-        font-size: 1.3rem;
+    .ios-header h1 {
+        font-family: -apple-system, 'SF Pro Display', BlinkMacSystemFont, sans-serif;
+        font-size: 1.25rem;
         font-weight: 600;
         margin: 0;
-        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-primary) 50%, var(--set-accent) 100%);
-        -webkit-background-clip: text;
-        background-clip: text;
-        -webkit-text-fill-color: transparent;
-        letter-spacing: -0.02em;
+        color: var(--ios-text);
+        letter-spacing: -0.01em;
     }
     
-    /* Mobile Optimized View */
-    .mobile-view-container {
-        padding: 0.5rem;
-    }
-    
-    .mobile-results-container {
-        margin-top: 0.5rem;
-    }
-
-    /* Buttons - Attached to images */
-    .stButton>button {
-        background: linear-gradient(135deg, var(--set-primary) 0%, var(--set-accent) 100%);
-        color: white;
-        border: none;
-        padding: 0.6rem 0.5rem;
-        border-radius: 10px;
-        font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
-        font-weight: 600;
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+    /* iOS Navigation Bar (Fixed at top) */
+    .ios-nav-bar {
+        position: sticky;
+        top: 0;
+        z-index: 100;
         width: 100%;
-        margin-top: 0 !important;
-        letter-spacing: 0.01em;
-        box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);
-        min-height: 44px; /* iOS minimum touch target size */
+        padding: 0.75rem 1rem;
+        background: rgba(247, 247, 252, 0.8);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     
-    .stButton>button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
-    }
-    
-    .stButton>button:active {
-        transform: translateY(1px);
-        box-shadow: 0 1px 4px rgba(124, 58, 237, 0.2);
-    }
-
-    /* Secondary button style */
-    .secondary-btn>button {
-        background: rgba(255, 255, 255, 0.9) !important;
-        color: var(--set-primary) !important;
-        border: 1px solid rgba(124, 58, 237, 0.25) !important;
-        box-shadow: 0 2px 4px rgba(124, 58, 237, 0.08) !important;
-    }
-    
-    .secondary-btn>button:hover {
-        background: rgba(255, 255, 255, 1) !important;
-        border-color: rgba(124, 58, 237, 0.4) !important;
-    }
-    
-    /* Button container */
-    .button-container {
-        margin-top: 0;
+    /* Mobile container - full width */
+    .ios-container {
+        padding: 0.5rem;
         margin-bottom: 0.5rem;
     }
+    
+    /* Image area with iOS card styling */
+    .ios-card {
+        background: white;
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        margin-bottom: 0.75rem;
+    }
 
-    /* Loader */
-    .loader-container {
+    /* iOS-style Primary Button */
+    .ios-button-primary > button {
+        background: var(--ios-blue);
+        color: white;
+        border: none;
+        padding: 0.75rem;
+        border-radius: 10px;
+        font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
+        font-weight: 600;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.1s ease-out;
+        width: 100%;
+        margin: 0.25rem 0 !important;
+        min-height: 44px; /* iOS minimum touch target */
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .ios-button-primary > button:hover {
+        background: #0071EB;
+    }
+    
+    .ios-button-primary > button:active {
+        transform: scale(0.98);
+        background: #0062CC;
+    }
+
+    /* iOS-style Secondary Button */
+    .ios-button-secondary > button {
+        background: rgba(0, 122, 255, 0.1);
+        color: var(--ios-blue);
+        border: none;
+        padding: 0.75rem;
+        border-radius: 10px;
+        font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
+        font-weight: 500;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.1s ease-out;
+        width: 100%;
+        margin: 0.25rem 0 !important;
+        min-height: 44px; /* iOS minimum touch target */
+    }
+    
+    .ios-button-secondary > button:hover {
+        background: rgba(0, 122, 255, 0.15);
+    }
+    
+    .ios-button-secondary > button:active {
+        transform: scale(0.98);
+        background: rgba(0, 122, 255, 0.2);
+    }
+
+    /* Image Container - Fixed height */
+    .ios-image-container {
+        margin: 0;
+        position: relative;
+        border-radius: 8px;
+        overflow: hidden;
+        height: 240px;
+        width: 100%;
+        background-color: #F8F8F8;
+    }
+    
+    .ios-image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* Preserve aspect ratio */
+    }
+    
+    /* iOS-style loader */
+    .ios-loader-container {
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        height: 150px;
-        margin: 0.75rem 0;
+        height: 180px;
     }
     
-    .loader {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .ios-loader {
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(0, 122, 255, 0.2);
+        border-top: 2px solid var(--ios-blue);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
         margin-bottom: 1rem;
     }
     
-    .loader-dot {
-        width: 10px;
-        height: 10px;
-        margin: 0 5px;
-        border-radius: 50%;
-        display: inline-block;
-        animation: loader 1.8s infinite cubic-bezier(0.45, 0.05, 0.55, 0.95) both;
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
     
-    .loader-dot-1 {
-        background-color: var(--set-red);
-        animation-delay: -0.32s;
-    }
-    
-    .loader-dot-2 {
-        background-color: var(--set-green);
-        animation-delay: -0.16s;
-    }
-    
-    .loader-dot-3 {
-        background-color: var(--set-purple);
-        animation-delay: 0s;
-    }
-    
-    @keyframes loader {
-        0%, 80%, 100% { transform: scale(0); opacity: 0.7; }
-        40% { transform: scale(1); opacity: 1; }
-    }
-    
-    .loader-text {
+    .ios-loader-text {
         font-size: 0.9rem;
-        color: var(--set-text-muted);
-        margin-top: 0.5rem;
-    }
-
-    /* Image Container - Uniform sizing */
-    .image-container {
-        margin: 0 0 0.35rem 0;
-        position: relative;
-        border-radius: 16px;
-        overflow: hidden;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        border: 1px solid rgba(124, 58, 237, 0.15);
-        height: 250px; /* Fixed height for uniformity */
-        width: 100%;
-    }
-    
-    .image-container img {
-        display: block;
-        width: 100%;
-        height: 100%;
-        object-fit: cover; /* Ensures image fills container without distortion */
-    }
-    
-    /* Image pair container */
-    .image-pair-container {
-        display: flex;
-        flex-direction: row;
-        gap: 0.5rem;
-        margin: 0.35rem 0;
-    }
-    
-    /* Image column */
-    .image-column {
-        display: flex;
-        flex-direction: column;
-        width: 50%;
-    }
-    
-    /* Caption styling for image containers */
-    .image-container .caption {
-        padding: 0.6rem;
-        font-size: 0.9rem;
-        background: rgba(255, 255, 255, 0.9);
-        backdrop-filter: blur(5px);
-        -webkit-backdrop-filter: blur(5px);
-        border-top: 1px solid rgba(255, 255, 255, 0.5);
         font-weight: 500;
+        color: var(--ios-text-muted);
     }
 
-    /* Messages - More compact for iPhone */
-    .system-message, .error-message, .warning-message, .success-message {
+    /* iOS-style alert messages */
+    .ios-alert {
+        padding: 0.75rem;
+        border-radius: 10px;
+        margin: 0.5rem 0;
         display: flex;
         align-items: center;
-        padding: 0.4rem 0.6rem;
-        border-radius: 8px;
-        margin: 0 0 0.35rem 0;
-        font-size: 0.85rem;
-    }
-    
-    .system-message {
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.6);
-        justify-content: center;
-    }
-    
-    .system-message p {
+        font-size: 0.9rem;
         font-weight: 500;
-        color: var(--set-text-muted);
-        margin: 0;
-    }
-
-    .error-message {
-        background-color: rgba(239, 68, 68, 0.06);
-        box-shadow: 0 1px 4px rgba(239, 68, 68, 0.08);
-        border: 1px solid rgba(239, 68, 68, 0.15);
+        min-height: 44px;
     }
     
-    .error-message::before {
+    .ios-alert-error {
+        background-color: rgba(255, 59, 48, 0.1);
+        color: var(--ios-red);
+    }
+    
+    .ios-alert-error::before {
         content: "⚠️";
-        font-size: 1rem;
-        margin-right: 0.4rem;
-        flex-shrink: 0;
+        margin-right: 0.5rem;
     }
     
-    .error-message p {
-        margin: 0;
-        font-weight: 500;
-        color: var(--set-red);
-    }
-
-    .warning-message {
-        background-color: rgba(245, 158, 11, 0.06);
-        box-shadow: 0 1px 4px rgba(245, 158, 11, 0.08);
-        border: 1px solid rgba(245, 158, 11, 0.15);
+    .ios-alert-warning {
+        background-color: rgba(255, 204, 0, 0.1);
+        color: #FF9500;
     }
     
-    .warning-message::before {
+    .ios-alert-warning::before {
         content: "ℹ️";
-        font-size: 1rem;
-        margin-right: 0.4rem;
-        flex-shrink: 0;
+        margin-right: 0.5rem;
     }
     
-    .warning-message p {
-        margin: 0;
-        font-weight: 500;
-        color: #F59E0B;
+    .ios-alert-success {
+        background-color: rgba(52, 199, 89, 0.1);
+        color: var(--ios-green);
     }
     
-    .success-message {
-        background-color: rgba(16, 185, 129, 0.06);
-        box-shadow: 0 1px 4px rgba(16, 185, 129, 0.08);
-        border: 1px solid rgba(16, 185, 129, 0.15);
-    }
-    
-    .success-message::before {
+    .ios-alert-success::before {
+        content: "✓";
         content: "✅";
-        font-size: 1rem;
-        margin-right: 0.4rem;
-        flex-shrink: 0;
+        margin-right: 0.5rem;
     }
     
-    .success-message p {
-        margin: 0;
+    /* iOS-style label */
+    .ios-label {
+        font-size: 0.9rem;
         font-weight: 500;
-        color: var(--set-green);
+        color: var(--ios-text-muted);
+        text-align: center;
+        margin: 0.5rem 0;
     }
     
-    /* Status label */
-    .status-label {
-        font-size: 0.75rem;
-        color: var(--set-text-muted);
-        text-align: center;
-        margin: 0.2rem 0 0.4rem;
+    /* Grid layout for side-by-side views */
+    .ios-grid {
+        display: flex;
+        gap: 0.75rem;
     }
-
-    /* Hide sidebar */
-    section[data-testid="stSidebar"] {
+    
+    .ios-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    /* Hide Streamlit elements we don't need */
+    footer {
         display: none !important;
     }
     
-    /* Reduce image margins */
+    /* Hide the default Streamlit header/footer */
+    header {
+        display: none !important;
+    }
+    
+    /* Override Streamlit image styles */
     [data-testid="stImage"] {
         margin-top: 0 !important;
         margin-bottom: 0 !important;
     }
     
-    /* Caption style */
-    .caption {
-        font-size: 0.8rem !important;
-        padding: 0.5rem !important;
-        text-align: center !important;
-    }
-    
-    /* Make file uploader more compact */
+    /* File uploader iOS style */
     [data-testid="stFileUploader"] {
-        padding: 0.5rem !important;
-        border-radius: 10px !important;
+        background: rgba(255, 255, 255, 0.8);
+        border-radius: 12px;
+        padding: 1rem !important;
+        border: 1px dashed rgba(0, 122, 255, 0.3);
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
     
-    [data-testid="stFileUploader"] label {
-        font-size: 0.9rem !important;
+    [data-testid="stFileUploader"] > div > button {
+        background-color: var(--ios-blue) !important;
+        color: white !important;
+        border-radius: 8px !important;
+        min-height: 44px;
     }
     
-    [data-testid="stFileUploader"] small {
-        margin-top: 0.3rem !important;
+    /* Remove all extra margins from button container */
+    .stButton {
+        margin: 0 !important; 
     }
     
-    /* Style for captions */
-    .st-emotion-cache-1q9deeb {
-        text-align: center !important;
-        font-size: 0.8rem !important;
-        color: var(--set-text-muted) !important;
-        margin-top: 0.3rem !important;
+    /* Results badge */
+    .ios-badge {
+        display: inline-block;
+        padding: 0.25rem 0.5rem;
+        background: var(--ios-blue);
+        color: white;
+        border-radius: 12px;
+        font-size: 0.8rem;
+        font-weight: 500;
+        margin-top: 0.25rem;
     }
     </style>
     """
@@ -682,21 +636,25 @@ def locate_all_sets(cards_df: pd.DataFrame) -> List[dict]:
 def draw_detected_sets(board_img: np.ndarray, sets_detected: List[dict]) -> np.ndarray:
     """
     Annotates the board image with bounding boxes for each detected SET.
-    Each SET is drawn in a different color and offset (thickness & expansion) 
-    so that overlapping sets are visible.
+    Each SET is drawn in a different color and offset for better visibility.
     """
-    # Some distinct BGR colors
-    colors = [
-        (255, 0, 0), (0, 255, 0), (0, 0, 255),
-        (255, 255, 0), (255, 0, 255), (0, 255, 255)
+    # iOS Brand colors (BGR format)
+    ios_colors = [
+        (255, 59, 48),    # Red
+        (52, 199, 89),    # Green
+        (0, 122, 255),    # Blue
+        (255, 149, 0),    # Orange
+        (175, 82, 222),   # Purple
+        (255, 45, 85)     # Pink
     ]
-    base_thickness = 8
+    
+    base_thickness = 4
     base_expansion = 5
 
     for idx, single_set in enumerate(sets_detected):
-        color = colors[idx % len(colors)]
-        thickness = base_thickness + 2 * idx
-        expansion = base_expansion + 15 * idx
+        color = ios_colors[idx % len(ios_colors)]
+        thickness = base_thickness + (idx % 3)
+        expansion = base_expansion + 10 * (idx % 3)
 
         for i, card_info in enumerate(single_set["cards"]):
             x1, y1, x2, y2 = card_info["Coordinates"]
@@ -708,16 +666,21 @@ def draw_detected_sets(board_img: np.ndarray, sets_detected: List[dict]) -> np.n
 
             cv2.rectangle(board_img, (x1e, y1e), (x2e, y2e), color, thickness)
 
-            # Label only the first card's box with "Set <number>"
+            # Label the first card with Set number
             if i == 0:
+                label_bg_size = cv2.getTextSize(f"Set {idx+1}", cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)[0]
+                cv2.rectangle(board_img, 
+                             (x1e, y1e - 25), 
+                             (x1e + label_bg_size[0] + 10, y1e),
+                             color, -1)
                 cv2.putText(
                     board_img,
                     f"Set {idx + 1}",
-                    (x1e, y1e - 10),
+                    (x1e + 5, y1e - 7),
                     cv2.FONT_HERSHEY_SIMPLEX,
-                    0.9,
-                    color,
-                    thickness
+                    0.7,
+                    (255, 255, 255),
+                    2
                 )
     return board_img
 
@@ -758,8 +721,7 @@ def identify_sets_from_image(
 
 def optimize_image_size(img_pil: Image.Image, max_dim=800) -> Image.Image:
     """
-    Resizes a PIL image if its largest dimension exceeds max_dim, to reduce processing time.
-    Optimized for mobile viewing with smaller dimension for iPhone screens.
+    Resizes a PIL image to optimize for mobile viewing while preserving aspect ratio.
     """
     width, height = img_pil.size
     if max(width, height) > max_dim:
@@ -778,10 +740,10 @@ def optimize_image_size(img_pil: Image.Image, max_dim=800) -> Image.Image:
 # =============================================================================
 def render_header():
     """
-    Renders a minimalistic header for the app.
+    Renders a iOS-style header for the app.
     """
     header_html = """
-    <div class="set-header-minimal">
+    <div class="ios-header">
         <h1>SET Detector</h1>
     </div>
     """
@@ -789,91 +751,85 @@ def render_header():
 
 def render_loading():
     """
-    Shows a simple 3-dot animated loader styled with SET colors.
+    Shows iOS-style loading indicator.
     """
     loader_html = """
-    <div class="loader-container">
-        <div class="loader">
-            <div class="loader-dot loader-dot-1"></div>
-            <div class="loader-dot loader-dot-2"></div>
-            <div class="loader-dot loader-dot-3"></div>
-        </div>
-        <div class="loader-text">Analyzing image...</div>
+    <div class="ios-loader-container">
+        <div class="ios-loader"></div>
+        <div class="ios-loader-text">Analyzing image...</div>
     </div>
     """
     st.markdown(loader_html, unsafe_allow_html=True)
 
 def render_error(message: str):
     """
-    Renders a styled error message.
+    Renders an iOS-style error message.
     """
     html = f"""
-    <div class="error-message">
-        <p>{message}</p>
+    <div class="ios-alert ios-alert-error">
+        {message}
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
 
 def render_warning(message: str):
     """
-    Renders a styled warning message.
+    Renders an iOS-style warning message.
     """
     html = f"""
-    <div class="warning-message">
-        <p>{message}</p>
+    <div class="ios-alert ios-alert-warning">
+        {message}
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
 
 def render_success_message(num_sets: int):
     """
-    Renders a styled success message indicating the number of sets found.
+    Renders an iOS-style success message.
     """
     if num_sets == 0:
         return
         
     html = f"""
-    <div class="success-message">
-        <p>Found {num_sets} SET{'' if num_sets == 1 else 's'}</p>
-    </div>
-    """
-    st.markdown(html, unsafe_allow_html=True)
-
-def render_process_prompt():
-    """
-    Renders a styled "system message" to prompt the user to tap 'Find Sets'.
-    """
-    html = """
-    <div class="system-message">
-        <p>Tap "Find Sets" to analyze</p>
+    <div class="ios-alert ios-alert-success">
+        Found {num_sets} SET{'' if num_sets == 1 else 's'}
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
 
 def detect_mobile_device():
     """
-    Adds JavaScript code to detect mobile devices and set viewport properly.
-    Always defaults to mobile UI for consistency.
+    Sets proper viewport for mobile devices with iOS-specific meta tags.
     """
     js_snippet = """
     <script>
-        // Set proper viewport for mobile
+        // Set proper viewport for iOS
         if (!document.querySelector('meta[name="viewport"]')) {
             var meta = document.createElement('meta');
             meta.name = 'viewport';
-            meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+            meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover';
             document.getElementsByTagName('head')[0].appendChild(meta);
         }
+        
+        // Add iOS status bar meta tags
+        var statusBarMeta = document.createElement('meta');
+        statusBarMeta.name = 'apple-mobile-web-app-status-bar-style';
+        statusBarMeta.content = 'black-translucent';
+        document.getElementsByTagName('head')[0].appendChild(statusBarMeta);
+        
+        // Add iOS web app capable meta tag
+        var webAppMeta = document.createElement('meta');
+        webAppMeta.name = 'apple-mobile-web-app-capable';
+        webAppMeta.content = 'yes';
+        document.getElementsByTagName('head')[0].appendChild(webAppMeta);
     </script>
     """
     st.markdown(js_snippet, unsafe_allow_html=True)
-    
-    # Default to mobile view for better experience
     return True
 
 def reset_app_state():
     """
-    Clears and reinitializes session state, forcing the UI to reset.
+    Clears and reinitializes session state to reset the app.
     """
     # Preserve device type detection
     is_mobile = st.session_state.get("is_mobile", True)
@@ -897,19 +853,19 @@ def reset_app_state():
     st.session_state.should_reset = True
     st.session_state.show_original = False
     st.session_state.is_mobile = is_mobile
-    st.session_state.reset_timestamp = time.time()
-
+    st.session_state.app_view = "upload"
+    
 # =============================================================================
 # MAIN APP
 # =============================================================================
 def main():
     """
-    Main application function with iOS-style layout for no-scroll iPhone experience.
+    Main application entry point with iOS-style layout optimized for iPhone.
     """
-    # 1. Load custom CSS
+    # 1. Load custom iOS-style CSS
     load_custom_css()
     
-    # 2. Set proper viewport for mobile
+    # 2. Set proper viewport for iOS
     is_mobile = detect_mobile_device()
     st.session_state.is_mobile = is_mobile
     
@@ -918,139 +874,188 @@ def main():
         st.session_state.should_reset = False
         st.rerun()
     
-    # 4. Display attractive iOS-style header with hover effect
+    # 4. Display iOS-style header
     render_header()
     
-    # 5. UPLOAD STEP - Only show if no file is uploaded
-    if not st.session_state.get("uploaded_file"):
-        st.file_uploader(
-            "Upload a SET board image",
-            type=["png", "jpg", "jpeg"],
-            key=f"uploader_{st.session_state.uploader_key}",
-            label_visibility="collapsed"
-        )
-            
-        if st.session_state.get("uploader_" + st.session_state.uploader_key):
-            uploaded_file = st.session_state.get("uploader_" + st.session_state.uploader_key)
-            
-            # Reset session state for new image
-            for key in ['processed', 'processed_image', 'sets_info', 'original_image',
-                        'no_cards_detected', 'no_sets_found', 'show_original']:
-                if key in st.session_state:
-                    if key in ('processed', 'no_cards_detected', 'no_sets_found', 'show_original'):
-                        st.session_state[key] = False
-                    else:
-                        st.session_state[key] = None
-
-            st.session_state.uploaded_file = uploaded_file
-            try:
-                img_pil = Image.open(uploaded_file)
-                img_pil = optimize_image_size(img_pil, max_dim=800)  # Smaller for iPhone screen
-                st.session_state.original_image = img_pil
-                st.session_state.image_height = img_pil.height
-            except Exception as e:
-                st.error(f"Failed to load the image")
-                st.error(str(e))
+    # 5. APP FLOW - Single-screen approach for iPhone
     
-    # 6. PROCESSING AND RESULTS FLOW - Side by side layout for iPhone (no scrolling)
-    if st.session_state.get("uploaded_file"):
+    # UPLOAD SCREEN
+    if not st.session_state.get("uploaded_file"):
+        # Center align uploader with custom styling
+        with st.container():
+            st.markdown("""
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 2rem;">
+                <img src="https://raw.githubusercontent.com/omermamitai/set-game-detector/main/assets/set-cards-icon.png" 
+                     style="width: 120px; height: 120px; border-radius: 24px; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
+                <div style="font-size: 1.1rem; font-weight: 500; margin-bottom: 1.5rem; text-align: center;">
+                    Upload a photo of your SET game
+                </div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # iOS-style file uploader
+            st.file_uploader(
+                "Upload a SET board image",
+                type=["png", "jpg", "jpeg"],
+                key=f"uploader_{st.session_state.uploader_key}",
+                label_visibility="collapsed"
+            )
+            
+            if st.session_state.get("uploader_" + st.session_state.uploader_key):
+                uploaded_file = st.session_state.get("uploader_" + st.session_state.uploader_key)
+                
+                # Reset session state for new image
+                for key in ['processed', 'processed_image', 'sets_info', 'original_image',
+                            'no_cards_detected', 'no_sets_found', 'show_original']:
+                    if key in st.session_state:
+                        if key in ('processed', 'no_cards_detected', 'no_sets_found', 'show_original'):
+                            st.session_state[key] = False
+                        else:
+                            st.session_state[key] = None
+
+                st.session_state.uploaded_file = uploaded_file
+                try:
+                    img_pil = Image.open(uploaded_file)
+                    img_pil = optimize_image_size(img_pil, max_dim=800)
+                    st.session_state.original_image = img_pil
+                    st.session_state.image_height = img_pil.height
+                    st.session_state.app_view = "preview"
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Failed to load the image")
+                    st.error(str(e))
+    
+    # PREVIEW SCREEN - Show original with Find Sets button
+    elif st.session_state.app_view == "preview":
+        st.markdown('<div class="ios-card">', unsafe_allow_html=True)
+        st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
+        st.image(st.session_state.original_image, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
         
-        # LOADING STATE (Centered when processing)
-        if st.session_state.get("start_processing"):
-            render_loading()
-            try:
-                img_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_RGB2BGR)
-                sets_info, processed_img = identify_sets_from_image(
-                    img_cv, detector_card, detector_shape, model_fill, model_shape
-                )
-                st.session_state.sets_info = sets_info
-                st.session_state.processed_image = processed_img
-                st.session_state.processed = True
-                st.session_state.start_processing = False
-                st.rerun()
-            except Exception as e:
-                st.error("Error processing image")
-                with st.expander("Show error details"):
-                    st.code(traceback.format_exc())
-                st.session_state.start_processing = False
+        col1, col2 = st.columns([1, 1])
         
-        # SIDE-BY-SIDE LAYOUT FOR IMAGES AND CONTROLS
-        elif not st.session_state.get("processed"):
-            # Not yet processed - show original image with Find Sets button below it
-            st.markdown('<div class="image-container">', unsafe_allow_html=True)
-            st.image(st.session_state.original_image, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Find Sets button attached to image
-            st.markdown('<div class="button-container">', unsafe_allow_html=True)
-            if st.button("Find Sets", key="find_sets_btn", use_container_width=True):
-                st.session_state.processed = False
-                st.session_state.processed_image = None
-                st.session_state.sets_info = None
-                st.session_state.no_cards_detected = False
-                st.session_state.no_sets_found = False
-                st.session_state.show_original = False
-                st.session_state.start_processing = True
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
-        
-        # RESULTS DISPLAY (Side by side images with buttons below each)
-        else:
-            # Show images side by side with their respective buttons
-            st.markdown('<div class="image-pair-container">', unsafe_allow_html=True)
-            
-            # Left column - Original image & toggle
-            st.markdown('<div class="image-column">', unsafe_allow_html=True)
-            st.markdown('<div class="image-container">', unsafe_allow_html=True)
-            st.image(st.session_state.original_image, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Secondary button below original image
-            st.markdown('<div class="secondary-btn button-container">', unsafe_allow_html=True)
-            toggle_label = "Hide" if st.session_state.get("show_original", True) else "Show"
-            if st.button(toggle_label, key="toggle_btn", use_container_width=True):
-                st.session_state.show_original = not st.session_state.get("show_original", True)
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Right column - Processed image & reset button
-            st.markdown('<div class="image-column">', unsafe_allow_html=True)
-            
-            # Status messages
-            if st.session_state.no_cards_detected:
-                render_error("No cards detected")
-                pm = None
-            elif st.session_state.no_sets_found:
-                render_warning("No SETs found")
-                pm = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
-            else:
-                pm = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
-                st.markdown('<div class="status-label">', unsafe_allow_html=True)
-                st.markdown(f"{len(st.session_state.sets_info)} SET{'' if len(st.session_state.sets_info) == 1 else 's'} found", unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Show processed image
-            if pm is not None:
-                st.markdown('<div class="image-container">', unsafe_allow_html=True)
-                st.image(pm, use_container_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-            
-            # Primary button (New Image) below processed image
-            st.markdown('<div class="button-container">', unsafe_allow_html=True)
-            if st.button("New Image", key="reset_btn", use_container_width=True):
+        with col1:
+            st.markdown('<div class="ios-button-secondary">', unsafe_allow_html=True)
+            if st.button("Cancel", key="cancel_btn", use_container_width=True):
                 reset_app_state()
                 st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
+        
+        with col2:
+            st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
+            if st.button("Find Sets", key="find_sets_btn", use_container_width=True):
+                st.session_state.app_view = "processing"
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+    
+    # PROCESSING SCREEN
+    elif st.session_state.app_view == "processing":
+        render_loading()
+        
+        # Process the image
+        try:
+            img_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_RGB2BGR)
+            sets_info, processed_img = identify_sets_from_image(
+                img_cv, detector_card, detector_shape, model_fill, model_shape
+            )
+            st.session_state.sets_info = sets_info
+            st.session_state.processed_image = processed_img
+            st.session_state.processed = True
+            st.session_state.app_view = "results"
+            st.rerun()
+        except Exception as e:
+            render_error("Error processing image")
+            with st.expander("Show error details"):
+                st.code(traceback.format_exc())
+            
+            # Add retry button
+            st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
+            if st.button("Try Again", key="retry_btn", use_container_width=True):
+                st.session_state.app_view = "preview"
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+    
+    # RESULTS SCREEN
+    elif st.session_state.app_view == "results":
+        # Handle error cases
+        if st.session_state.no_cards_detected:
+            render_error("No cards detected in the image")
+            
+            # Show original image
+            st.markdown('<div class="ios-card">', unsafe_allow_html=True)
+            st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
+            st.image(st.session_state.original_image, use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
-            st.markdown('</div>', unsafe_allow_html=True) # Close image-pair-container
-
-def run_app():
-    """
-    Application entry point.
-    """
-    main()
+            # Try again button
+            st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
+            if st.button("Try Another Image", key="try_again_btn", use_container_width=True):
+                reset_app_state()
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+        elif st.session_state.no_sets_found:
+            render_warning("No valid SETs found in this game")
+            
+            # Show original image
+            st.markdown('<div class="ios-card">', unsafe_allow_html=True)
+            st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
+            st.image(cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB), use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Try again button
+            st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
+            if st.button("Try Another Image", key="no_sets_btn", use_container_width=True):
+                reset_app_state()
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+        else:
+            # Success case - show results
+            num_sets = len(st.session_state.sets_info)
+            
+            # Results header with badge
+            st.markdown(f"""
+            <div style="text-align: center; margin-bottom: 0.5rem;">
+                <div class="ios-badge">{num_sets} SET{'' if num_sets == 1 else 's'} Found</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Display processed image with sets highlighted
+            st.markdown('<div class="ios-card">', unsafe_allow_html=True)
+            st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
+            st.image(cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB), use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Toggle and New Image buttons
+            col1, col2 = st.columns([1, 1])
+            
+            with col1:
+                st.markdown('<div class="ios-button-secondary">', unsafe_allow_html=True)
+                toggle_label = "Show Original" if not st.session_state.get("show_original", False) else "Show Results"
+                if st.button(toggle_label, key="toggle_btn", use_container_width=True):
+                    st.session_state.show_original = not st.session_state.get("show_original", False)
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
+                if st.button("New Image", key="new_img_btn", use_container_width=True):
+                    reset_app_state()
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            # If showing original, display it
+            if st.session_state.get("show_original", False):
+                st.markdown('<div class="ios-card" style="margin-top: 0.75rem;">', unsafe_allow_html=True)
+                st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
+                st.image(st.session_state.original_image, use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
+                st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    run_app()
+    main()
