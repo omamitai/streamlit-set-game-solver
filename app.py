@@ -118,42 +118,53 @@ def load_custom_css():
         max-width: 100%;
     }}
 
-    /* SET Header */
-    .set-header {{
+    /* Minimal Header for Mobile */
+    .set-header-minimal {
         display: flex;
-        flex-direction: column;
-        align-items: center;
         justify-content: center;
-        margin-bottom: 2rem;
-        position: relative;
-        padding: 2rem 1.5rem;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        box-shadow: 0 8px 32px rgba(124, 58, 237, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.6);
-    }}
-    
-    .set-header h1 {{
-        font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-        font-size: 2.6rem;
-        font-weight: 600;
+        align-items: center;
+        padding: 0.75rem;
         margin-bottom: 0.5rem;
+    }
+    
+    .set-header-minimal h1 {
+        font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin: 0;
         background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-primary) 50%, var(--set-accent) 100%);
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
         letter-spacing: -0.02em;
-    }}
+    }
     
-    .set-header p {{
-        font-size: 1.1rem;
-        color: var(--set-text-muted);
-        max-width: 600px;
-        text-align: center;
-        margin: 0;
-    }}
+    /* Mobile Optimized View */
+    .mobile-view-container {
+        padding: 0.5rem;
+    }
+    
+    .mobile-compact-btn {
+        padding: 0.75rem !important;
+        margin-top: 0.5rem !important;
+        border-radius: 10px !important;
+    }
+    
+    .toggle-original-btn {
+        background: transparent !important;
+        color: var(--set-primary) !important;
+        box-shadow: none !important;
+        border: 1px solid rgba(124, 58, 237, 0.3) !important;
+        margin-top: 0.5rem !important;
+    }
+    
+    .toggle-original-btn:hover {
+        background: rgba(124, 58, 237, 0.05) !important;
+    }
+    
+    .mobile-results-container {
+        margin-top: 0.5rem;
+    }
 
     /* Cards */
     .set-card {{
@@ -425,46 +436,51 @@ def load_custom_css():
         border-radius: 2px;
     }}
 
-    /* Responsive Adjustments */
-    @media (max-width: 991px) {{
-        section[data-testid="stSidebar"] {{
+    /* Update responsive adjustments */
+    @media (max-width: 768px) {
+        section[data-testid="stSidebar"] {
             display: none !important;
-        }}
+        }
         
-        .set-header h1 {{
-            font-size: 2rem;
-        }}
+        /* Minimize padding in Streamlit containers */
+        .block-container {
+            padding-top: 0.5rem !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+        }
         
-        .set-header p {{
-            font-size: 1rem;
-        }}
+        .stButton>button {
+            padding: 0.7rem !important;
+            font-size: 0.9rem !important;
+        }
         
-        .set-header {{
-            padding: 1.5rem 1rem;
-            margin-bottom: 1.5rem;
-        }}
+        /* Reduce margins */
+        .image-container {
+            margin: 0.5rem 0 !important;
+        }
         
-        .mobile-container {{
-            padding: 0.75rem;
-            margin-bottom: 0.75rem;
-        }}
-        
-        .stButton>button {{
-            padding: 0.8rem 1.2rem;
-        }}
-        
-        .image-container {{
-            margin: 1rem 0;
-        }}
-        
+        /* Make messages more compact */
         .system-message,
         .error-message,
         .warning-message,
-        .success-message {{
-            padding: 1rem;
-            margin: 1rem 0;
-        }}
-    }}
+        .success-message {
+            padding: 0.75rem !important;
+            margin: 0.5rem 0 !important;
+        }
+        
+        /* Reduce image margins */
+        [data-testid="stImage"] {
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
+        
+        /* Reduce caption size */
+        .caption {
+            font-size: 0.8rem !important;
+            padding: 0.5rem !important;
+        }
+    }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -909,29 +925,44 @@ def detect_mobile_device():
     Simple placeholder for mobile detection.
     We use a JavaScript snippet that sets a flag in sessionStorage,
     but here we simply return the session state's known value if set.
+    This is improved for better iPhone detection.
     """
     js_snippet = """
     <script>
-        function isMobile() { return window.innerWidth <= 991; }
+        function isMobile() {
+            return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
+        }
+        
         if (isMobile()) {
             sessionStorage.setItem('isMobile', 'true');
             document.body.classList.add('mobile-view');
+            // Add a meta tag to ensure proper scaling on mobile
+            if (!document.querySelector('meta[name="viewport"]')) {
+                var meta = document.createElement('meta');
+                meta.name = 'viewport';
+                meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+                document.getElementsByTagName('head')[0].appendChild(meta);
+            }
         } else {
             sessionStorage.setItem('isMobile', 'false');
         }
     </script>
     """
     st.markdown(js_snippet, unsafe_allow_html=True)
-    return st.session_state.get("is_mobile", False)
+    
+    # Force mobile view on for smaller screens
+    if "is_mobile" not in st.session_state:
+        st.session_state.is_mobile = True  # Default to mobile for safer experience
+    
+    return st.session_state.is_mobile
 
 def render_header():
     """
-    Renders the main header with SET-themed styling.
+    Renders a minimalistic header for the app.
     """
     header_html = """
-    <div class="set-header">
-        <h1>🎴 SET Game Detector</h1>
-        <p>Upload an image of a SET game board and we'll automatically find all valid sets for you</p>
+    <div class="set-header-minimal">
+        <h1>SET Detector</h1>
     </div>
     """
     st.markdown(header_html, unsafe_allow_html=True)
@@ -955,102 +986,104 @@ def main():
     # 4. Render header
     render_header()
 
-    # 5. Single unified layout for both mobile and desktop (no arrows needed)
-    if is_mobile:
-        # Mobile-specific adjustments
-        upload_container_width = 100
-        container_padding = "0.75rem"
-    else:
-        # Desktop-specific adjustments
-        upload_container_width = 80
-        container_padding = "1.5rem"
+    # 5. Optimized layout for iPhone/mobile screens
+    # Auto-detect but default to mobile view for safer experience
+    is_mobile = detect_mobile_device()
+    st.session_state.is_mobile = is_mobile
     
-    # Upload section
+    # 3. If a reset was triggered, rerun to clear stale states
+    if st.session_state.get("should_reset", False):
+        st.session_state.should_reset = False
+        st.rerun()
+    
+    # Mobile-optimized layout
+    # Clear header taking minimal space
+    render_header()
+    
+    # UPLOAD STEP - Only show if no file is uploaded
     if not st.session_state.get("uploaded_file"):
-        st.markdown(f'<div style="max-width: {upload_container_width}%; margin: 0 auto; padding: {container_padding};">', unsafe_allow_html=True)
-        st.markdown('<h3 style="text-align:center; margin-bottom: 1rem;">Upload Your SET Game Image</h3>', unsafe_allow_html=True)
-        
-        uploaded_file = st.file_uploader(
-            "Upload a SET board image",
-            type=["png", "jpg", "jpeg"],
-            key=f"uploader_{st.session_state.uploader_key}",
-            label_visibility="collapsed",
-            help="Take a photo or choose an image of your SET game"
-        )
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        if uploaded_file and uploaded_file != st.session_state.get("uploaded_file", None):
-            # Reset session state for new image
-            for key in ['processed', 'processed_image', 'sets_info', 'original_image',
-                        'no_cards_detected', 'no_sets_found']:
-                if key in st.session_state:
-                    if key in ('processed', 'no_cards_detected', 'no_sets_found'):
-                        st.session_state[key] = False
-                    else:
-                        st.session_state[key] = None
-
-            st.session_state.uploaded_file = uploaded_file
-            try:
-                img_pil = Image.open(uploaded_file)
-                img_pil = optimize_image_size(img_pil)
-                st.session_state.original_image = img_pil
-                st.session_state.image_height = img_pil.height
-            except Exception as e:
-                st.error(f"Failed to load the image: {str(e)}")
-    
-    # Processing section
-    if st.session_state.get("uploaded_file"):
-        container_width = "100%" if is_mobile else "85%"
-        
-        st.markdown(f'<div style="max-width: {container_width}; margin: 0 auto;">', unsafe_allow_html=True)
-        
-        # Original image display
-        if st.session_state.get("original_image"):
-            st.markdown('<div class="image-container">', unsafe_allow_html=True)
-            st.image(
-                st.session_state.original_image,
-                caption="Original Image",
-                use_container_width=True
+        upload_container = st.container()
+        with upload_container:
+            st.markdown('<div class="mobile-view-container">', unsafe_allow_html=True)
+            uploaded_file = st.file_uploader(
+                "Upload a SET board image",
+                type=["png", "jpg", "jpeg"],
+                key=f"uploader_{st.session_state.uploader_key}",
+                label_visibility="collapsed",
+                help="Take a photo or choose an image of your SET game"
             )
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # Process button (if not already processing or processed)
-            if not st.session_state.get("processed") and not st.session_state.get("start_processing"):
-                render_process_prompt()
-                col1, col2, col3 = st.columns([1, 2, 1])
-                with col2:
-                    if st.button("🔎 Find Sets", key="find_sets_btn"):
-                        st.session_state.processed = False
-                        st.session_state.processed_image = None
-                        st.session_state.sets_info = None
-                        st.session_state.no_cards_detected = False
-                        st.session_state.no_sets_found = False
-                        st.session_state.start_processing = True
-                        st.rerun()
-            
-            # Processing state
-            if st.session_state.get("start_processing"):
-                render_separator()
-                render_loading()
+            if uploaded_file and uploaded_file != st.session_state.get("uploaded_file", None):
+                # Reset session state for new image
+                for key in ['processed', 'processed_image', 'sets_info', 'original_image',
+                            'no_cards_detected', 'no_sets_found', 'show_original']:
+                    if key in st.session_state:
+                        if key in ('processed', 'no_cards_detected', 'no_sets_found', 'show_original'):
+                            st.session_state[key] = False
+                        else:
+                            st.session_state[key] = None
+
+                st.session_state.uploaded_file = uploaded_file
                 try:
-                    img_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_RGB2BGR)
-                    sets_info, processed_img = identify_sets_from_image(
-                        img_cv, detector_card, detector_shape, model_fill, model_shape
-                    )
-                    st.session_state.sets_info = sets_info
-                    st.session_state.processed_image = processed_img
-                    st.session_state.processed = True
-                    st.session_state.start_processing = False
-                    st.rerun()
+                    img_pil = Image.open(uploaded_file)
+                    img_pil = optimize_image_size(img_pil, max_dim=900) # Smaller for mobile
+                    st.session_state.original_image = img_pil
+                    st.session_state.image_height = img_pil.height
                 except Exception as e:
-                    st.error("An error occurred during processing:")
-                    st.code(traceback.format_exc())
-                    st.session_state.start_processing = False
-            
-            # Results display
-            elif st.session_state.get("processed"):
-                render_separator()
+                    st.error(f"Failed to load the image: {str(e)}")
+    
+    # If a file is uploaded, handle processing flow
+    if st.session_state.get("uploaded_file"):
+        st.markdown('<div class="mobile-view-container">', unsafe_allow_html=True)
+        
+        # ONLY show original image initially or if toggled
+        if not st.session_state.get("processed") or st.session_state.get("show_original", False):
+            with st.container():
+                st.markdown('<div class="image-container">', unsafe_allow_html=True)
+                st.image(
+                    st.session_state.original_image,
+                    caption="Original Image",
+                    use_container_width=True
+                )
+                st.markdown('</div>', unsafe_allow_html=True)
+        
+        # PROCESSING SECTION
+        # Process button (if not already processing or processed)
+        if not st.session_state.get("processed") and not st.session_state.get("start_processing"):
+            if st.button("Find Sets", key="find_sets_btn", use_container_width=True, 
+                      help="Process the uploaded image to find SET cards"):
+                st.session_state.processed = False
+                st.session_state.processed_image = None
+                st.session_state.sets_info = None
+                st.session_state.no_cards_detected = False
+                st.session_state.no_sets_found = False
+                st.session_state.show_original = False
+                st.session_state.start_processing = True
+                st.rerun()
+        
+        # Processing state - show loader
+        if st.session_state.get("start_processing"):
+            render_loading()
+            try:
+                img_cv = cv2.cvtColor(np.array(st.session_state.original_image), cv2.COLOR_RGB2BGR)
+                sets_info, processed_img = identify_sets_from_image(
+                    img_cv, detector_card, detector_shape, model_fill, model_shape
+                )
+                st.session_state.sets_info = sets_info
+                st.session_state.processed_image = processed_img
+                st.session_state.processed = True
+                st.session_state.start_processing = False
+                st.rerun()
+            except Exception as e:
+                st.error("An error occurred during processing:")
+                st.code(traceback.format_exc())
+                st.session_state.start_processing = False
+        
+        # RESULTS SECTION
+        elif st.session_state.get("processed"):
+            with st.container():
+                st.markdown('<div class="mobile-results-container">', unsafe_allow_html=True)
                 
                 # Case 1: No cards found
                 if st.session_state.no_cards_detected:
@@ -1077,10 +1110,20 @@ def main():
                     )
                     st.markdown('</div>', unsafe_allow_html=True)
                 
-                # Reset button
-                col1, col2, col3 = st.columns([1, 2, 1])
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+                # CONTROLS - Two buttons side by side for toggle and reset
+                col1, col2 = st.columns(2)
+                with col1:
+                    toggle_label = "Hide Original" if st.session_state.get("show_original", False) else "Show Original"
+                    if st.button(toggle_label, key="toggle_btn", use_container_width=True,
+                               help="Toggle visibility of the original image"):
+                        st.session_state.show_original = not st.session_state.get("show_original", False)
+                        st.rerun()
+                
                 with col2:
-                    if st.button("⟳ Analyze New Image", key="reset_btn"):
+                    if st.button("New Image", key="reset_btn", use_container_width=True,
+                               help="Upload and analyze a new image"):
                         reset_app_state()
                         st.rerun()
         
