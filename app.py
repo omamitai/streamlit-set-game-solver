@@ -32,19 +32,19 @@ st.set_page_config(
 )
 
 # =============================================================================
-# SET THEME COLORS - iOS Palette
+# SET THEME COLORS - SET Card Game Palette
 # =============================================================================
 SET_THEME = {
-    "primary": "#007AFF",     # iOS Blue
-    "secondary": "#34C759",   # iOS Green
-    "accent": "#FF2D55",      # iOS Pink
-    "red": "#FF3B30",         # iOS Red
-    "green": "#34C759",       # iOS Green
-    "purple": "#AF52DE",      # iOS Purple
-    "background": "#F2F2F7",  # iOS Light Gray
-    "card": "#FFFFFF",        # iOS White
-    "text": "#000000",        # iOS Black
-    "text_muted": "#8E8E93",  # iOS Gray
+    "primary": "#7C3AED",     # SET Purple
+    "secondary": "#10B981",   # SET Green
+    "accent": "#EC4899",      # SET Pink
+    "red": "#EF4444",         # SET Red
+    "green": "#10B981",       # SET Green
+    "purple": "#8B5CF6",      # SET Light Purple
+    "background": "#F4F1FA",  # Light Purple Background
+    "card": "#FFFFFF",        # White
+    "text": "#1F2937",        # Dark Text
+    "text_muted": "#6B7280",  # Gray Text
 }
 
 # =============================================================================
@@ -92,25 +92,26 @@ def load_custom_css():
     @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Text:wght@400;500;600&display=swap');
 
     :root {
-        --ios-blue: #007AFF;
-        --ios-green: #34C759;
-        --ios-red: #FF3B30;
-        --ios-pink: #FF2D55;
-        --ios-purple: #AF52DE;
-        --ios-background: #F2F2F7;
-        --ios-card: #FFFFFF;
-        --ios-text: #000000;
-        --ios-text-muted: #8E8E93;
-        --ios-border: rgba(0, 0, 0, 0.1);
+        --set-purple: #7C3AED;
+        --set-green: #10B981;
+        --set-red: #EF4444;
+        --set-pink: #EC4899;
+        --set-light-purple: #8B5CF6;
+        --set-background: #F4F1FA;
+        --set-card: #FFFFFF;
+        --set-text: #1F2937;
+        --set-text-muted: #6B7280;
+        --set-border: rgba(124, 58, 237, 0.2);
     }
 
     body {
         font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
-        background-color: var(--ios-background);
-        color: var(--ios-text);
+        background-color: var(--set-background);
+        color: var(--set-text);
         line-height: 1.5;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        background-image: linear-gradient(to bottom right, #F4F1FA, #F0F9FF);
     }
 
     /* Custom Streamlit override - zero padding for mobile */
@@ -122,29 +123,33 @@ def load_custom_css():
         max-width: 100%;
     }
 
-    /* iOS-style Header */
+    /* SET Game Header */
     .ios-header {
         display: flex;
         justify-content: center;
         align-items: center;
-        padding: 0.75rem;
-        margin: 0 auto 0.75rem;
-        background: rgba(255, 255, 255, 0.8);
+        padding: 0.5rem 0.75rem;
+        margin: 0 auto 0.6rem;
+        background: rgba(255, 255, 255, 0.85);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
-        border-radius: 16px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        border-radius: 12px;
+        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.1);
+        border: 1px solid rgba(124, 58, 237, 0.15);
         transition: all 0.2s ease;
-        max-width: 200px;
+        max-width: 180px;
     }
     
     .ios-header h1 {
         font-family: -apple-system, 'SF Pro Display', BlinkMacSystemFont, sans-serif;
-        font-size: 1.25rem;
+        font-size: 1.2rem;
         font-weight: 600;
         margin: 0;
-        color: var(--ios-text);
-        letter-spacing: -0.01em;
+        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-light-purple) 50%, var(--set-pink) 100%);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: -0.02em;
     }
     
     /* iOS Navigation Bar (Fixed at top) */
@@ -178,68 +183,72 @@ def load_custom_css():
         margin-bottom: 0.75rem;
     }
 
-    /* iOS-style Primary Button */
+    /* SET Game Primary Button */
     .ios-button-primary > button {
-        background: var(--ios-blue);
+        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-light-purple) 100%);
         color: white;
         border: none;
-        padding: 0.75rem;
+        padding: 0.65rem;
         border-radius: 10px;
         font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
         font-weight: 600;
-        font-size: 1rem;
+        font-size: 0.95rem;
         cursor: pointer;
         transition: all 0.1s ease-out;
         width: 100%;
         margin: 0.25rem 0 !important;
         min-height: 44px; /* iOS minimum touch target */
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);
     }
     
     .ios-button-primary > button:hover {
-        background: #0071EB;
+        box-shadow: 0 3px 8px rgba(124, 58, 237, 0.35);
     }
     
     .ios-button-primary > button:active {
         transform: scale(0.98);
-        background: #0062CC;
+        box-shadow: 0 1px 4px rgba(124, 58, 237, 0.2);
     }
 
-    /* iOS-style Secondary Button */
+    /* SET Game Secondary Button */
     .ios-button-secondary > button {
-        background: rgba(0, 122, 255, 0.1);
-        color: var(--ios-blue);
-        border: none;
-        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.9);
+        color: var(--set-purple);
+        border: 1px solid rgba(124, 58, 237, 0.25);
+        padding: 0.65rem;
         border-radius: 10px;
         font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
         font-weight: 500;
-        font-size: 1rem;
+        font-size: 0.95rem;
         cursor: pointer;
         transition: all 0.1s ease-out;
         width: 100%;
         margin: 0.25rem 0 !important;
         min-height: 44px; /* iOS minimum touch target */
+        box-shadow: 0 1px 3px rgba(124, 58, 237, 0.1);
     }
     
     .ios-button-secondary > button:hover {
-        background: rgba(0, 122, 255, 0.15);
+        background: rgba(255, 255, 255, 1);
+        border-color: rgba(124, 58, 237, 0.4);
     }
     
     .ios-button-secondary > button:active {
         transform: scale(0.98);
-        background: rgba(0, 122, 255, 0.2);
+        background: rgba(239, 246, 255, 1);
     }
 
-    /* Image Container - Fixed height */
+    /* Image Container - Reduced height */
     .ios-image-container {
         margin: 0;
         position: relative;
-        border-radius: 8px;
+        border-radius: 10px;
         overflow: hidden;
-        height: 240px;
+        height: 180px;
         width: 100%;
-        background-color: #F8F8F8;
+        background-color: rgba(255, 255, 255, 0.8);
+        box-shadow: 0 2px 6px rgba(124, 58, 237, 0.1);
+        border: 1px solid rgba(124, 58, 237, 0.1);
     }
     
     .ios-image-container img {
@@ -248,51 +257,44 @@ def load_custom_css():
         object-fit: contain; /* Preserve aspect ratio */
     }
     
-    /* iOS-style loader */
+    /* SET Game Static Loading State */
     .ios-loader-container {
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        height: 180px;
-    }
-    
-    .ios-loader {
-        width: 20px;
-        height: 20px;
-        border: 2px solid rgba(0, 122, 255, 0.2);
-        border-top: 2px solid var(--ios-blue);
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-bottom: 1rem;
-    }
-    
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
+        height: 160px;
+        margin: 1rem 0;
     }
     
     .ios-loader-text {
         font-size: 0.9rem;
         font-weight: 500;
-        color: var(--ios-text-muted);
+        color: var(--set-text-muted);
+        background: rgba(255, 255, 255, 0.8);
+        padding: 0.75rem 1.25rem;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(124, 58, 237, 0.1);
+        border: 1px solid rgba(124, 58, 237, 0.1);
     }
 
-    /* iOS-style alert messages */
+    /* SET Game alert messages */
     .ios-alert {
-        padding: 0.75rem;
+        padding: 0.65rem 0.75rem;
         border-radius: 10px;
-        margin: 0.5rem 0;
+        margin: 0.4rem 0;
         display: flex;
         align-items: center;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
         font-weight: 500;
-        min-height: 44px;
+        min-height: 40px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
     }
     
     .ios-alert-error {
-        background-color: rgba(255, 59, 48, 0.1);
-        color: var(--ios-red);
+        background-color: rgba(239, 68, 68, 0.08);
+        color: var(--set-red);
+        border: 1px solid rgba(239, 68, 68, 0.2);
     }
     
     .ios-alert-error::before {
@@ -301,8 +303,9 @@ def load_custom_css():
     }
     
     .ios-alert-warning {
-        background-color: rgba(255, 204, 0, 0.1);
-        color: #FF9500;
+        background-color: rgba(245, 158, 11, 0.08);
+        color: #F59E0B;
+        border: 1px solid rgba(245, 158, 11, 0.2);
     }
     
     .ios-alert-warning::before {
@@ -311,14 +314,15 @@ def load_custom_css():
     }
     
     .ios-alert-success {
-        background-color: rgba(52, 199, 89, 0.1);
-        color: var(--ios-green);
+        background-color: rgba(16, 185, 129, 0.08);
+        color: var(--set-green);
+        border: 1px solid rgba(16, 185, 129, 0.2);
     }
     
     .ios-alert-success::before {
-        content: "✓";
         content: "✅";
         margin-right: 0.5rem;
+        font-size: 0.9rem;
     }
     
     /* iOS-style label */
@@ -379,16 +383,18 @@ def load_custom_css():
         margin: 0 !important; 
     }
     
-    /* Results badge */
+    /* SET Game Results badge */
     .ios-badge {
         display: inline-block;
-        padding: 0.25rem 0.5rem;
-        background: var(--ios-blue);
+        padding: 0.3rem 0.6rem;
+        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-light-purple) 100%);
         color: white;
         border-radius: 12px;
         font-size: 0.8rem;
-        font-weight: 500;
+        font-weight: 600;
         margin-top: 0.25rem;
+        box-shadow: 0 2px 4px rgba(124, 58, 237, 0.2);
+        letter-spacing: 0.01em;
     }
     </style>
     """
@@ -740,7 +746,7 @@ def optimize_image_size(img_pil: Image.Image, max_dim=800) -> Image.Image:
 # =============================================================================
 def render_header():
     """
-    Renders a iOS-style header for the app.
+    Renders a SET-themed header for the app.
     """
     header_html = """
     <div class="ios-header">
@@ -751,12 +757,11 @@ def render_header():
 
 def render_loading():
     """
-    Shows iOS-style loading indicator.
+    Shows static loading message without animation.
     """
     loader_html = """
     <div class="ios-loader-container">
-        <div class="ios-loader"></div>
-        <div class="ios-loader-text">Analyzing image...</div>
+        <div class="ios-loader-text">Analyzing cards...</div>
     </div>
     """
     st.markdown(loader_html, unsafe_allow_html=True)
@@ -885,8 +890,10 @@ def main():
         with st.container():
             st.markdown("""
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 2rem;">
-                <img src="https://raw.githubusercontent.com/omermamitai/set-game-detector/main/assets/set-cards-icon.png" 
-                     style="width: 120px; height: 120px; border-radius: 24px; margin-bottom: 1.5rem; box-shadow: 0 4px 12px rgba(0,0,0,0.1);" />
+                <div style="width: 100px; height: 100px; border-radius: 20px; margin: 0 auto 1.25rem; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2); 
+                 background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%); display: flex; justify-content: center; align-items: center;">
+                <div style="font-size: 2.5rem; color: white; font-weight: bold;">SET</div>
+            </div>
                 <div style="font-size: 1.1rem; font-weight: 500; margin-bottom: 1.5rem; text-align: center;">
                     Upload a photo of your SET game
                 </div>
@@ -1019,7 +1026,7 @@ def main():
             
             # Results header with badge
             st.markdown(f"""
-            <div style="text-align: center; margin-bottom: 0.5rem;">
+            <div style="text-align: center; margin-bottom: 0.4rem;">
                 <div class="ios-badge">{num_sets} SET{'' if num_sets == 1 else 's'} Found</div>
             </div>
             """, unsafe_allow_html=True)
@@ -1031,31 +1038,12 @@ def main():
             st.markdown('</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # Toggle and New Image buttons
-            col1, col2 = st.columns([1, 1])
-            
-            with col1:
-                st.markdown('<div class="ios-button-secondary">', unsafe_allow_html=True)
-                toggle_label = "Show Original" if not st.session_state.get("show_original", False) else "Show Results"
-                if st.button(toggle_label, key="toggle_btn", use_container_width=True):
-                    st.session_state.show_original = not st.session_state.get("show_original", False)
-                    st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
-            
-            with col2:
-                st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
-                if st.button("New Image", key="new_img_btn", use_container_width=True):
-                    reset_app_state()
-                    st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
-            
-            # If showing original, display it
-            if st.session_state.get("show_original", False):
-                st.markdown('<div class="ios-card" style="margin-top: 0.75rem;">', unsafe_allow_html=True)
-                st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
-                st.image(st.session_state.original_image, use_container_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
-                st.markdown('</div>', unsafe_allow_html=True)
+            # Single action button
+            st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
+            if st.button("Analyze Another Card", key="new_img_btn", use_container_width=True):
+                reset_app_state()
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
