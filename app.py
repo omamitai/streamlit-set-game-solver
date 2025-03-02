@@ -118,18 +118,32 @@ def load_custom_css():
         max-width: 100%;
     }
 
-    /* Minimal Header */
+    /* iOS-style Header Box */
     .set-header-minimal {
         display: flex;
         justify-content: center;
         align-items: center;
-        padding: 0.5rem;
-        margin-bottom: 0.5rem;
+        padding: 0.5rem 0.75rem;
+        margin: 0.25rem auto 0.5rem;
+        background: rgba(255, 255, 255, 0.85);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 12px;
+        border: 1px solid rgba(124, 58, 237, 0.15);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        transition: all 0.2s ease;
+        max-width: 200px;
+    }
+    
+    .set-header-minimal:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.1);
+        border-color: rgba(124, 58, 237, 0.25);
     }
     
     .set-header-minimal h1 {
         font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-        font-size: 1.4rem;
+        font-size: 1.3rem;
         font-weight: 600;
         margin: 0;
         background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-primary) 50%, var(--set-accent) 100%);
@@ -148,46 +162,52 @@ def load_custom_css():
         margin-top: 0.5rem;
     }
 
-    /* Buttons */
+    /* Buttons - Attached to images */
     .stButton>button {
         background: linear-gradient(135deg, var(--set-primary) 0%, var(--set-accent) 100%);
         color: white;
         border: none;
-        padding: 0.8rem 1rem;
-        border-radius: 12px;
+        padding: 0.6rem 0.5rem;
+        border-radius: 10px;
         font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
         font-weight: 600;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
         width: 100%;
-        margin-top: 0.75rem;
+        margin-top: 0 !important;
         letter-spacing: 0.01em;
-        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+        box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);
         min-height: 44px; /* iOS minimum touch target size */
     }
     
     .stButton>button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
     }
     
     .stButton>button:active {
         transform: translateY(1px);
-        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+        box-shadow: 0 1px 4px rgba(124, 58, 237, 0.2);
     }
 
     /* Secondary button style */
     .secondary-btn>button {
         background: rgba(255, 255, 255, 0.9) !important;
         color: var(--set-primary) !important;
-        border: 1px solid rgba(124, 58, 237, 0.3) !important;
-        box-shadow: 0 2px 6px rgba(124, 58, 237, 0.1) !important;
+        border: 1px solid rgba(124, 58, 237, 0.25) !important;
+        box-shadow: 0 2px 4px rgba(124, 58, 237, 0.08) !important;
     }
     
     .secondary-btn>button:hover {
         background: rgba(255, 255, 255, 1) !important;
-        border-color: rgba(124, 58, 237, 0.5) !important;
+        border-color: rgba(124, 58, 237, 0.4) !important;
+    }
+    
+    /* Button container */
+    .button-container {
+        margin-top: 0;
+        margin-bottom: 0.5rem;
     }
 
     /* Loader */
@@ -242,21 +262,38 @@ def load_custom_css():
         margin-top: 0.5rem;
     }
 
-    /* Image Container */
+    /* Image Container - Uniform sizing */
     .image-container {
-        margin: 0.75rem 0;
+        margin: 0 0 0.35rem 0;
         position: relative;
         border-radius: 16px;
         overflow: hidden;
-        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
-        border: 1px solid rgba(255, 255, 255, 0.6);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        border: 1px solid rgba(124, 58, 237, 0.15);
+        height: 250px; /* Fixed height for uniformity */
+        width: 100%;
     }
     
     .image-container img {
         display: block;
         width: 100%;
-        height: auto;
+        height: 100%;
+        object-fit: cover; /* Ensures image fills container without distortion */
+    }
+    
+    /* Image pair container */
+    .image-pair-container {
+        display: flex;
+        flex-direction: row;
+        gap: 0.5rem;
+        margin: 0.35rem 0;
+    }
+    
+    /* Image column */
+    .image-column {
+        display: flex;
+        flex-direction: column;
+        width: 50%;
     }
     
     /* Caption styling for image containers */
@@ -270,21 +307,21 @@ def load_custom_css():
         font-weight: 500;
     }
 
-    /* Messages */
+    /* Messages - More compact for iPhone */
     .system-message, .error-message, .warning-message, .success-message {
         display: flex;
         align-items: center;
-        padding: 0.75rem;
-        border-radius: 10px;
-        margin: 0.75rem 0;
-        font-size: 0.9rem;
+        padding: 0.4rem 0.6rem;
+        border-radius: 8px;
+        margin: 0 0 0.35rem 0;
+        font-size: 0.85rem;
     }
     
     .system-message {
         background: rgba(255, 255, 255, 0.8);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
         border: 1px solid rgba(255, 255, 255, 0.6);
         justify-content: center;
     }
@@ -296,15 +333,15 @@ def load_custom_css():
     }
 
     .error-message {
-        background-color: rgba(239, 68, 68, 0.08);
-        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.1);
-        border: 1px solid rgba(239, 68, 68, 0.2);
+        background-color: rgba(239, 68, 68, 0.06);
+        box-shadow: 0 1px 4px rgba(239, 68, 68, 0.08);
+        border: 1px solid rgba(239, 68, 68, 0.15);
     }
     
     .error-message::before {
         content: "⚠️";
-        font-size: 1.2rem;
-        margin-right: 0.6rem;
+        font-size: 1rem;
+        margin-right: 0.4rem;
         flex-shrink: 0;
     }
     
@@ -315,15 +352,15 @@ def load_custom_css():
     }
 
     .warning-message {
-        background-color: rgba(245, 158, 11, 0.08);
-        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);
-        border: 1px solid rgba(245, 158, 11, 0.2);
+        background-color: rgba(245, 158, 11, 0.06);
+        box-shadow: 0 1px 4px rgba(245, 158, 11, 0.08);
+        border: 1px solid rgba(245, 158, 11, 0.15);
     }
     
     .warning-message::before {
         content: "ℹ️";
-        font-size: 1.2rem;
-        margin-right: 0.6rem;
+        font-size: 1rem;
+        margin-right: 0.4rem;
         flex-shrink: 0;
     }
     
@@ -334,15 +371,15 @@ def load_custom_css():
     }
     
     .success-message {
-        background-color: rgba(16, 185, 129, 0.08);
-        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
-        border: 1px solid rgba(16, 185, 129, 0.2);
+        background-color: rgba(16, 185, 129, 0.06);
+        box-shadow: 0 1px 4px rgba(16, 185, 129, 0.08);
+        border: 1px solid rgba(16, 185, 129, 0.15);
     }
     
     .success-message::before {
         content: "✅";
-        font-size: 1.2rem;
-        margin-right: 0.6rem;
+        font-size: 1rem;
+        margin-right: 0.4rem;
         flex-shrink: 0;
     }
     
@@ -350,6 +387,14 @@ def load_custom_css():
         margin: 0;
         font-weight: 500;
         color: var(--set-green);
+    }
+    
+    /* Status label */
+    .status-label {
+        font-size: 0.75rem;
+        color: var(--set-text-muted);
+        text-align: center;
+        margin: 0.2rem 0 0.4rem;
     }
 
     /* Hide sidebar */
@@ -711,10 +756,10 @@ def identify_sets_from_image(
     final_output = restore_orientation(annotated, was_rotated)
     return found_sets, final_output
 
-def optimize_image_size(img_pil: Image.Image, max_dim=900) -> Image.Image:
+def optimize_image_size(img_pil: Image.Image, max_dim=800) -> Image.Image:
     """
     Resizes a PIL image if its largest dimension exceeds max_dim, to reduce processing time.
-    Optimized for mobile viewing.
+    Optimized for mobile viewing with smaller dimension for iPhone screens.
     """
     width, height = img_pil.size
     if max(width, height) > max_dim:
@@ -859,7 +904,7 @@ def reset_app_state():
 # =============================================================================
 def main():
     """
-    Main application function with mobile-optimized UI.
+    Main application function with iOS-style layout for no-scroll iPhone experience.
     """
     # 1. Load custom CSS
     load_custom_css()
@@ -873,7 +918,7 @@ def main():
         st.session_state.should_reset = False
         st.rerun()
     
-    # 4. Display minimal header
+    # 4. Display attractive iOS-style header with hover effect
     render_header()
     
     # 5. UPLOAD STEP - Only show if no file is uploaded
@@ -900,39 +945,17 @@ def main():
             st.session_state.uploaded_file = uploaded_file
             try:
                 img_pil = Image.open(uploaded_file)
-                img_pil = optimize_image_size(img_pil, max_dim=900)  # Smaller for mobile
+                img_pil = optimize_image_size(img_pil, max_dim=800)  # Smaller for iPhone screen
                 st.session_state.original_image = img_pil
                 st.session_state.image_height = img_pil.height
             except Exception as e:
                 st.error(f"Failed to load the image")
                 st.error(str(e))
     
-    # 6. PROCESSING AND RESULTS FLOW
+    # 6. PROCESSING AND RESULTS FLOW - Side by side layout for iPhone (no scrolling)
     if st.session_state.get("uploaded_file"):
-        # Image display section
-        if not st.session_state.get("processed") or st.session_state.get("show_original", False):
-            st.markdown('<div class="image-container">', unsafe_allow_html=True)
-            st.image(
-                st.session_state.original_image,
-                use_container_width=True  # No caption to save space
-            )
-            st.markdown('</div>', unsafe_allow_html=True)
         
-        # Process button
-        if not st.session_state.get("processed") and not st.session_state.get("start_processing"):
-            # Show process prompt and button
-            render_process_prompt()
-            if st.button("Find Sets", key="find_sets_btn", use_container_width=True):
-                st.session_state.processed = False
-                st.session_state.processed_image = None
-                st.session_state.sets_info = None
-                st.session_state.no_cards_detected = False
-                st.session_state.no_sets_found = False
-                st.session_state.show_original = False
-                st.session_state.start_processing = True
-                st.rerun()
-        
-        # Loading state
+        # LOADING STATE (Centered when processing)
         if st.session_state.get("start_processing"):
             render_loading()
             try:
@@ -951,49 +974,77 @@ def main():
                     st.code(traceback.format_exc())
                 st.session_state.start_processing = False
         
-        # Results display
-        elif st.session_state.get("processed"):
-            # Case 1: No cards found
+        # SIDE-BY-SIDE LAYOUT FOR IMAGES AND CONTROLS
+        elif not st.session_state.get("processed"):
+            # Not yet processed - show original image with Find Sets button below it
+            st.markdown('<div class="image-container">', unsafe_allow_html=True)
+            st.image(st.session_state.original_image, use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Find Sets button attached to image
+            st.markdown('<div class="button-container">', unsafe_allow_html=True)
+            if st.button("Find Sets", key="find_sets_btn", use_container_width=True):
+                st.session_state.processed = False
+                st.session_state.processed_image = None
+                st.session_state.sets_info = None
+                st.session_state.no_cards_detected = False
+                st.session_state.no_sets_found = False
+                st.session_state.show_original = False
+                st.session_state.start_processing = True
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+        
+        # RESULTS DISPLAY (Side by side images with buttons below each)
+        else:
+            # Show images side by side with their respective buttons
+            st.markdown('<div class="image-pair-container">', unsafe_allow_html=True)
+            
+            # Left column - Original image & toggle
+            st.markdown('<div class="image-column">', unsafe_allow_html=True)
+            st.markdown('<div class="image-container">', unsafe_allow_html=True)
+            st.image(st.session_state.original_image, use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Secondary button below original image
+            st.markdown('<div class="secondary-btn button-container">', unsafe_allow_html=True)
+            toggle_label = "Hide" if st.session_state.get("show_original", True) else "Show"
+            if st.button(toggle_label, key="toggle_btn", use_container_width=True):
+                st.session_state.show_original = not st.session_state.get("show_original", True)
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Right column - Processed image & reset button
+            st.markdown('<div class="image-column">', unsafe_allow_html=True)
+            
+            # Status messages
             if st.session_state.no_cards_detected:
                 render_error("No cards detected")
-            
-            # Case 2: Cards found but no sets
+                pm = None
             elif st.session_state.no_sets_found:
-                if not st.session_state.get("show_original", False):
-                    st.markdown('<div class="image-container">', unsafe_allow_html=True)
-                    pm = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
-                    st.image(pm, use_container_width=True)
-                    st.markdown('</div>', unsafe_allow_html=True)
-                render_warning("No valid SETs found")
-            
-            # Case 3: Sets found!
-            elif not st.session_state.get("show_original", False):
-                render_success_message(len(st.session_state.sets_info))
-                
-                st.markdown('<div class="image-container">', unsafe_allow_html=True)
+                render_warning("No SETs found")
                 pm = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
-                st.image(
-                    pm,
-                    caption=f"{len(st.session_state.sets_info)} SET{'' if len(st.session_state.sets_info) == 1 else 's'} found",
-                    use_container_width=True
-                )
+            else:
+                pm = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
+                st.markdown('<div class="status-label">', unsafe_allow_html=True)
+                st.markdown(f"{len(st.session_state.sets_info)} SET{'' if len(st.session_state.sets_info) == 1 else 's'} found", unsafe_allow_html=True)
                 st.markdown('</div>', unsafe_allow_html=True)
             
-            # Control buttons
-            col1, col2 = st.columns(2)
-            with col1:
-                # Toggle button with secondary styling
-                toggle_label = "Hide Original" if st.session_state.get("show_original", False) else "Show Original"
-                st.markdown('<div class="secondary-btn">', unsafe_allow_html=True)
-                if st.button(toggle_label, key="toggle_btn", use_container_width=True):
-                    st.session_state.show_original = not st.session_state.get("show_original", False)
-                    st.rerun()
+            # Show processed image
+            if pm is not None:
+                st.markdown('<div class="image-container">', unsafe_allow_html=True)
+                st.image(pm, use_container_width=True)
                 st.markdown('</div>', unsafe_allow_html=True)
             
-            with col2:
-                if st.button("New Image", key="reset_btn", use_container_width=True):
-                    reset_app_state()
-                    st.rerun()
+            # Primary button (New Image) below processed image
+            st.markdown('<div class="button-container">', unsafe_allow_html=True)
+            if st.button("New Image", key="reset_btn", use_container_width=True):
+                reset_app_state()
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+            st.markdown('</div>', unsafe_allow_html=True) # Close image-pair-container
 
 def run_app():
     """
