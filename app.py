@@ -1,10 +1,9 @@
 """
-Set Game Detector App
+SET Game Detector App
 =====================
 
 A Streamlit application that identifies valid SETs from an uploaded image of a SET game board.
-It uses computer vision (YOLO) for card detection, TensorFlow models for feature classification,
-and highlights detected sets on the board image.
+Optimized for mobile devices with iOS-inspired design principles.
 """
 
 import streamlit as st
@@ -20,7 +19,6 @@ from ultralytics import YOLO
 from itertools import combinations
 from pathlib import Path
 from typing import Tuple, List, Dict
-import base64
 import random
 import time
 
@@ -28,7 +26,7 @@ import time
 # STREAMLIT CONFIGURATION
 # =============================================================================
 st.set_page_config(
-    page_title="SET Game Detector",
+    page_title="SET Detector",
     layout="wide"
 )
 
@@ -51,7 +49,6 @@ SET_THEME = {
 # =============================================================================
 # SESSION STATE INITIALIZATION
 # =============================================================================
-# We place this early to ensure these states are available before subsequent operations
 if "processed" not in st.session_state:
     st.session_state.processed = False
 if "start_processing" not in st.session_state:
@@ -65,7 +62,7 @@ if "processed_image" not in st.session_state:
 if "sets_info" not in st.session_state:
     st.session_state.sets_info = None
 if "is_mobile" not in st.session_state:
-    st.session_state.is_mobile = False
+    st.session_state.is_mobile = True  # Default to mobile
 if "should_reset" not in st.session_state:
     st.session_state.should_reset = False
 if "no_cards_detected" not in st.session_state:
@@ -76,6 +73,8 @@ if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = "initial"
 if "image_height" not in st.session_state:
     st.session_state.image_height = 400
+if "show_original" not in st.session_state:
+    st.session_state.show_original = False
 
 # =============================================================================
 # CUSTOM CSS
@@ -83,53 +82,54 @@ if "image_height" not in st.session_state:
 def load_custom_css():
     """
     Loads custom CSS for a cohesive SET-themed UI with iOS-like aesthetics.
-    Includes responsive design adjustments for mobile devices.
     """
-    css = f"""
+    css = """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Text:wght@400;500;600&display=swap');
 
-    :root {{
-        --set-primary: {SET_THEME["primary"]};
-        --set-secondary: {SET_THEME["secondary"]};
-        --set-accent: {SET_THEME["accent"]};
-        --set-red: {SET_THEME["red"]};
-        --set-green: {SET_THEME["green"]};
-        --set-purple: {SET_THEME["purple"]};
-        --set-background: {SET_THEME["background"]};
-        --set-card: {SET_THEME["card"]};
-        --set-text: {SET_THEME["text"]};
-        --set-text-muted: {SET_THEME["text_muted"]};
-    }}
+    :root {
+        --set-primary: #7C3AED;
+        --set-secondary: #10B981;
+        --set-accent: #EC4899;
+        --set-red: #EF4444;
+        --set-green: #10B981;
+        --set-purple: #8B5CF6;
+        --set-background: #F9F9FC;
+        --set-card: #FFFFFF;
+        --set-text: #222222;
+        --set-text-muted: #666666;
+    }
 
-    body {{
+    body {
         font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
         background-color: var(--set-background);
         color: var(--set-text);
         line-height: 1.5;
         -webkit-font-smoothing: antialiased;
-    }}
+    }
 
     /* Custom Streamlit override */
-    .main .block-container {{
-        padding-top: 2rem;
-        padding-bottom: 2rem;
+    .main .block-container {
+        padding-top: 0.75rem;
+        padding-bottom: 1rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
         max-width: 100%;
-    }}
+    }
 
-    /* Minimal Header for Mobile */
+    /* Minimal Header */
     .set-header-minimal {
         display: flex;
         justify-content: center;
         align-items: center;
-        padding: 0.75rem;
+        padding: 0.5rem;
         margin-bottom: 0.5rem;
     }
     
     .set-header-minimal h1 {
         font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-        font-size: 1.5rem;
+        font-size: 1.4rem;
         font-weight: 600;
         margin: 0;
         background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-primary) 50%, var(--set-accent) 100%);
@@ -144,343 +144,253 @@ def load_custom_css():
         padding: 0.5rem;
     }
     
-    .mobile-compact-btn {
-        padding: 0.75rem !important;
-        margin-top: 0.5rem !important;
-        border-radius: 10px !important;
-    }
-    
-    .toggle-original-btn {
-        background: transparent !important;
-        color: var(--set-primary) !important;
-        box-shadow: none !important;
-        border: 1px solid rgba(124, 58, 237, 0.3) !important;
-        margin-top: 0.5rem !important;
-    }
-    
-    .toggle-original-btn:hover {
-        background: rgba(124, 58, 237, 0.05) !important;
-    }
-    
     .mobile-results-container {
         margin-top: 0.5rem;
     }
 
-    /* Cards */
-    .set-card {{
-        background-color: var(--set-card);
-        border-radius: 16px;
-        padding: 1.5rem;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-        height: 100%;
-        margin-bottom: 1.5rem;
-        border: 1px solid rgba(255, 255, 255, 0.8);
-    }}
-    
-    .set-card:hover {{
-        transform: translateY(-5px);
-        box-shadow: 0 15px 35px rgba(124, 58, 237, 0.15);
-    }}
-    
-    .set-card h3 {{
-        font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
-        margin-top: 0;
-        font-weight: 600;
-        font-size: 1.4rem;
-        color: var(--set-primary);
-        padding-bottom: 0.75rem;
-        border-bottom: 2px solid rgba(124, 58, 237, 0.2);
-        text-align: center;
-        letter-spacing: -0.01em;
-    }}
-
-    /* Upload Area */
-    .upload-area {{
-        border: 2px dashed rgba(124, 58, 237, 0.3);
-        border-radius: 16px;
-        padding: 2rem 1.5rem;
-        text-align: center;
-        transition: all 0.3s ease;
-        background-color: rgba(124, 58, 237, 0.03);
-        cursor: pointer;
-        margin-bottom: 1.5rem;
-    }}
-    
-    .upload-area:hover {{
-        border-color: var(--set-primary);
-        background-color: rgba(124, 58, 237, 0.06);
-    }}
-
     /* Buttons */
-    .stButton>button {{
+    .stButton>button {
         background: linear-gradient(135deg, var(--set-primary) 0%, var(--set-accent) 100%);
         color: white;
         border: none;
-        padding: 0.9rem 1.5rem;
+        padding: 0.8rem 1rem;
         border-radius: 12px;
         font-family: 'SF Pro Text', -apple-system, BlinkMacSystemFont, sans-serif;
         font-weight: 600;
-        font-size: 1rem;
+        font-size: 0.95rem;
         cursor: pointer;
         transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         width: 100%;
-        margin-top: 1rem;
+        margin-top: 0.75rem;
         letter-spacing: 0.01em;
         box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
-    }}
+        min-height: 44px; /* iOS minimum touch target size */
+    }
     
-    .stButton>button:hover {{
+    .stButton>button:hover {
         transform: translateY(-2px);
         box-shadow: 0 8px 20px rgba(124, 58, 237, 0.4);
-    }}
+    }
     
-    .stButton>button:active {{
+    .stButton>button:active {
         transform: translateY(1px);
         box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
-    }}
+    }
+
+    /* Secondary button style */
+    .secondary-btn>button {
+        background: rgba(255, 255, 255, 0.9) !important;
+        color: var(--set-primary) !important;
+        border: 1px solid rgba(124, 58, 237, 0.3) !important;
+        box-shadow: 0 2px 6px rgba(124, 58, 237, 0.1) !important;
+    }
+    
+    .secondary-btn>button:hover {
+        background: rgba(255, 255, 255, 1) !important;
+        border-color: rgba(124, 58, 237, 0.5) !important;
+    }
 
     /* Loader */
-    .loader-container {{
+    .loader-container {
         display: flex;
+        flex-direction: column;
         justify-content: center;
         align-items: center;
-        height: 200px;
-        margin: 1rem 0;
-    }}
+        height: 150px;
+        margin: 0.75rem 0;
+    }
     
-    .loader {{
+    .loader {
         display: flex;
         align-items: center;
         justify-content: center;
-    }}
+        margin-bottom: 1rem;
+    }
     
-    .loader-dot {{
-        width: 12px;
-        height: 12px;
-        margin: 0 6px;
+    .loader-dot {
+        width: 10px;
+        height: 10px;
+        margin: 0 5px;
         border-radius: 50%;
         display: inline-block;
         animation: loader 1.8s infinite cubic-bezier(0.45, 0.05, 0.55, 0.95) both;
-    }}
+    }
     
-    .loader-dot-1 {{
+    .loader-dot-1 {
         background-color: var(--set-red);
         animation-delay: -0.32s;
-    }}
+    }
     
-    .loader-dot-2 {{
+    .loader-dot-2 {
         background-color: var(--set-green);
         animation-delay: -0.16s;
-    }}
+    }
     
-    .loader-dot-3 {{
+    .loader-dot-3 {
         background-color: var(--set-purple);
         animation-delay: 0s;
-    }}
+    }
     
-    @keyframes loader {{
-        0%, 80%, 100% {{ transform: scale(0); opacity: 0.7; }}
-        40% {{ transform: scale(1); opacity: 1; }}
-    }}
+    @keyframes loader {
+        0%, 80%, 100% { transform: scale(0); opacity: 0.7; }
+        40% { transform: scale(1); opacity: 1; }
+    }
+    
+    .loader-text {
+        font-size: 0.9rem;
+        color: var(--set-text-muted);
+        margin-top: 0.5rem;
+    }
 
     /* Image Container */
-    .image-container {{
-        margin: 1.5rem 0;
+    .image-container {
+        margin: 0.75rem 0;
         position: relative;
         border-radius: 16px;
         overflow: hidden;
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         border: 1px solid rgba(255, 255, 255, 0.6);
-    }}
+    }
     
-    .image-container:hover {{
-        transform: scale(1.01);
-        box-shadow: 0 15px 40px rgba(124, 58, 237, 0.18);
-    }}
-    
-    .image-container img {{
+    .image-container img {
         display: block;
         width: 100%;
         height: auto;
-    }}
+    }
     
     /* Caption styling for image containers */
-    .image-container .caption {{
-        padding: 1rem;
+    .image-container .caption {
+        padding: 0.6rem;
+        font-size: 0.9rem;
         background: rgba(255, 255, 255, 0.9);
         backdrop-filter: blur(5px);
         -webkit-backdrop-filter: blur(5px);
         border-top: 1px solid rgba(255, 255, 255, 0.5);
         font-weight: 500;
-    }}
+    }
 
-    /* System Message */
-    .system-message {{
+    /* Messages */
+    .system-message, .error-message, .warning-message, .success-message {
         display: flex;
-        flex-direction: column;
         align-items: center;
-        justify-content: center;
+        padding: 0.75rem;
+        border-radius: 10px;
+        margin: 0.75rem 0;
+        font-size: 0.9rem;
+    }
+    
+    .system-message {
         background: rgba(255, 255, 255, 0.8);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
-        padding: 1.5rem;
-        border-radius: 16px;
-        text-align: center;
-        margin: 2rem 0;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
         border: 1px solid rgba(255, 255, 255, 0.6);
-    }}
+        justify-content: center;
+    }
     
-    .system-message p {{
-        font-size: 1.1rem;
+    .system-message p {
         font-weight: 500;
         color: var(--set-text-muted);
         margin: 0;
-    }}
+    }
 
-    /* Error Message */
-    .error-message {{
+    .error-message {
         background-color: rgba(239, 68, 68, 0.08);
-        border-radius: 12px;
-        padding: 1.2rem;
-        margin: 1.5rem 0;
-        display: flex;
-        align-items: center;
-        box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.1);
         border: 1px solid rgba(239, 68, 68, 0.2);
-    }}
+    }
     
-    .error-message::before {{
+    .error-message::before {
         content: "⚠️";
-        font-size: 1.4rem;
-        margin-right: 0.8rem;
-    }}
+        font-size: 1.2rem;
+        margin-right: 0.6rem;
+        flex-shrink: 0;
+    }
     
-    .error-message p {{
+    .error-message p {
         margin: 0;
         font-weight: 500;
         color: var(--set-red);
-    }}
+    }
 
-    /* Warning Message */
-    .warning-message {{
+    .warning-message {
         background-color: rgba(245, 158, 11, 0.08);
-        border-radius: 12px;
-        padding: 1.2rem;
-        margin: 1.5rem 0;
-        display: flex;
-        align-items: center;
-        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.1);
+        box-shadow: 0 2px 8px rgba(245, 158, 11, 0.1);
         border: 1px solid rgba(245, 158, 11, 0.2);
-    }}
+    }
     
-    .warning-message::before {{
+    .warning-message::before {
         content: "ℹ️";
-        font-size: 1.4rem;
-        margin-right: 0.8rem;
-    }}
+        font-size: 1.2rem;
+        margin-right: 0.6rem;
+        flex-shrink: 0;
+    }
     
-    .warning-message p {{
+    .warning-message p {
         margin: 0;
         font-weight: 500;
         color: #F59E0B;
-    }}
+    }
     
-    /* Success Message */
-    .success-message {{
+    .success-message {
         background-color: rgba(16, 185, 129, 0.08);
-        border-radius: 12px;
-        padding: 1.2rem;
-        margin: 1.5rem 0;
-        display: flex;
-        align-items: center;
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.1);
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
         border: 1px solid rgba(16, 185, 129, 0.2);
-    }}
+    }
     
-    .success-message::before {{
+    .success-message::before {
         content: "✅";
-        font-size: 1.4rem;
-        margin-right: 0.8rem;
-    }}
+        font-size: 1.2rem;
+        margin-right: 0.6rem;
+        flex-shrink: 0;
+    }
     
-    .success-message p {{
+    .success-message p {
         margin: 0;
         font-weight: 500;
         color: var(--set-green);
-    }}
-    
-    /* SET Cards Container */
-    .set-results-container {{
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 1.5rem;
-        margin: 2rem 0;
-    }}
-    
-    /* Image Wrapper */
-    .img-wrapper {{
-        position: relative;
-        border-radius: 16px;
-        overflow: hidden;
-        transition: all 0.3s ease;
-    }}
+    }
 
-    /* Separator */
-    .set-separator {{
-        height: 2px;
-        background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.5), transparent);
-        margin: 2rem 0;
-        border-radius: 2px;
-    }}
-
-    /* Update responsive adjustments */
-    @media (max-width: 768px) {{
-        section[data-testid="stSidebar"] {{
-            display: none !important;
-        }}
-        
-        /* Minimize padding in Streamlit containers */
-        .block-container {{
-            padding-top: 0.5rem !important;
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
-            padding-bottom: 0.5rem !important;
-        }}
-        
-        .stButton>button {{
-            padding: 0.7rem !important;
-            font-size: 0.9rem !important;
-        }}
-        
-        /* Reduce margins */
-        .image-container {{
-            margin: 0.5rem 0 !important;
-        }}
-        
-        /* Make messages more compact */
-        .system-message,
-        .error-message,
-        .warning-message,
-        .success-message {{
-            padding: 0.75rem !important;
-            margin: 0.5rem 0 !important;
-        }}
-        
-        /* Reduce image margins */
-        [data-testid="stImage"] {{
-            margin-top: 0 !important;
-            margin-bottom: 0 !important;
-        }}
-        
-        /* Reduce caption size */
-        .caption {{
-            font-size: 0.8rem !important;
-            padding: 0.5rem !important;
-        }}
-    }}
+    /* Hide sidebar */
+    section[data-testid="stSidebar"] {
+        display: none !important;
+    }
+    
+    /* Reduce image margins */
+    [data-testid="stImage"] {
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
+    }
+    
+    /* Caption style */
+    .caption {
+        font-size: 0.8rem !important;
+        padding: 0.5rem !important;
+        text-align: center !important;
+    }
+    
+    /* Make file uploader more compact */
+    [data-testid="stFileUploader"] {
+        padding: 0.5rem !important;
+        border-radius: 10px !important;
+    }
+    
+    [data-testid="stFileUploader"] label {
+        font-size: 0.9rem !important;
+    }
+    
+    [data-testid="stFileUploader"] small {
+        margin-top: 0.3rem !important;
+    }
+    
+    /* Style for captions */
+    .st-emotion-cache-1q9deeb {
+        text-align: center !important;
+        font-size: 0.8rem !important;
+        color: var(--set-text-muted) !important;
+        margin-top: 0.3rem !important;
+    }
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -490,7 +400,7 @@ def load_custom_css():
 # =============================================================================
 base_dir = Path("models")
 char_path = base_dir / "Characteristics" / "11022025"
-shape_path = base_dir / "Shape" / "15052024"
+shape_path = base_dir / "Shape" / "15052024" 
 card_path = base_dir / "Card" / "16042024"
 
 @st.cache_resource(show_spinner=False)
@@ -821,6 +731,17 @@ def optimize_image_size(img_pil: Image.Image, max_dim=900) -> Image.Image:
 # =============================================================================
 # UI RENDERING HELPERS
 # =============================================================================
+def render_header():
+    """
+    Renders a minimalistic header for the app.
+    """
+    header_html = """
+    <div class="set-header-minimal">
+        <h1>SET Detector</h1>
+    </div>
+    """
+    st.markdown(header_html, unsafe_allow_html=True)
+
 def render_loading():
     """
     Shows a simple 3-dot animated loader styled with SET colors.
@@ -832,15 +753,14 @@ def render_loading():
             <div class="loader-dot loader-dot-2"></div>
             <div class="loader-dot loader-dot-3"></div>
         </div>
+        <div class="loader-text">Analyzing image...</div>
     </div>
     """
     st.markdown(loader_html, unsafe_allow_html=True)
 
-# Arrow function removed as requested
-
 def render_error(message: str):
     """
-    Renders a styled error message in a box with a left border.
+    Renders a styled error message.
     """
     html = f"""
     <div class="error-message">
@@ -851,7 +771,7 @@ def render_error(message: str):
 
 def render_warning(message: str):
     """
-    Renders a styled warning message in a box with a left border.
+    Renders a styled warning message.
     """
     html = f"""
     <div class="warning-message">
@@ -860,18 +780,7 @@ def render_warning(message: str):
     """
     st.markdown(html, unsafe_allow_html=True)
 
-def render_process_prompt():
-    """
-    Renders a styled "system message" to prompt the user to click 'Find Sets'.
-    """
-    html = """
-    <div class="system-message">
-        <p>Tap "Find Sets" to analyze</p>
-    </div>
-    """
-    st.markdown(html, unsafe_allow_html=True)
-    
-def render_success_message(num_sets):
+def render_success_message(num_sets: int):
     """
     Renders a styled success message indicating the number of sets found.
     """
@@ -884,25 +793,50 @@ def render_success_message(num_sets):
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
-    
-def render_separator():
+
+def render_process_prompt():
     """
-    Renders a visual separator between sections.
+    Renders a styled "system message" to prompt the user to tap 'Find Sets'.
     """
     html = """
-    <div class="set-separator"></div>
+    <div class="system-message">
+        <p>Tap "Find Sets" to analyze</p>
+    </div>
     """
     st.markdown(html, unsafe_allow_html=True)
+
+def detect_mobile_device():
+    """
+    Adds JavaScript code to detect mobile devices and set viewport properly.
+    Always defaults to mobile UI for consistency.
+    """
+    js_snippet = """
+    <script>
+        // Set proper viewport for mobile
+        if (!document.querySelector('meta[name="viewport"]')) {
+            var meta = document.createElement('meta');
+            meta.name = 'viewport';
+            meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+            document.getElementsByTagName('head')[0].appendChild(meta);
+        }
+    </script>
+    """
+    st.markdown(js_snippet, unsafe_allow_html=True)
+    
+    # Default to mobile view for better experience
+    return True
 
 def reset_app_state():
     """
     Clears and reinitializes session state, forcing the UI to reset.
     """
-    preserve_keys = ["is_mobile"]
-    to_remove = [k for k in st.session_state.keys() if k not in preserve_keys]
-
-    for k in to_remove:
-        del st.session_state[k]
+    # Preserve device type detection
+    is_mobile = st.session_state.get("is_mobile", True)
+    
+    # Clear session state
+    for key in list(st.session_state.keys()):
+        if key != "is_mobile":
+            del st.session_state[key]
 
     # Now reinitialize with defaults
     st.session_state.processed = False
@@ -916,147 +850,79 @@ def reset_app_state():
     st.session_state.image_height = 400
     st.session_state.uploader_key = str(random.randint(1000, 9999))
     st.session_state.should_reset = True
+    st.session_state.show_original = False
+    st.session_state.is_mobile = is_mobile
     st.session_state.reset_timestamp = time.time()
-
-    # Force clearing of caches if desired
-    st.cache_data.clear()
-
-    # If you want to clear the query params (if any)
-    st.query_params.clear()
-
-def detect_mobile_device():
-    """
-    Simple placeholder for mobile detection.
-    We use a JavaScript snippet that sets a flag in sessionStorage,
-    but here we simply return the session state's known value if set.
-    This is improved for better iPhone detection.
-    """
-    js_snippet = """
-    <script>
-        function isMobile() {
-            return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || window.innerWidth <= 768;
-        }
-        
-        if (isMobile()) {
-            sessionStorage.setItem('isMobile', 'true');
-            document.body.classList.add('mobile-view');
-            // Add a meta tag to ensure proper scaling on mobile
-            if (!document.querySelector('meta[name="viewport"]')) {
-                var meta = document.createElement('meta');
-                meta.name = 'viewport';
-                meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
-                document.getElementsByTagName('head')[0].appendChild(meta);
-            }
-        } else {
-            sessionStorage.setItem('isMobile', 'false');
-        }
-    </script>
-    """
-    st.markdown(js_snippet, unsafe_allow_html=True)
-    
-    # Force mobile view on for smaller screens
-    if "is_mobile" not in st.session_state:
-        st.session_state.is_mobile = True  # Default to mobile for safer experience
-    
-    return st.session_state.is_mobile
-
-def render_header():
-    """
-    Renders a minimalistic header for the app.
-    """
-    header_html = """
-    <div class="set-header-minimal">
-        <h1>SET Detector</h1>
-    </div>
-    """
-    st.markdown(header_html, unsafe_allow_html=True)
 
 # =============================================================================
 # MAIN APP
 # =============================================================================
 def main():
-    # 1. Load our custom CSS
+    """
+    Main application function with mobile-optimized UI.
+    """
+    # 1. Load custom CSS
     load_custom_css()
-
-    # 2. Detect mobile or desktop
-    is_mobile = detect_mobile_device()
-    st.session_state.is_mobile = is_mobile
-
-    # 3. If a reset was triggered, rerun to clear stale states
-    if st.session_state.get("should_reset", False):
-        st.session_state.should_reset = False
-        st.rerun()
-
-    # 4. Render header
-    render_header()
-
-    # 5. Optimized layout for iPhone/mobile screens
-    # Auto-detect but default to mobile view for safer experience
+    
+    # 2. Set proper viewport for mobile
     is_mobile = detect_mobile_device()
     st.session_state.is_mobile = is_mobile
     
-    # 3. If a reset was triggered, rerun to clear stale states
+    # 3. Handle app reset if needed
     if st.session_state.get("should_reset", False):
         st.session_state.should_reset = False
         st.rerun()
     
-    # Mobile-optimized layout
-    # Clear header taking minimal space
+    # 4. Display minimal header
     render_header()
     
-    # UPLOAD STEP - Only show if no file is uploaded
+    # 5. UPLOAD STEP - Only show if no file is uploaded
     if not st.session_state.get("uploaded_file"):
-        upload_container = st.container()
-        with upload_container:
-            st.markdown('<div class="mobile-view-container">', unsafe_allow_html=True)
-            uploaded_file = st.file_uploader(
-                "Upload a SET board image",
-                type=["png", "jpg", "jpeg"],
-                key=f"uploader_{st.session_state.uploader_key}",
-                label_visibility="collapsed",
-                help="Take a photo or choose an image of your SET game"
+        st.file_uploader(
+            "Upload a SET board image",
+            type=["png", "jpg", "jpeg"],
+            key=f"uploader_{st.session_state.uploader_key}",
+            label_visibility="collapsed"
+        )
+            
+        if st.session_state.get("uploader_" + st.session_state.uploader_key):
+            uploaded_file = st.session_state.get("uploader_" + st.session_state.uploader_key)
+            
+            # Reset session state for new image
+            for key in ['processed', 'processed_image', 'sets_info', 'original_image',
+                        'no_cards_detected', 'no_sets_found', 'show_original']:
+                if key in st.session_state:
+                    if key in ('processed', 'no_cards_detected', 'no_sets_found', 'show_original'):
+                        st.session_state[key] = False
+                    else:
+                        st.session_state[key] = None
+
+            st.session_state.uploaded_file = uploaded_file
+            try:
+                img_pil = Image.open(uploaded_file)
+                img_pil = optimize_image_size(img_pil, max_dim=900)  # Smaller for mobile
+                st.session_state.original_image = img_pil
+                st.session_state.image_height = img_pil.height
+            except Exception as e:
+                st.error(f"Failed to load the image")
+                st.error(str(e))
+    
+    # 6. PROCESSING AND RESULTS FLOW
+    if st.session_state.get("uploaded_file"):
+        # Image display section
+        if not st.session_state.get("processed") or st.session_state.get("show_original", False):
+            st.markdown('<div class="image-container">', unsafe_allow_html=True)
+            st.image(
+                st.session_state.original_image,
+                use_container_width=True  # No caption to save space
             )
             st.markdown('</div>', unsafe_allow_html=True)
-            
-            if uploaded_file and uploaded_file != st.session_state.get("uploaded_file", None):
-                # Reset session state for new image
-                for key in ['processed', 'processed_image', 'sets_info', 'original_image',
-                            'no_cards_detected', 'no_sets_found', 'show_original']:
-                    if key in st.session_state:
-                        if key in ('processed', 'no_cards_detected', 'no_sets_found', 'show_original'):
-                            st.session_state[key] = False
-                        else:
-                            st.session_state[key] = None
-
-                st.session_state.uploaded_file = uploaded_file
-                try:
-                    img_pil = Image.open(uploaded_file)
-                    img_pil = optimize_image_size(img_pil, max_dim=900) # Smaller for mobile
-                    st.session_state.original_image = img_pil
-                    st.session_state.image_height = img_pil.height
-                except Exception as e:
-                    st.error(f"Failed to load the image: {str(e)}")
-    
-    # If a file is uploaded, handle processing flow
-    if st.session_state.get("uploaded_file"):
-        st.markdown('<div class="mobile-view-container">', unsafe_allow_html=True)
         
-        # ONLY show original image initially or if toggled
-        if not st.session_state.get("processed") or st.session_state.get("show_original", False):
-            with st.container():
-                st.markdown('<div class="image-container">', unsafe_allow_html=True)
-                st.image(
-                    st.session_state.original_image,
-                    caption="Original Image",
-                    use_container_width=True
-                )
-                st.markdown('</div>', unsafe_allow_html=True)
-        
-        # PROCESSING SECTION
-        # Process button (if not already processing or processed)
+        # Process button
         if not st.session_state.get("processed") and not st.session_state.get("start_processing"):
-            if st.button("Find Sets", key="find_sets_btn", use_container_width=True, 
-                      help="Process the uploaded image to find SET cards"):
+            # Show process prompt and button
+            render_process_prompt()
+            if st.button("Find Sets", key="find_sets_btn", use_container_width=True):
                 st.session_state.processed = False
                 st.session_state.processed_image = None
                 st.session_state.sets_info = None
@@ -1066,7 +932,7 @@ def main():
                 st.session_state.start_processing = True
                 st.rerun()
         
-        # Processing state - show loader
+        # Loading state
         if st.session_state.get("start_processing"):
             render_loading()
             try:
@@ -1080,60 +946,58 @@ def main():
                 st.session_state.start_processing = False
                 st.rerun()
             except Exception as e:
-                st.error("An error occurred during processing:")
-                st.code(traceback.format_exc())
+                st.error("Error processing image")
+                with st.expander("Show error details"):
+                    st.code(traceback.format_exc())
                 st.session_state.start_processing = False
         
-        # RESULTS SECTION
+        # Results display
         elif st.session_state.get("processed"):
-            with st.container():
-                st.markdown('<div class="mobile-results-container">', unsafe_allow_html=True)
-                
-                # Case 1: No cards found
-                if st.session_state.no_cards_detected:
-                    render_error("No cards detected")
-                
-                # Case 2: Cards found but no sets
-                elif st.session_state.no_sets_found:
+            # Case 1: No cards found
+            if st.session_state.no_cards_detected:
+                render_error("No cards detected")
+            
+            # Case 2: Cards found but no sets
+            elif st.session_state.no_sets_found:
+                if not st.session_state.get("show_original", False):
                     st.markdown('<div class="image-container">', unsafe_allow_html=True)
                     pm = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
                     st.image(pm, use_container_width=True)
                     st.markdown('</div>', unsafe_allow_html=True)
-                    render_warning("No valid SETs found")
+                render_warning("No valid SETs found")
+            
+            # Case 3: Sets found!
+            elif not st.session_state.get("show_original", False):
+                render_success_message(len(st.session_state.sets_info))
                 
-                # Case 3: Sets found!
-                else:
-                    render_success_message(len(st.session_state.sets_info))
-                    
-                    st.markdown('<div class="image-container">', unsafe_allow_html=True)
-                    pm = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
-                    st.image(
-                        pm,
-                        caption=f"{len(st.session_state.sets_info)} SET{'' if len(st.session_state.sets_info) == 1 else 's'} found",
-                        use_container_width=True
-                    )
-                    st.markdown('</div>', unsafe_allow_html=True)
-                
+                st.markdown('<div class="image-container">', unsafe_allow_html=True)
+                pm = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
+                st.image(
+                    pm,
+                    caption=f"{len(st.session_state.sets_info)} SET{'' if len(st.session_state.sets_info) == 1 else 's'} found",
+                    use_container_width=True
+                )
                 st.markdown('</div>', unsafe_allow_html=True)
-                
-                # CONTROLS - Two buttons side by side for toggle and reset
-                col1, col2 = st.columns(2)
-                with col1:
-                    toggle_label = "Hide Original" if st.session_state.get("show_original", False) else "Show Original"
-                    if st.button(toggle_label, key="toggle_btn", use_container_width=True):
-                        st.session_state.show_original = not st.session_state.get("show_original", False)
-                        st.rerun()
-                
-                with col2:
-                    if st.button("New Image", key="reset_btn", use_container_width=True):
-                        reset_app_state()
-                        st.rerun()
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Control buttons
+            col1, col2 = st.columns(2)
+            with col1:
+                # Toggle button with secondary styling
+                toggle_label = "Hide Original" if st.session_state.get("show_original", False) else "Show Original"
+                st.markdown('<div class="secondary-btn">', unsafe_allow_html=True)
+                if st.button(toggle_label, key="toggle_btn", use_container_width=True):
+                    st.session_state.show_original = not st.session_state.get("show_original", False)
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            with col2:
+                if st.button("New Image", key="reset_btn", use_container_width=True):
+                    reset_app_state()
+                    st.rerun()
 
 def run_app():
     """
-    Wrapper to run the main function if name == '_main_'.
+    Application entry point.
     """
     main()
 
