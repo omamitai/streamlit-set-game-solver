@@ -1,3 +1,4 @@
+"""
 Set Game Detector App
 =====================
 
@@ -753,13 +754,13 @@ def detect_mobile_device():
     """
     js_snippet = """
     <script>
-        function isMobile() {{ return window.innerWidth <= 991; }}
-        if (isMobile()) {{
+        function isMobile() { return window.innerWidth <= 991; }
+        if (isMobile()) {
             sessionStorage.setItem('isMobile', 'true');
             document.body.classList.add('mobile-view');
-        }} else {{
+        } else {
             sessionStorage.setItem('isMobile', 'false');
-        }}
+        }
     </script>
     """
     st.markdown(js_snippet, unsafe_allow_html=True)
@@ -1028,5 +1029,5 @@ def run_app():
     """
     main()
 
-if _name_ == "_main_":
-    run_app()
+if __name__ == "__main__":
+    run_app()
