@@ -123,21 +123,21 @@ def load_custom_css():
         max-width: 100%;
     }
 
-    /* SET Game Header */
+    /* Updated header style with light blue semi-transparent background */
     .ios-header {
         display: flex;
         justify-content: center;
         align-items: center;
-        padding: 0.5rem 0.75rem;
-        margin: 0 auto 0.6rem;
-        background: rgba(255, 255, 255, 0.85);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        padding: 0.6rem 1rem;
+        margin: 0 auto 0.75rem;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(96, 165, 250, 0.15) 100%);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
         border-radius: 12px;
         box-shadow: 0 2px 8px rgba(124, 58, 237, 0.1);
         border: 1px solid rgba(124, 58, 237, 0.15);
         transition: all 0.2s ease;
-        max-width: 180px;
+        max-width: 90%;
     }
     
     .ios-header h1 {
@@ -145,7 +145,7 @@ def load_custom_css():
         font-size: 1.2rem;
         font-weight: 600;
         margin: 0;
-        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-light-purple) 50%, var(--set-pink) 100%);
+        background: linear-gradient(135deg, var(--set-purple) 0%, #60A5FA 100%);
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
@@ -183,71 +183,92 @@ def load_custom_css():
         margin-bottom: 0.75rem;
     }
 
-    /* Update both button styles to avoid white */
+    /* Enhanced SET-themed buttons */
     .ios-button-primary > button {
-        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-light-purple) 100%);
+        background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%);
         color: white;
         border: none;
         padding: 0.6rem;
-        border-radius: 10px;
+        border-radius: 12px;
         font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
         font-weight: 600;
         font-size: 0.95rem;
         cursor: pointer;
-        transition: all 0.1s ease-out;
+        transition: all 0.15s ease-out;
         width: 100%;
         margin: 0.25rem 0 !important;
-        min-height: 44px; /* iOS minimum touch target */
-        box-shadow: 0 2px 6px rgba(124, 58, 237, 0.25);
+        min-height: 48px; /* Increased touch target */
+        box-shadow: 0 3px 10px rgba(124, 58, 237, 0.3);
+        letter-spacing: 0.01em;
+        text-transform: uppercase;
+        font-size: 0.85rem;
     }
     
     .ios-button-primary > button:hover {
-        box-shadow: 0 3px 8px rgba(124, 58, 237, 0.35);
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+        transform: translateY(-1px);
     }
     
     .ios-button-primary > button:active {
-        transform: scale(0.98);
-        box-shadow: 0 1px 4px rgba(124, 58, 237, 0.2);
+        transform: translateY(1px);
+        box-shadow: 0 2px 5px rgba(124, 58, 237, 0.25);
     }
 
-    /* Secondary button now uses green gradient */
+    /* Secondary button with SET theme */
     .ios-button-secondary > button {
-        background: linear-gradient(135deg, var(--set-green) 0%, #34D399 100%);
+        background: linear-gradient(135deg, #EC4899 0%, #F472B6 100%);
         color: white;
         border: none;
         padding: 0.6rem;
-        border-radius: 10px;
+        border-radius: 12px;
         font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
         font-weight: 500;
-        font-size: 0.95rem;
+        font-size: 0.85rem;
         cursor: pointer;
-        transition: all 0.1s ease-out;
+        transition: all 0.15s ease-out;
         width: 100%;
         margin: 0.25rem 0 !important;
-        min-height: 44px; /* iOS minimum touch target */
-        box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+        min-height: 48px; /* Increased touch target */
+        box-shadow: 0 3px 10px rgba(236, 72, 153, 0.25);
+        text-transform: uppercase;
+        letter-spacing: 0.01em;
     }
     
     .ios-button-secondary > button:hover {
-        box-shadow: 0 3px 8px rgba(16, 185, 129, 0.35);
+        box-shadow: 0 4px 12px rgba(236, 72, 153, 0.35);
+        transform: translateY(-1px);
     }
     
     .ios-button-secondary > button:active {
-        transform: scale(0.98);
-        box-shadow: 0 1px 4px rgba(16, 185, 129, 0.2);
+        transform: translateY(1px);
+        box-shadow: 0 2px 5px rgba(236, 72, 153, 0.2);
+    }
+    
+    /* Find Sets button variant */
+    .find-sets-button > button {
+        background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
+        box-shadow: 0 3px 10px rgba(16, 185, 129, 0.25);
+    }
+    
+    .find-sets-button > button:hover {
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+    }
+    
+    .find-sets-button > button:active {
+        box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2);
     }
 
-    /* Remove card wrapper, just use image container directly */
+    /* Smaller, well-defined image container */
     .ios-image-container {
-        margin: 0.5rem 0;
+        margin: 0.75rem auto;
         position: relative;
-        border-radius: 10px;
+        border-radius: 12px;
         overflow: hidden;
-        height: 180px;
-        width: 100%;
-        background-color: rgba(255, 255, 255, 0.5);
-        box-shadow: 0 2px 6px rgba(124, 58, 237, 0.15);
-        border: 1px solid rgba(124, 58, 237, 0.15);
+        height: 160px;
+        width: 95%;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(96, 165, 250, 0.05) 100%);
+        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15);
+        border: 1px solid rgba(124, 58, 237, 0.2);
     }
     
     .ios-image-container img {
@@ -256,25 +277,52 @@ def load_custom_css():
         object-fit: contain; /* Preserve aspect ratio */
     }
     
-    /* SET Game Static Loading State */
+    .ios-image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain; /* Preserve aspect ratio */
+    }
+    
+    /* SET Game animated loader (centered on image) */
     .ios-loader-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        height: 160px;
-        margin: 1rem 0;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(3px);
+        -webkit-backdrop-filter: blur(3px);
+        z-index: 10;
+    }
+    
+    .ios-loader {
+        width: 24px;
+        height: 24px;
+        border: 2px solid rgba(124, 58, 237, 0.2);
+        border-top: 2px solid #7C3AED;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 0.75rem;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
     
     .ios-loader-text {
         font-size: 0.9rem;
         font-weight: 500;
-        color: var(--set-text-muted);
+        color: #7C3AED;
         background: rgba(255, 255, 255, 0.8);
-        padding: 0.75rem 1.25rem;
+        padding: 0.5rem 1rem;
         border-radius: 10px;
         box-shadow: 0 2px 6px rgba(124, 58, 237, 0.1);
-        border: 1px solid rgba(124, 58, 237, 0.1);
     }
 
     /* SET Game alert messages */
@@ -746,21 +794,22 @@ def optimize_image_size(img_pil: Image.Image, max_dim=800) -> Image.Image:
 # =============================================================================
 def render_header():
     """
-    Renders a SET-themed header for the app.
+    Renders a stylish SET-themed header with light blue transparent background.
     """
     header_html = """
     <div class="ios-header">
-        <h1>SET Detector</h1>
+        <h1>SET Card Game Detector</h1>
     </div>
     """
     st.markdown(header_html, unsafe_allow_html=True)
 
 def render_loading():
     """
-    Shows static loading message without animation.
+    Shows animated loading spinner centered on the image.
     """
     loader_html = """
     <div class="ios-loader-container">
+        <div class="ios-loader"></div>
         <div class="ios-loader-text">Analyzing cards...</div>
     </div>
     """
@@ -930,29 +979,30 @@ def main():
     
     # PREVIEW SCREEN - Show original with Find Sets button
     elif st.session_state.app_view == "preview":
+        # Container for the image and loading overlay
+        st.markdown('<div style="position: relative;">', unsafe_allow_html=True)
         st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
         st.image(st.session_state.original_image, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
         
-        col1, col2 = st.columns([1, 1])
-        
-        with col1:
-            st.markdown('<div class="ios-button-secondary">', unsafe_allow_html=True)
-            if st.button("Cancel", key="cancel_btn", use_container_width=True):
-                reset_app_state()
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
-        
-        with col2:
-            st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
-            if st.button("Find Sets", key="find_sets_btn", use_container_width=True):
-                st.session_state.app_view = "processing"
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
+        # Only show Find Sets button (cancel Cancel button)
+        st.markdown('<div class="ios-button-primary find-sets-button">', unsafe_allow_html=True)
+        if st.button("Find Sets", key="find_sets_btn", use_container_width=True):
+            st.session_state.app_view = "processing"
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
     
     # PROCESSING SCREEN
     elif st.session_state.app_view == "processing":
+        # Container for the image and loading overlay
+        st.markdown('<div style="position: relative;">', unsafe_allow_html=True)
+        st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
+        st.image(st.session_state.original_image, use_container_width=True)
+        # Overlay the loader on the image
         render_loading()
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
         
         # Process the image
         try:
@@ -988,7 +1038,7 @@ def main():
             st.image(st.session_state.original_image, use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # Try again button
+            # Try again button with enhanced style
             st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
             if st.button("Try Another Image", key="try_again_btn", use_container_width=True):
                 reset_app_state()
@@ -1026,9 +1076,9 @@ def main():
             st.image(cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB), use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # Single action button
+            # Single action button with enhanced style
             st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
-            if st.button("Analyze Another Card", key="new_img_btn", use_container_width=True):
+            if st.button("Analyze Another Game", key="new_img_btn", use_container_width=True):
                 reset_app_state()
                 st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
