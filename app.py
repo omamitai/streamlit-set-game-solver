@@ -80,15 +80,15 @@ if "app_view" not in st.session_state:
     st.session_state.app_view = "upload"  # Possible values: "upload", "processing", "results"
 
 # =============================================================================
-# CUSTOM CSS - iOS-inspired styling
+# CUSTOM CSS - Enhanced iOS-inspired styling
 # =============================================================================
 def load_custom_css():
     """
-    Loads custom CSS for an iOS-inspired UI following Apple's Human Interface Guidelines.
+    Loads enhanced custom CSS for an iOS-inspired UI following Apple's Human Interface Guidelines.
     """
     css = """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Text:wght@400;500;600&display=swap');
 
     :root {
@@ -97,11 +97,11 @@ def load_custom_css():
         --set-red: #EF4444;
         --set-pink: #EC4899;
         --set-light-purple: #8B5CF6;
-        --set-background: #F4F1FA;
+        --set-background: #F8F5FF;
         --set-card: #FFFFFF;
         --set-text: #1F2937;
         --set-text-muted: #6B7280;
-        --set-border: rgba(124, 58, 237, 0.2);
+        --set-border: rgba(124, 58, 237, 0.25);
     }
 
     body {
@@ -111,10 +111,10 @@ def load_custom_css():
         line-height: 1.5;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        background-image: linear-gradient(to bottom right, #F4F1FA, #F0F9FF);
+        background-image: linear-gradient(135deg, #F4F1FA 0%, #F0F9FF 50%, #F9F5FF 100%);
     }
 
-    /* Custom Streamlit override - zero padding for mobile */
+    /* Custom Streamlit override - minimal padding for mobile */
     .main .block-container {
         padding-top: 0.5rem;
         padding-bottom: 0.5rem;
@@ -123,33 +123,34 @@ def load_custom_css():
         max-width: 100%;
     }
 
-    /* Updated header style with light blue semi-transparent background */
+    /* Enhanced header style with glassmorphism effect */
     .ios-header {
         display: flex;
         justify-content: center;
         align-items: center;
-        padding: 0.6rem 1rem;
+        padding: 0.7rem 1.2rem;
         margin: 0 auto 0.75rem;
-        background: linear-gradient(135deg, rgba(139, 92, 246, 0.15) 0%, rgba(96, 165, 250, 0.15) 100%);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border-radius: 12px;
-        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.1);
-        border: 1px solid rgba(124, 58, 237, 0.15);
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 16px;
+        box-shadow: 0 3px 12px rgba(124, 58, 237, 0.15);
+        border: 1px solid rgba(124, 58, 237, 0.2);
         transition: all 0.2s ease;
-        max-width: 90%;
+        max-width: 85%;
     }
     
     .ios-header h1 {
         font-family: -apple-system, 'SF Pro Display', BlinkMacSystemFont, sans-serif;
-        font-size: 1.2rem;
-        font-weight: 600;
+        font-size: 1.3rem;
+        font-weight: 700;
         margin: 0;
-        background: linear-gradient(135deg, var(--set-purple) 0%, #60A5FA 100%);
+        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-pink) 100%);
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
         letter-spacing: -0.02em;
+        text-shadow: 0 1px 2px rgba(124, 58, 237, 0.1);
     }
     
     /* iOS Navigation Bar (Fixed at top) */
@@ -159,10 +160,10 @@ def load_custom_css():
         z-index: 100;
         width: 100%;
         padding: 0.75rem 1rem;
-        background: rgba(247, 247, 252, 0.8);
+        background: rgba(248, 245, 255, 0.85);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        border-bottom: 1px solid rgba(124, 58, 237, 0.1);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -174,12 +175,12 @@ def load_custom_css():
         margin-bottom: 0.5rem;
     }
     
-    /* Image area with iOS card styling */
+    /* Image area with enhanced iOS card styling */
     .ios-card {
         background: white;
         border-radius: 16px;
         overflow: hidden;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 3px 10px rgba(124, 58, 237, 0.1);
         margin-bottom: 0.75rem;
     }
 
@@ -188,30 +189,29 @@ def load_custom_css():
         background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%);
         color: white;
         border: none;
-        padding: 0.6rem;
-        border-radius: 12px;
+        padding: 0.7rem;
+        border-radius: 14px;
         font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
         font-weight: 600;
-        font-size: 0.95rem;
+        font-size: 0.9rem;
         cursor: pointer;
         transition: all 0.15s ease-out;
         width: 100%;
         margin: 0.25rem 0 !important;
-        min-height: 48px; /* Increased touch target */
-        box-shadow: 0 3px 10px rgba(124, 58, 237, 0.3);
+        min-height: 50px; /* Increased touch target */
+        box-shadow: 0 3px 12px rgba(124, 58, 237, 0.35);
         letter-spacing: 0.01em;
         text-transform: uppercase;
-        font-size: 0.85rem;
     }
     
     .ios-button-primary > button:hover {
-        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+        box-shadow: 0 4px 15px rgba(124, 58, 237, 0.45);
         transform: translateY(-1px);
     }
     
     .ios-button-primary > button:active {
         transform: translateY(1px);
-        box-shadow: 0 2px 5px rgba(124, 58, 237, 0.25);
+        box-shadow: 0 2px 5px rgba(124, 58, 237, 0.3);
     }
 
     /* Secondary button with SET theme */
@@ -219,56 +219,58 @@ def load_custom_css():
         background: linear-gradient(135deg, #EC4899 0%, #F472B6 100%);
         color: white;
         border: none;
-        padding: 0.6rem;
-        border-radius: 12px;
+        padding: 0.7rem;
+        border-radius: 14px;
         font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
         font-weight: 500;
-        font-size: 0.85rem;
+        font-size: 0.9rem;
         cursor: pointer;
         transition: all 0.15s ease-out;
         width: 100%;
         margin: 0.25rem 0 !important;
-        min-height: 48px; /* Increased touch target */
-        box-shadow: 0 3px 10px rgba(236, 72, 153, 0.25);
+        min-height: 50px; /* Increased touch target */
+        box-shadow: 0 3px 12px rgba(236, 72, 153, 0.3);
         text-transform: uppercase;
         letter-spacing: 0.01em;
     }
     
     .ios-button-secondary > button:hover {
-        box-shadow: 0 4px 12px rgba(236, 72, 153, 0.35);
+        box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
         transform: translateY(-1px);
     }
     
     .ios-button-secondary > button:active {
         transform: translateY(1px);
-        box-shadow: 0 2px 5px rgba(236, 72, 153, 0.2);
+        box-shadow: 0 2px 5px rgba(236, 72, 153, 0.25);
     }
     
-    /* Find Sets button variant */
+    /* Find Sets button variant with enhanced styling */
     .find-sets-button > button {
         background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
-        box-shadow: 0 3px 10px rgba(16, 185, 129, 0.25);
+        box-shadow: 0 3px 12px rgba(16, 185, 129, 0.3);
     }
     
     .find-sets-button > button:hover {
-        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
     }
     
     .find-sets-button > button:active {
-        box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2);
+        box-shadow: 0 2px 5px rgba(16, 185, 129, 0.25);
     }
 
-    /* Smaller, well-defined image container */
+    /* Enhanced image container with adaptive sizing */
     .ios-image-container {
         margin: 0.75rem auto;
         position: relative;
-        border-radius: 12px;
+        border-radius: 16px;
         overflow: hidden;
-        height: 160px;
-        width: 95%;
-        background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(96, 165, 250, 0.05) 100%);
-        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.15);
-        border: 1px solid rgba(124, 58, 237, 0.2);
+        max-height: 300px; /* Higher but still fits on iPhone */
+        height: calc(100vh - 250px); /* Adaptive height */
+        min-height: 180px;
+        width: 92%;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
+        box-shadow: 0 3px 12px rgba(124, 58, 237, 0.2);
+        border: 1px solid rgba(124, 58, 237, 0.25);
     }
     
     .ios-image-container img {
@@ -277,13 +279,7 @@ def load_custom_css():
         object-fit: contain; /* Preserve aspect ratio */
     }
     
-    .ios-image-container img {
-        width: 100%;
-        height: 100%;
-        object-fit: contain; /* Preserve aspect ratio */
-    }
-    
-    /* SET Game animated loader (centered on image) */
+    /* Improved SET Game animated loader with glassmorphism */
     .ios-loader-container {
         position: absolute;
         top: 0;
@@ -294,20 +290,22 @@ def load_custom_css():
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(3px);
-        -webkit-backdrop-filter: blur(3px);
+        background: rgba(244, 241, 250, 0.7); /* Lighter background using SET theme */
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
         z-index: 10;
+        border-radius: 16px; /* Match container's radius */
     }
     
     .ios-loader {
-        width: 24px;
-        height: 24px;
-        border: 2px solid rgba(124, 58, 237, 0.2);
-        border-top: 2px solid #7C3AED;
+        width: 32px;
+        height: 32px;
+        border: 3px solid rgba(124, 58, 237, 0.2);
+        border-top: 3px solid var(--set-purple);
         border-radius: 50%;
         animation: spin 1s linear infinite;
-        margin-bottom: 0.75rem;
+        margin-bottom: 0.8rem;
+        box-shadow: 0 0 10px rgba(124, 58, 237, 0.15);
     }
     
     @keyframes spin {
@@ -316,60 +314,63 @@ def load_custom_css():
     }
     
     .ios-loader-text {
-        font-size: 0.9rem;
-        font-weight: 500;
-        color: #7C3AED;
-        background: rgba(255, 255, 255, 0.8);
-        padding: 0.5rem 1rem;
-        border-radius: 10px;
-        box-shadow: 0 2px 6px rgba(124, 58, 237, 0.1);
+        font-size: 0.95rem;
+        font-weight: 600;
+        color: var(--set-purple);
+        background: rgba(255, 255, 255, 0.85);
+        padding: 0.6rem 1.2rem;
+        border-radius: 12px;
+        box-shadow: 0 3px 8px rgba(124, 58, 237, 0.15);
+        border: 1px solid rgba(124, 58, 237, 0.2);
     }
 
-    /* SET Game alert messages */
+    /* Enhanced SET Game alert messages */
     .ios-alert {
-        padding: 0.65rem 0.75rem;
-        border-radius: 10px;
-        margin: 0.4rem 0;
+        padding: 0.75rem 0.9rem;
+        border-radius: 12px;
+        margin: 0.5rem 0;
         display: flex;
         align-items: center;
-        font-size: 0.85rem;
-        font-weight: 500;
-        min-height: 40px;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        font-size: 0.9rem;
+        font-weight: 600;
+        min-height: 44px;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
     }
     
     .ios-alert-error {
-        background-color: rgba(239, 68, 68, 0.08);
+        background-color: rgba(239, 68, 68, 0.1);
         color: var(--set-red);
-        border: 1px solid rgba(239, 68, 68, 0.2);
+        border: 1px solid rgba(239, 68, 68, 0.25);
     }
     
     .ios-alert-error::before {
         content: "⚠️";
-        margin-right: 0.5rem;
+        margin-right: 0.6rem;
+        font-size: 1.1rem;
     }
     
     .ios-alert-warning {
-        background-color: rgba(245, 158, 11, 0.08);
+        background-color: rgba(245, 158, 11, 0.1);
         color: #F59E0B;
-        border: 1px solid rgba(245, 158, 11, 0.2);
+        border: 1px solid rgba(245, 158, 11, 0.25);
     }
     
     .ios-alert-warning::before {
         content: "ℹ️";
-        margin-right: 0.5rem;
+        margin-right: 0.6rem;
+        font-size: 1.1rem;
     }
     
     .ios-alert-success {
-        background-color: rgba(16, 185, 129, 0.08);
+        background-color: rgba(16, 185, 129, 0.1);
         color: var(--set-green);
-        border: 1px solid rgba(16, 185, 129, 0.2);
+        border: 1px solid rgba(16, 185, 129, 0.25);
     }
     
     .ios-alert-success::before {
         content: "✅";
-        margin-right: 0.5rem;
-        font-size: 0.9rem;
+        margin-right: 0.6rem;
+        font-size: 1.1rem;
     }
     
     /* iOS-style label */
@@ -409,21 +410,21 @@ def load_custom_css():
         margin-bottom: 0 !important;
     }
     
-    /* File uploader custom styling */
+    /* Enhanced file uploader custom styling */
     [data-testid="stFileUploader"] {
         background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(139, 92, 246, 0.1) 100%);
-        border-radius: 12px;
+        border-radius: 16px;
         padding: 1rem !important;
-        border: 1px dashed rgba(124, 58, 237, 0.3);
-        box-shadow: 0 2px 6px rgba(124, 58, 237, 0.08);
+        border: 1px dashed rgba(124, 58, 237, 0.35);
+        box-shadow: 0 3px 8px rgba(124, 58, 237, 0.1);
     }
     
     [data-testid="stFileUploader"] > div > button {
         background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-light-purple) 100%) !important;
         color: white !important;
-        border-radius: 8px !important;
-        min-height: 44px;
-        box-shadow: 0 2px 6px rgba(124, 58, 237, 0.2);
+        border-radius: 12px !important;
+        min-height: 48px;
+        box-shadow: 0 3px 8px rgba(124, 58, 237, 0.25);
     }
     
     /* Remove all extra margins from button container */
@@ -431,18 +432,58 @@ def load_custom_css():
         margin: 0 !important; 
     }
     
-    /* SET Game Results badge */
+    /* Enhanced SET Game Results badge */
     .ios-badge {
         display: inline-block;
-        padding: 0.3rem 0.6rem;
+        padding: 0.4rem 0.8rem;
         background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-light-purple) 100%);
         color: white;
-        border-radius: 12px;
-        font-size: 0.8rem;
+        border-radius: 14px;
+        font-size: 0.9rem;
         font-weight: 600;
         margin-top: 0.25rem;
-        box-shadow: 0 2px 4px rgba(124, 58, 237, 0.2);
+        box-shadow: 0 3px 6px rgba(124, 58, 237, 0.25);
         letter-spacing: 0.01em;
+    }
+
+    /* Card info tooltip with glassmorphism effect */
+    .ios-tooltip {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-radius: 10px;
+        padding: 0.5rem 0.8rem;
+        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        border: 1px solid rgba(124, 58, 237, 0.15);
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--set-text);
+        max-width: 200px;
+        position: absolute;
+        z-index: 20;
+    }
+
+    /* Animated pulsing indicator for detected sets */
+    .set-indicator {
+        position: absolute;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--set-green);
+        box-shadow: 0 0 0 rgba(16, 185, 129, 0.7);
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+        }
+        70% {
+            box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+        }
+        100% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+        }
     }
     </style>
     """
@@ -692,21 +733,21 @@ def draw_detected_sets(board_img: np.ndarray, sets_detected: List[dict]) -> np.n
     Annotates the board image with bounding boxes for each detected SET.
     Each SET is drawn in a different color and offset for better visibility.
     """
-    # iOS Brand colors (BGR format)
-    ios_colors = [
-        (255, 59, 48),    # Red
-        (52, 199, 89),    # Green
-        (0, 122, 255),    # Blue
-        (255, 149, 0),    # Orange
-        (175, 82, 222),   # Purple
-        (255, 45, 85)     # Pink
+    # Enhanced SET-themed colors (BGR format)
+    set_colors = [
+        (68, 68, 239),    # Red
+        (89, 199, 16),    # Green
+        (246, 92, 139),   # Pink
+        (0, 149, 255),    # Orange
+        (222, 82, 175),   # Purple
+        (85, 45, 255)     # Hot Pink
     ]
     
     base_thickness = 4
     base_expansion = 5
 
     for idx, single_set in enumerate(sets_detected):
-        color = ios_colors[idx % len(ios_colors)]
+        color = set_colors[idx % len(set_colors)]
         thickness = base_thickness + (idx % 3)
         expansion = base_expansion + 10 * (idx % 3)
 
@@ -718,23 +759,55 @@ def draw_detected_sets(board_img: np.ndarray, sets_detected: List[dict]) -> np.n
             x2e = min(board_img.shape[1], x2 + expansion)
             y2e = min(board_img.shape[0], y2 + expansion)
 
+            # Draw more attractive rounded rectangle with gradient effect
             cv2.rectangle(board_img, (x1e, y1e), (x2e, y2e), color, thickness)
+            
+            # Add corners with thicker lines for iOS-style appearance
+            corner_length = min(30, (x2e - x1e) // 4)
+            corner_thickness = thickness + 1
+            
+            # Top-left corner
+            cv2.line(board_img, (x1e, y1e + corner_length), (x1e, y1e), color, corner_thickness)
+            cv2.line(board_img, (x1e, y1e), (x1e + corner_length, y1e), color, corner_thickness)
+            
+            # Top-right corner
+            cv2.line(board_img, (x2e - corner_length, y1e), (x2e, y1e), color, corner_thickness)
+            cv2.line(board_img, (x2e, y1e), (x2e, y1e + corner_length), color, corner_thickness)
+            
+            # Bottom-left corner
+            cv2.line(board_img, (x1e, y2e - corner_length), (x1e, y2e), color, corner_thickness)
+            cv2.line(board_img, (x1e, y2e), (x1e + corner_length, y2e), color, corner_thickness)
+            
+            # Bottom-right corner
+            cv2.line(board_img, (x2e - corner_length, y2e), (x2e, y2e), color, corner_thickness)
+            cv2.line(board_img, (x2e, y2e), (x2e, y2e - corner_length), color, corner_thickness)
 
-            # Label the first card with Set number
+            # Label the first card with Set number with enhanced styling
             if i == 0:
-                label_bg_size = cv2.getTextSize(f"Set {idx+1}", cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)[0]
+                # Create pill-shaped badge background
+                text = f"Set {idx+1}"
+                text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)[0]
+                badge_width = text_size[0] + 16
+                badge_height = 26
+                badge_x = x1e
+                badge_y = y1e - badge_height - 5
+                
+                # Draw pill-shaped badge
                 cv2.rectangle(board_img, 
-                             (x1e, y1e - 25), 
-                             (x1e + label_bg_size[0] + 10, y1e),
-                             color, -1)
+                              (badge_x, badge_y), 
+                              (badge_x + badge_width, badge_y + badge_height),
+                              color, -1, cv2.LINE_AA)
+                
+                # Draw text in center of badge
                 cv2.putText(
                     board_img,
-                    f"Set {idx + 1}",
-                    (x1e + 5, y1e - 7),
+                    text,
+                    (badge_x + 8, badge_y + badge_height - 8),
                     cv2.FONT_HERSHEY_SIMPLEX,
                     0.7,
                     (255, 255, 255),
-                    2
+                    2,
+                    cv2.LINE_AA
                 )
     return board_img
 
@@ -773,9 +846,10 @@ def identify_sets_from_image(
     final_output = restore_orientation(annotated, was_rotated)
     return found_sets, final_output
 
-def optimize_image_size(img_pil: Image.Image, max_dim=800) -> Image.Image:
+def optimize_image_size(img_pil: Image.Image, max_dim=700) -> Image.Image:
     """
     Resizes a PIL image to optimize for mobile viewing while preserving aspect ratio.
+    Reduced max_dim to 700 to ensure better fit on iPhone screens.
     """
     width, height = img_pil.size
     if max(width, height) > max_dim:
@@ -794,7 +868,7 @@ def optimize_image_size(img_pil: Image.Image, max_dim=800) -> Image.Image:
 # =============================================================================
 def render_header():
     """
-    Renders a stylish SET-themed header with light blue transparent background.
+    Renders a stylish SET-themed header with enhanced glassmorphism effect.
     """
     header_html = """
     <div class="ios-header">
@@ -805,7 +879,7 @@ def render_header():
 
 def render_loading():
     """
-    Shows animated loading spinner centered on the image.
+    Shows enhanced animated loading spinner centered on the image.
     """
     loader_html = """
     <div class="ios-loader-container">
@@ -817,7 +891,7 @@ def render_loading():
 
 def render_error(message: str):
     """
-    Renders an iOS-style error message.
+    Renders an enhanced iOS-style error message.
     """
     html = f"""
     <div class="ios-alert ios-alert-error">
@@ -828,7 +902,7 @@ def render_error(message: str):
 
 def render_warning(message: str):
     """
-    Renders an iOS-style warning message.
+    Renders an enhanced iOS-style warning message.
     """
     html = f"""
     <div class="ios-alert ios-alert-warning">
@@ -839,7 +913,7 @@ def render_warning(message: str):
 
 def render_success_message(num_sets: int):
     """
-    Renders an iOS-style success message.
+    Renders an enhanced iOS-style success message.
     """
     if num_sets == 0:
         return
@@ -853,7 +927,7 @@ def render_success_message(num_sets: int):
 
 def detect_mobile_device():
     """
-    Sets proper viewport for mobile devices with iOS-specific meta tags.
+    Sets proper viewport for mobile devices with enhanced iOS-specific meta tags.
     """
     js_snippet = """
     <script>
@@ -876,6 +950,12 @@ def detect_mobile_device():
         webAppMeta.name = 'apple-mobile-web-app-capable';
         webAppMeta.content = 'yes';
         document.getElementsByTagName('head')[0].appendChild(webAppMeta);
+        
+        // Add apple touch icon
+        var touchIconMeta = document.createElement('link');
+        touchIconMeta.rel = 'apple-touch-icon';
+        touchIconMeta.href = 'data:image/png;base64,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';
+        document.getElementsByTagName('head')[0].appendChild(touchIconMeta);
     </script>
     """
     st.markdown(js_snippet, unsafe_allow_html=True)
@@ -914,7 +994,7 @@ def reset_app_state():
 # =============================================================================
 def main():
     """
-    Main application entry point with SET-themed layout optimized for iPhone.
+    Main application entry point with enhanced SET-themed layout optimized for iPhone.
     """
     # 1. Load custom SET-themed CSS
     load_custom_css()
@@ -939,7 +1019,10 @@ def main():
         with st.container():
             st.markdown("""
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 1rem;">
-                <div style="font-size: 1.1rem; font-weight: 500; margin-bottom: 1rem; text-align: center;">
+                <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; text-align: center; 
+                            background: linear-gradient(135deg, #7C3AED 0%, #EC4899 100%); 
+                            -webkit-background-clip: text; background-clip: text; 
+                            -webkit-text-fill-color: transparent;">
                     Upload a photo of your SET game
                 </div>
             </div>
@@ -968,7 +1051,7 @@ def main():
                 st.session_state.uploaded_file = uploaded_file
                 try:
                     img_pil = Image.open(uploaded_file)
-                    img_pil = optimize_image_size(img_pil, max_dim=800)
+                    img_pil = optimize_image_size(img_pil, max_dim=700)  # Reduced max size for better mobile fit
                     st.session_state.original_image = img_pil
                     st.session_state.image_height = img_pil.height
                     st.session_state.app_view = "preview"
@@ -986,7 +1069,7 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Only show Find Sets button (cancel Cancel button)
+        # Only show Find Sets button (enhanced style)
         st.markdown('<div class="ios-button-primary find-sets-button">', unsafe_allow_html=True)
         if st.button("Find Sets", key="find_sets_btn", use_container_width=True):
             st.session_state.app_view = "processing"
@@ -999,7 +1082,7 @@ def main():
         st.markdown('<div style="position: relative;">', unsafe_allow_html=True)
         st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
         st.image(st.session_state.original_image, use_container_width=True)
-        # Overlay the loader on the image
+        # Overlay the enhanced loader on the image
         render_loading()
         st.markdown('</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -1020,7 +1103,7 @@ def main():
             with st.expander("Show error details"):
                 st.code(traceback.format_exc())
             
-            # Add retry button
+            # Add retry button with enhanced style
             st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
             if st.button("Try Again", key="retry_btn", use_container_width=True):
                 st.session_state.app_view = "preview"
@@ -1048,12 +1131,12 @@ def main():
         elif st.session_state.no_sets_found:
             render_warning("No valid SETs found in this game")
             
-            # Show original image
+            # Show processed image
             st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
             st.image(cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB), use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # Try again button
+            # Try again button with enhanced style
             st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
             if st.button("Try Another Image", key="no_sets_btn", use_container_width=True):
                 reset_app_state()
@@ -1061,10 +1144,10 @@ def main():
             st.markdown('</div>', unsafe_allow_html=True)
             
         else:
-            # Success case - show results
+            # Success case - show results with enhanced styling
             num_sets = len(st.session_state.sets_info)
             
-            # Results header with badge
+            # Results header with enhanced badge
             st.markdown(f"""
             <div style="text-align: center; margin-bottom: 0.4rem;">
                 <div class="ios-badge">{num_sets} SET{'' if num_sets == 1 else 's'} Found</div>
