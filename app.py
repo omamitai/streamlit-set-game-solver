@@ -437,50 +437,50 @@ def load_custom_css():
     }}
 
     /* Update responsive adjustments */
-    @media (max-width: 768px) {
-        section[data-testid="stSidebar"] {
+    @media (max-width: 768px) {{
+        section[data-testid="stSidebar"] {{
             display: none !important;
-        }
+        }}
         
         /* Minimize padding in Streamlit containers */
-        .block-container {
+        .block-container {{
             padding-top: 0.5rem !important;
             padding-left: 0.5rem !important;
             padding-right: 0.5rem !important;
             padding-bottom: 0.5rem !important;
-        }
+        }}
         
-        .stButton>button {
+        .stButton>button {{
             padding: 0.7rem !important;
             font-size: 0.9rem !important;
-        }
+        }}
         
         /* Reduce margins */
-        .image-container {
+        .image-container {{
             margin: 0.5rem 0 !important;
-        }
+        }}
         
         /* Make messages more compact */
         .system-message,
         .error-message,
         .warning-message,
-        .success-message {
+        .success-message {{
             padding: 0.75rem !important;
             margin: 0.5rem 0 !important;
-        }
+        }}
         
         /* Reduce image margins */
-        [data-testid="stImage"] {
+        [data-testid="stImage"] {{
             margin-top: 0 !important;
             margin-bottom: 0 !important;
-        }
+        }}
         
         /* Reduce caption size */
-        .caption {
+        .caption {{
             font-size: 0.8rem !important;
             padding: 0.5rem !important;
-        }
-    }
+        }}
+    }}
     </style>
     """
     st.markdown(css, unsafe_allow_html=True)
@@ -801,9 +801,10 @@ def identify_sets_from_image(
     final_output = restore_orientation(annotated, was_rotated)
     return found_sets, final_output
 
-def optimize_image_size(img_pil: Image.Image, max_dim=1200) -> Image.Image:
+def optimize_image_size(img_pil: Image.Image, max_dim=900) -> Image.Image:
     """
     Resizes a PIL image if its largest dimension exceeds max_dim, to reduce processing time.
+    Optimized for mobile viewing.
     """
     width, height = img_pil.size
     if max(width, height) > max_dim:
@@ -865,7 +866,7 @@ def render_process_prompt():
     """
     html = """
     <div class="system-message">
-        <p>Click "Find Sets" to process the image and detect SET cards</p>
+        <p>Tap "Find Sets" to analyze</p>
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
@@ -874,9 +875,12 @@ def render_success_message(num_sets):
     """
     Renders a styled success message indicating the number of sets found.
     """
+    if num_sets == 0:
+        return
+        
     html = f"""
     <div class="success-message">
-        <p>Successfully detected {num_sets} SET{'' if num_sets == 1 else 's'} in the image!</p>
+        <p>Found {num_sets} SET{'' if num_sets == 1 else 's'}</p>
     </div>
     """
     st.markdown(html, unsafe_allow_html=True)
@@ -1087,15 +1091,15 @@ def main():
                 
                 # Case 1: No cards found
                 if st.session_state.no_cards_detected:
-                    render_error("No cards detected. Please ensure it's a clear photo of a SET game board.")
+                    render_error("No cards detected")
                 
                 # Case 2: Cards found but no sets
                 elif st.session_state.no_sets_found:
                     st.markdown('<div class="image-container">', unsafe_allow_html=True)
                     pm = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
-                    st.image(pm, caption="Processed Image", use_container_width=True)
+                    st.image(pm, use_container_width=True)
                     st.markdown('</div>', unsafe_allow_html=True)
-                    render_warning("Cards detected, but no valid SETs found. You may need to deal more cards!")
+                    render_warning("No valid SETs found")
                 
                 # Case 3: Sets found!
                 else:
@@ -1105,7 +1109,7 @@ def main():
                     pm = cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB)
                     st.image(
                         pm,
-                        caption=f"Detected {len(st.session_state.sets_info)} SET{'' if len(st.session_state.sets_info) == 1 else 's'}",
+                        caption=f"{len(st.session_state.sets_info)} SET{'' if len(st.session_state.sets_info) == 1 else 's'} found",
                         use_container_width=True
                     )
                     st.markdown('</div>', unsafe_allow_html=True)
@@ -1116,14 +1120,12 @@ def main():
                 col1, col2 = st.columns(2)
                 with col1:
                     toggle_label = "Hide Original" if st.session_state.get("show_original", False) else "Show Original"
-                    if st.button(toggle_label, key="toggle_btn", use_container_width=True,
-                               help="Toggle visibility of the original image"):
+                    if st.button(toggle_label, key="toggle_btn", use_container_width=True):
                         st.session_state.show_original = not st.session_state.get("show_original", False)
                         st.rerun()
                 
                 with col2:
-                    if st.button("New Image", key="reset_btn", use_container_width=True,
-                               help="Upload and analyze a new image"):
+                    if st.button("New Image", key="reset_btn", use_container_width=True):
                         reset_app_state()
                         st.rerun()
         
