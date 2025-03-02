@@ -106,12 +106,12 @@ def load_custom_css():
 
     body {
         font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
-        background-color: var(--set-background);
+        background-color: #F2ECFD; /* SET-themed light purple background */
         color: var(--set-text);
         line-height: 1.5;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        background-image: linear-gradient(135deg, #F4F1FA 0%, #F0F9FF 50%, #F9F5FF 100%);
+        background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     }
 
     /* Custom Streamlit override - minimal padding for mobile */
@@ -184,9 +184,9 @@ def load_custom_css():
         margin-bottom: 0.75rem;
     }
 
-    /* Enhanced SET-themed buttons */
+    /* Solid SET-themed buttons */
     .ios-button-primary > button {
-        background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%);
+        background: #7C3AED; /* Solid purple */
         color: white;
         border: none;
         padding: 0.7rem;
@@ -199,78 +199,89 @@ def load_custom_css():
         width: 100%;
         margin: 0.25rem 0 !important;
         min-height: 50px; /* Increased touch target */
-        box-shadow: 0 3px 12px rgba(124, 58, 237, 0.35);
+        box-shadow: 0 3px 12px rgba(124, 58, 237, 0.4);
         letter-spacing: 0.01em;
         text-transform: uppercase;
     }
     
     .ios-button-primary > button:hover {
-        box-shadow: 0 4px 15px rgba(124, 58, 237, 0.45);
+        background: #8B5CF6; /* Lighter purple on hover */
+        box-shadow: 0 4px 15px rgba(124, 58, 237, 0.5);
         transform: translateY(-1px);
     }
     
     .ios-button-primary > button:active {
+        background: #6D28D9; /* Darker purple when pressed */
         transform: translateY(1px);
         box-shadow: 0 2px 5px rgba(124, 58, 237, 0.3);
     }
 
     /* Secondary button with SET theme */
     .ios-button-secondary > button {
-        background: linear-gradient(135deg, #EC4899 0%, #F472B6 100%);
+        background: #EF4444; /* Solid red - SET color */
         color: white;
         border: none;
         padding: 0.7rem;
         border-radius: 14px;
         font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
-        font-weight: 500;
+        font-weight: 600;
         font-size: 0.9rem;
         cursor: pointer;
         transition: all 0.15s ease-out;
         width: 100%;
         margin: 0.25rem 0 !important;
         min-height: 50px; /* Increased touch target */
-        box-shadow: 0 3px 12px rgba(236, 72, 153, 0.3);
+        box-shadow: 0 3px 12px rgba(239, 68, 68, 0.35);
         text-transform: uppercase;
         letter-spacing: 0.01em;
     }
     
     .ios-button-secondary > button:hover {
-        box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);
+        background: #F87171; /* Lighter red on hover */
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.45);
         transform: translateY(-1px);
     }
     
     .ios-button-secondary > button:active {
+        background: #DC2626; /* Darker red when pressed */
         transform: translateY(1px);
-        box-shadow: 0 2px 5px rgba(236, 72, 153, 0.25);
+        box-shadow: 0 2px 5px rgba(239, 68, 68, 0.3);
     }
     
-    /* Find Sets button variant with enhanced styling */
+    /* Find Sets button variant - green from SET */
     .find-sets-button > button {
-        background: linear-gradient(135deg, #10B981 0%, #34D399 100%);
-        box-shadow: 0 3px 12px rgba(16, 185, 129, 0.3);
+        background: #10B981; /* Solid green - SET color */
+        box-shadow: 0 3px 12px rgba(16, 185, 129, 0.35);
     }
     
     .find-sets-button > button:hover {
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        background: #34D399; /* Lighter green on hover */
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.45);
     }
     
     .find-sets-button > button:active {
-        box-shadow: 0 2px 5px rgba(16, 185, 129, 0.25);
+        background: #059669; /* Darker green when pressed */
+        box-shadow: 0 2px 5px rgba(16, 185, 129, 0.3);
     }
 
-    /* Enhanced image container with adaptive sizing */
+    /* Enhanced image container with adaptive sizing - no empty boxes */
     .ios-image-container {
         margin: 0.75rem auto;
         position: relative;
         border-radius: 16px;
         overflow: hidden;
         max-height: 300px; /* Higher but still fits on iPhone */
-        height: calc(100vh - 250px); /* Adaptive height */
+        height: auto; /* Let content determine height */
         min-height: 180px;
         width: 92%;
         background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
         box-shadow: 0 3px 12px rgba(124, 58, 237, 0.2);
         border: 1px solid rgba(124, 58, 237, 0.25);
+    }
+    
+    /* Hide empty containers */
+    .ios-image-container:empty {
+        display: none;
     }
     
     .ios-image-container img {
@@ -435,15 +446,38 @@ def load_custom_css():
     /* Enhanced SET Game Results badge */
     .ios-badge {
         display: inline-block;
-        padding: 0.4rem 0.8rem;
-        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-light-purple) 100%);
+        padding: 0.6rem 1rem;
+        background: #7C3AED; /* Solid purple */
         color: white;
-        border-radius: 14px;
-        font-size: 0.9rem;
-        font-weight: 600;
-        margin-top: 0.25rem;
-        box-shadow: 0 3px 6px rgba(124, 58, 237, 0.25);
+        border-radius: 18px;
+        font-size: 1rem;
+        font-weight: 700;
+        margin: 0.5rem auto;
+        box-shadow: 0 3px 8px rgba(124, 58, 237, 0.35);
         letter-spacing: 0.01em;
+    }
+    
+    /* SET-themed card styles */
+    .set-card-diamond, .set-card-oval, .set-card-squiggle {
+        display: inline-block;
+        margin: 0 3px;
+        width: 20px;
+        height: 10px;
+    }
+    
+    .set-card-diamond {
+        transform: rotate(45deg);
+        background: #EF4444;
+    }
+    
+    .set-card-oval {
+        border-radius: 50%;
+        background: #10B981;
+    }
+    
+    .set-card-squiggle {
+        border-radius: 40% 60% 60% 40% / 70% 30% 70% 30%;
+        background: #7C3AED;
     }
 
     /* Card info tooltip with glassmorphism effect */
@@ -868,7 +902,7 @@ def optimize_image_size(img_pil: Image.Image, max_dim=700) -> Image.Image:
 # =============================================================================
 def render_header():
     """
-    Renders a stylish SET-themed header with enhanced glassmorphism effect.
+    Renders a stylish SET-themed header with SET card icons.
     """
     header_html = """
     <div class="ios-header">
@@ -1147,10 +1181,14 @@ def main():
             # Success case - show results with enhanced styling
             num_sets = len(st.session_state.sets_info)
             
-            # Results header with enhanced badge
+            # Results header with enhanced badge and SET icons
             st.markdown(f"""
-            <div style="text-align: center; margin-bottom: 0.4rem;">
-                <div class="ios-badge">{num_sets} SET{'' if num_sets == 1 else 's'} Found</div>
+            <div style="text-align: center; margin: 0.8rem 0;">
+                <div class="ios-badge">
+                    <span class="set-card-diamond"></span>
+                    {num_sets} SET{'' if num_sets == 1 else 's'} Found
+                    <span class="set-card-oval"></span>
+                </div>
             </div>
             """, unsafe_allow_html=True)
             
