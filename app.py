@@ -183,12 +183,12 @@ def load_custom_css():
         margin-bottom: 0.75rem;
     }
 
-    /* SET Game Primary Button */
+    /* Update both button styles to avoid white */
     .ios-button-primary > button {
         background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-light-purple) 100%);
         color: white;
         border: none;
-        padding: 0.65rem;
+        padding: 0.6rem;
         border-radius: 10px;
         font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
         font-weight: 600;
@@ -210,12 +210,12 @@ def load_custom_css():
         box-shadow: 0 1px 4px rgba(124, 58, 237, 0.2);
     }
 
-    /* SET Game Secondary Button */
+    /* Secondary button now uses green gradient */
     .ios-button-secondary > button {
-        background: rgba(255, 255, 255, 0.9);
-        color: var(--set-purple);
-        border: 1px solid rgba(124, 58, 237, 0.25);
-        padding: 0.65rem;
+        background: linear-gradient(135deg, var(--set-green) 0%, #34D399 100%);
+        color: white;
+        border: none;
+        padding: 0.6rem;
         border-radius: 10px;
         font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
         font-weight: 500;
@@ -225,30 +225,29 @@ def load_custom_css():
         width: 100%;
         margin: 0.25rem 0 !important;
         min-height: 44px; /* iOS minimum touch target */
-        box-shadow: 0 1px 3px rgba(124, 58, 237, 0.1);
+        box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
     }
     
     .ios-button-secondary > button:hover {
-        background: rgba(255, 255, 255, 1);
-        border-color: rgba(124, 58, 237, 0.4);
+        box-shadow: 0 3px 8px rgba(16, 185, 129, 0.35);
     }
     
     .ios-button-secondary > button:active {
         transform: scale(0.98);
-        background: rgba(239, 246, 255, 1);
+        box-shadow: 0 1px 4px rgba(16, 185, 129, 0.2);
     }
 
-    /* Image Container - Reduced height */
+    /* Remove card wrapper, just use image container directly */
     .ios-image-container {
-        margin: 0;
+        margin: 0.5rem 0;
         position: relative;
         border-radius: 10px;
         overflow: hidden;
         height: 180px;
         width: 100%;
-        background-color: rgba(255, 255, 255, 0.8);
-        box-shadow: 0 2px 6px rgba(124, 58, 237, 0.1);
-        border: 1px solid rgba(124, 58, 237, 0.1);
+        background-color: rgba(255, 255, 255, 0.5);
+        box-shadow: 0 2px 6px rgba(124, 58, 237, 0.15);
+        border: 1px solid rgba(124, 58, 237, 0.15);
     }
     
     .ios-image-container img {
@@ -362,20 +361,21 @@ def load_custom_css():
         margin-bottom: 0 !important;
     }
     
-    /* File uploader iOS style */
+    /* File uploader custom styling */
     [data-testid="stFileUploader"] {
-        background: rgba(255, 255, 255, 0.8);
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(139, 92, 246, 0.1) 100%);
         border-radius: 12px;
         padding: 1rem !important;
-        border: 1px dashed rgba(0, 122, 255, 0.3);
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        border: 1px dashed rgba(124, 58, 237, 0.3);
+        box-shadow: 0 2px 6px rgba(124, 58, 237, 0.08);
     }
     
     [data-testid="stFileUploader"] > div > button {
-        background-color: var(--ios-blue) !important;
+        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-light-purple) 100%) !important;
         color: white !important;
         border-radius: 8px !important;
         min-height: 44px;
+        box-shadow: 0 2px 6px rgba(124, 58, 237, 0.2);
     }
     
     /* Remove all extra margins from button container */
@@ -865,9 +865,9 @@ def reset_app_state():
 # =============================================================================
 def main():
     """
-    Main application entry point with iOS-style layout optimized for iPhone.
+    Main application entry point with SET-themed layout optimized for iPhone.
     """
-    # 1. Load custom iOS-style CSS
+    # 1. Load custom SET-themed CSS
     load_custom_css()
     
     # 2. Set proper viewport for iOS
@@ -879,7 +879,7 @@ def main():
         st.session_state.should_reset = False
         st.rerun()
     
-    # 4. Display iOS-style header
+    # 4. Display SET-themed header
     render_header()
     
     # 5. APP FLOW - Single-screen approach for iPhone
@@ -889,12 +889,8 @@ def main():
         # Center align uploader with custom styling
         with st.container():
             st.markdown("""
-            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 2rem;">
-                <div style="width: 100px; height: 100px; border-radius: 20px; margin: 0 auto 1.25rem; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2); 
-                 background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%); display: flex; justify-content: center; align-items: center;">
-                <div style="font-size: 2.5rem; color: white; font-weight: bold;">SET</div>
-            </div>
-                <div style="font-size: 1.1rem; font-weight: 500; margin-bottom: 1.5rem; text-align: center;">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 1rem;">
+                <div style="font-size: 1.1rem; font-weight: 500; margin-bottom: 1rem; text-align: center;">
                     Upload a photo of your SET game
                 </div>
             </div>
@@ -934,10 +930,8 @@ def main():
     
     # PREVIEW SCREEN - Show original with Find Sets button
     elif st.session_state.app_view == "preview":
-        st.markdown('<div class="ios-card">', unsafe_allow_html=True)
         st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
         st.image(st.session_state.original_image, use_container_width=True)
-        st.markdown('</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
         
         col1, col2 = st.columns([1, 1])
@@ -990,10 +984,8 @@ def main():
             render_error("No cards detected in the image")
             
             # Show original image
-            st.markdown('<div class="ios-card">', unsafe_allow_html=True)
             st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
             st.image(st.session_state.original_image, use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
             # Try again button
@@ -1007,10 +999,8 @@ def main():
             render_warning("No valid SETs found in this game")
             
             # Show original image
-            st.markdown('<div class="ios-card">', unsafe_allow_html=True)
             st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
             st.image(cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB), use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
             # Try again button
@@ -1032,10 +1022,8 @@ def main():
             """, unsafe_allow_html=True)
             
             # Display processed image with sets highlighted
-            st.markdown('<div class="ios-card">', unsafe_allow_html=True)
             st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
             st.image(cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB), use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
             # Single action button
