@@ -1,9 +1,9 @@
 """
-SET Game Detector - iOS Optimized
+SET Game Detector - iOS Design
 ================================
 
 A Streamlit application that identifies valid SETs from uploaded images of SET card games.
-Designed with Apple's Human Interface Guidelines for an optimal iPhone experience.
+Redesigned with Apple's Human Interface Guidelines for an optimal iPhone experience.
 """
 
 import streamlit as st
@@ -32,7 +32,7 @@ st.set_page_config(
 )
 
 # =============================================================================
-# SET THEME COLORS - SET Card Game Palette
+# SET THEME COLORS - Enhanced SET Card Game Palette
 # =============================================================================
 SET_THEME = {
     "primary": "#7C3AED",     # SET Purple
@@ -77,33 +77,43 @@ if "image_height" not in st.session_state:
 if "show_original" not in st.session_state:
     st.session_state.show_original = False
 if "app_view" not in st.session_state:
-    st.session_state.app_view = "upload"  # Possible values: "upload", "processing", "results"
+    st.session_state.app_view = "upload"  # Possible values: "upload", "preview", "processing", "results"
 
 # =============================================================================
 # CUSTOM CSS - Enhanced iOS-inspired styling
 # =============================================================================
 def load_custom_css():
     """
-    Loads enhanced custom CSS for an iOS-inspired UI following Apple's Human Interface Guidelines.
+    Loads premium iOS-styled CSS that follows Apple's Human Interface Guidelines.
     """
     css = """
     <style>
+    /* --- iOS Font Import --- */
     @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Text:wght@400;500;600&display=swap');
 
+    /* --- SET-themed Variables --- */
     :root {
         --set-purple: #7C3AED;
+        --set-purple-light: #8B5CF6;
+        --set-purple-dark: #6D28D9;
         --set-green: #10B981;
+        --set-green-light: #34D399;
+        --set-green-dark: #059669;
         --set-red: #EF4444;
+        --set-red-light: #F87171;
+        --set-red-dark: #DC2626;
         --set-pink: #EC4899;
-        --set-light-purple: #8B5CF6;
+        --set-pink-light: #F472B6;
         --set-background: #F8F5FF;
         --set-card: #FFFFFF;
         --set-text: #1F2937;
+        --set-text-light: #4B5563;
         --set-text-muted: #6B7280;
         --set-border: rgba(124, 58, 237, 0.25);
     }
 
+    /* --- Base Styles --- */
     body {
         font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
         background-color: #F2ECFD; /* SET-themed light purple background */
@@ -114,7 +124,7 @@ def load_custom_css():
         background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
     }
 
-    /* Custom Streamlit override - minimal padding for mobile */
+    /* --- Streamlit Override - Zero Padding for Mobile --- */
     .main .block-container {
         padding-top: 0.5rem;
         padding-bottom: 0.5rem;
@@ -123,17 +133,17 @@ def load_custom_css():
         max-width: 100%;
     }
 
-    /* Enhanced header style with glassmorphism effect */
+    /* --- Premium Header with Glassmorphism --- */
     .ios-header {
         display: flex;
         justify-content: center;
         align-items: center;
-        padding: 0.7rem 1.2rem;
+        padding: 0.8rem 1.2rem;
         margin: 0 auto 0.75rem;
         background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        border-radius: 16px;
+        border-radius: 18px;
         box-shadow: 0 3px 12px rgba(124, 58, 237, 0.15);
         border: 1px solid rgba(124, 58, 237, 0.2);
         transition: all 0.2s ease;
@@ -153,7 +163,7 @@ def load_custom_css():
         text-shadow: 0 1px 2px rgba(124, 58, 237, 0.1);
     }
     
-    /* iOS Navigation Bar (Fixed at top) */
+    /* --- iOS Nav Bar (Fixed at top) --- */
     .ios-nav-bar {
         position: sticky;
         top: 0;
@@ -169,24 +179,25 @@ def load_custom_css():
         align-items: center;
     }
     
-    /* Mobile container - full width */
+    /* --- Mobile Container --- */
     .ios-container {
         padding: 0.5rem;
         margin-bottom: 0.5rem;
     }
     
-    /* Image area with enhanced iOS card styling */
+    /* --- Card Container --- */
     .ios-card {
         background: white;
         border-radius: 16px;
         overflow: hidden;
         box-shadow: 0 3px 10px rgba(124, 58, 237, 0.1);
         margin-bottom: 0.75rem;
+        border: 1px solid rgba(124, 58, 237, 0.15);
     }
 
-    /* Solid SET-themed buttons */
+    /* --- Primary Button (Purple) --- */
     .ios-button-primary > button {
-        background: #7C3AED; /* Solid purple */
+        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-purple-light) 100%);
         color: white;
         border: none;
         padding: 0.7rem;
@@ -205,20 +216,20 @@ def load_custom_css():
     }
     
     .ios-button-primary > button:hover {
-        background: #8B5CF6; /* Lighter purple on hover */
+        background: linear-gradient(135deg, var(--set-purple-light) 0%, var(--set-purple) 100%);
         box-shadow: 0 4px 15px rgba(124, 58, 237, 0.5);
         transform: translateY(-1px);
     }
     
     .ios-button-primary > button:active {
-        background: #6D28D9; /* Darker purple when pressed */
+        background: linear-gradient(135deg, var(--set-purple-dark) 0%, var(--set-purple) 100%);
         transform: translateY(1px);
         box-shadow: 0 2px 5px rgba(124, 58, 237, 0.3);
     }
 
-    /* Secondary button with SET theme */
+    /* --- Secondary Button (Red) --- */
     .ios-button-secondary > button {
-        background: #EF4444; /* Solid red - SET color */
+        background: linear-gradient(135deg, var(--set-red) 0%, var(--set-red-light) 100%);
         color: white;
         border: none;
         padding: 0.7rem;
@@ -237,34 +248,34 @@ def load_custom_css():
     }
     
     .ios-button-secondary > button:hover {
-        background: #F87171; /* Lighter red on hover */
+        background: linear-gradient(135deg, var(--set-red-light) 0%, var(--set-red) 100%);
         box-shadow: 0 4px 15px rgba(239, 68, 68, 0.45);
         transform: translateY(-1px);
     }
     
     .ios-button-secondary > button:active {
-        background: #DC2626; /* Darker red when pressed */
+        background: linear-gradient(135deg, var(--set-red-dark) 0%, var(--set-red) 100%);
         transform: translateY(1px);
         box-shadow: 0 2px 5px rgba(239, 68, 68, 0.3);
     }
     
-    /* Find Sets button variant - green from SET */
+    /* --- Find Sets Button (Green) --- */
     .find-sets-button > button {
-        background: #10B981; /* Solid green - SET color */
+        background: linear-gradient(135deg, var(--set-green) 0%, var(--set-green-light) 100%);
         box-shadow: 0 3px 12px rgba(16, 185, 129, 0.35);
     }
     
     .find-sets-button > button:hover {
-        background: #34D399; /* Lighter green on hover */
+        background: linear-gradient(135deg, var(--set-green-light) 0%, var(--set-green) 100%);
         box-shadow: 0 4px 15px rgba(16, 185, 129, 0.45);
     }
     
     .find-sets-button > button:active {
-        background: #059669; /* Darker green when pressed */
+        background: linear-gradient(135deg, var(--set-green-dark) 0%, var(--set-green) 100%);
         box-shadow: 0 2px 5px rgba(16, 185, 129, 0.3);
     }
 
-    /* Enhanced image container with adaptive sizing - no empty boxes */
+    /* --- Premium Image Container --- */
     .ios-image-container {
         margin: 0.75rem auto;
         position: relative;
@@ -277,6 +288,9 @@ def load_custom_css():
         background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
         box-shadow: 0 3px 12px rgba(124, 58, 237, 0.2);
         border: 1px solid rgba(124, 58, 237, 0.25);
+        display: flex;
+        justify-content: center;
+        align-items: center;
     }
     
     /* Hide empty containers */
@@ -288,9 +302,10 @@ def load_custom_css():
         width: 100%;
         height: 100%;
         object-fit: contain; /* Preserve aspect ratio */
+        display: block; /* Eliminate bottom margin */
     }
     
-    /* Improved SET Game animated loader with glassmorphism */
+    /* --- Premium SET Loader with Glassmorphism --- */
     .ios-loader-container {
         position: absolute;
         top: 0;
@@ -335,17 +350,20 @@ def load_custom_css():
         border: 1px solid rgba(124, 58, 237, 0.2);
     }
 
-    /* Enhanced SET Game alert messages */
+    /* --- iOS-styled Alert Messages --- */
     .ios-alert {
         padding: 0.75rem 0.9rem;
-        border-radius: 12px;
-        margin: 0.5rem 0;
+        border-radius: 14px;
+        margin: 0.6rem auto;
         display: flex;
         align-items: center;
         font-size: 0.9rem;
         font-weight: 600;
         min-height: 44px;
         box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+        width: 92%;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
     }
     
     .ios-alert-error {
@@ -384,16 +402,16 @@ def load_custom_css():
         font-size: 1.1rem;
     }
     
-    /* iOS-style label */
+    /* --- iOS-style Label --- */
     .ios-label {
         font-size: 0.9rem;
         font-weight: 500;
-        color: var(--ios-text-muted);
+        color: var(--set-text-muted);
         text-align: center;
         margin: 0.5rem 0;
     }
     
-    /* Grid layout for side-by-side views */
+    /* --- Grid Layout --- */
     .ios-grid {
         display: flex;
         gap: 0.75rem;
@@ -405,29 +423,34 @@ def load_custom_css():
         flex-direction: column;
     }
     
-    /* Hide Streamlit elements we don't need */
+    /* --- Hide Streamlit Elements --- */
     footer {
         display: none !important;
     }
     
-    /* Hide the default Streamlit header/footer */
     header {
         display: none !important;
     }
     
-    /* Override Streamlit image styles */
+    /* --- Override Streamlit Image Styles --- */
     [data-testid="stImage"] {
         margin-top: 0 !important;
         margin-bottom: 0 !important;
     }
     
-    /* Enhanced file uploader custom styling */
+    [data-testid="stImage"] > img {
+        margin-bottom: 0 !important;
+    }
+    
+    /* --- Premium File Uploader --- */
     [data-testid="stFileUploader"] {
         background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(139, 92, 246, 0.1) 100%);
         border-radius: 16px;
-        padding: 1rem !important;
+        padding: 1.2rem !important;
         border: 1px dashed rgba(124, 58, 237, 0.35);
         box-shadow: 0 3px 8px rgba(124, 58, 237, 0.1);
+        margin: 0.5rem auto !important;
+        width: 92%;
     }
     
     [data-testid="stFileUploader"] > div > button {
@@ -436,18 +459,20 @@ def load_custom_css():
         border-radius: 12px !important;
         min-height: 48px;
         box-shadow: 0 3px 8px rgba(124, 58, 237, 0.25);
+        border: none !important;
+        font-weight: 600 !important;
     }
     
-    /* Remove all extra margins from button container */
+    /* --- Remove Extra Button Margins --- */
     .stButton {
         margin: 0 !important; 
     }
     
-    /* Enhanced SET Game Results badge */
+    /* --- SET Results Badge --- */
     .ios-badge {
         display: inline-block;
         padding: 0.6rem 1rem;
-        background: #7C3AED; /* Solid purple */
+        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-purple-light) 100%);
         color: white;
         border-radius: 18px;
         font-size: 1rem;
@@ -455,9 +480,10 @@ def load_custom_css():
         margin: 0.5rem auto;
         box-shadow: 0 3px 8px rgba(124, 58, 237, 0.35);
         letter-spacing: 0.01em;
+        border: 1px solid rgba(255, 255, 255, 0.3);
     }
     
-    /* SET-themed card styles */
+    /* --- SET Card Indicators --- */
     .set-card-diamond, .set-card-oval, .set-card-squiggle {
         display: inline-block;
         margin: 0 3px;
@@ -467,26 +493,26 @@ def load_custom_css():
     
     .set-card-diamond {
         transform: rotate(45deg);
-        background: #EF4444;
+        background: var(--set-red);
     }
     
     .set-card-oval {
         border-radius: 50%;
-        background: #10B981;
+        background: var(--set-green);
     }
     
     .set-card-squiggle {
         border-radius: 40% 60% 60% 40% / 70% 30% 70% 30%;
-        background: #7C3AED;
+        background: var(--set-purple);
     }
 
-    /* Card info tooltip with glassmorphism effect */
+    /* --- Premium Card Tooltip --- */
     .ios-tooltip {
         background: rgba(255, 255, 255, 0.8);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
-        border-radius: 10px;
-        padding: 0.5rem 0.8rem;
+        border-radius: 12px;
+        padding: 0.6rem 0.9rem;
         box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
         border: 1px solid rgba(124, 58, 237, 0.15);
         font-size: 0.85rem;
@@ -497,7 +523,7 @@ def load_custom_css():
         z-index: 20;
     }
 
-    /* Animated pulsing indicator for detected sets */
+    /* --- SET Indicator Animation --- */
     .set-indicator {
         position: absolute;
         width: 12px;
@@ -518,6 +544,125 @@ def load_custom_css():
         100% {
             box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
         }
+    }
+    
+    /* --- Empty State Messages --- */
+    .ios-empty-state {
+        text-align: center;
+        padding: 1.5rem;
+        color: var(--set-text-light);
+        font-size: 0.95rem;
+        font-weight: 500;
+    }
+    
+    .ios-empty-state-icon {
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+        color: var(--set-purple-light);
+    }
+    
+    /* --- Instruction Text --- */
+    .ios-instruction {
+        text-align: center;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: var(--set-text-light);
+        margin: 0.5rem auto;
+        max-width: 90%;
+        background: rgba(255, 255, 255, 0.5);
+        padding: 0.6rem 1rem;
+        border-radius: 10px;
+        backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: blur(5px);
+        border: 1px solid rgba(124, 58, 237, 0.1);
+    }
+    
+    /* --- Custom Image Upload Button --- */
+    .ios-upload-button {
+        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-purple-light) 100%);
+        color: white;
+        border: none;
+        padding: 0.8rem 1.2rem;
+        border-radius: 14px;
+        font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.15s ease-out;
+        display: inline-block;
+        text-align: center;
+        margin: 0.5rem auto;
+        min-height: 50px;
+        min-width: 200px;
+        box-shadow: 0 3px 12px rgba(124, 58, 237, 0.4);
+    }
+    
+    /* --- Premium Result Styles --- */
+    .ios-result-item {
+        background: white;
+        border-radius: 12px;
+        padding: 0.8rem;
+        margin: 0.5rem 0;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(124, 58, 237, 0.15);
+    }
+    
+    .ios-result-title {
+        font-weight: 600;
+        color: var(--set-purple);
+        margin-bottom: 0.4rem;
+    }
+
+    /* --- Hide Streamlit Elements for Mobile --- */
+    .viewerBadge_container__1QSob {
+        display: none !important;
+    }
+    
+    [data-testid="stToolbar"] {
+        display: none !important;
+    }
+    
+    /* --- Floating Action Button --- */
+    .ios-fab {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 28px;
+        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-pink) 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+        cursor: pointer;
+        z-index: 1000;
+        color: white;
+        font-size: 24px;
+        transition: all 0.2s ease;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .ios-fab:hover {
+        transform: scale(1.05);
+        box-shadow: 0 5px 15px rgba(124, 58, 237, 0.5);
+    }
+    
+    /* --- Full-Screen Loader --- */
+    .ios-fullscreen-loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(244, 241, 250, 0.9);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
     }
     </style>
     """
@@ -687,8 +832,8 @@ def predict_card_features(
         shape_imgs.append(shape_crop_resized)
         color_candidates.append(predict_color(shape_crop))
 
-    fill_preds = fill_model.predict(np.array(fill_imgs), batch_size=len(fill_imgs))
-    shape_preds = shape_model.predict(np.array(shape_imgs), batch_size=len(shape_imgs))
+    fill_preds = fill_model.predict(np.array(fill_imgs), batch_size=len(fill_imgs), verbose=0)
+    shape_preds = shape_model.predict(np.array(shape_imgs), batch_size=len(shape_imgs), verbose=0)
 
     fill_labels = ['empty', 'full', 'striped']
     shape_labels = ['diamond', 'oval', 'squiggle']
@@ -764,8 +909,8 @@ def locate_all_sets(cards_df: pd.DataFrame) -> List[dict]:
 
 def draw_detected_sets(board_img: np.ndarray, sets_detected: List[dict]) -> np.ndarray:
     """
-    Annotates the board image with bounding boxes for each detected SET.
-    Each SET is drawn in a different color and offset for better visibility.
+    Annotates the board image with visually appealing bounding boxes for each detected SET.
+    Each SET is drawn in a different color with enhanced iOS-style indicators.
     """
     # Enhanced SET-themed colors (BGR format)
     set_colors = [
@@ -777,8 +922,12 @@ def draw_detected_sets(board_img: np.ndarray, sets_detected: List[dict]) -> np.n
         (85, 45, 255)     # Hot Pink
     ]
     
+    # Enhanced styling parameters
     base_thickness = 4
     base_expansion = 5
+
+    # Create a copy to avoid modifying the original
+    result_img = board_img.copy()
 
     for idx, single_set in enumerate(sets_detected):
         color = set_colors[idx % len(set_colors)]
@@ -787,38 +936,39 @@ def draw_detected_sets(board_img: np.ndarray, sets_detected: List[dict]) -> np.n
 
         for i, card_info in enumerate(single_set["cards"]):
             x1, y1, x2, y2 = card_info["Coordinates"]
+            
             # Expand the bounding box slightly
             x1e = max(0, x1 - expansion)
             y1e = max(0, y1 - expansion)
-            x2e = min(board_img.shape[1], x2 + expansion)
-            y2e = min(board_img.shape[0], y2 + expansion)
+            x2e = min(result_img.shape[1], x2 + expansion)
+            y2e = min(result_img.shape[0], y2 + expansion)
 
-            # Draw more attractive rounded rectangle with gradient effect
-            cv2.rectangle(board_img, (x1e, y1e), (x2e, y2e), color, thickness)
+            # Draw premium rounded rectangle with gradient effect
+            cv2.rectangle(result_img, (x1e, y1e), (x2e, y2e), color, thickness, cv2.LINE_AA)
             
-            # Add corners with thicker lines for iOS-style appearance
+            # Add iOS-style rounded corners with thicker lines
             corner_length = min(30, (x2e - x1e) // 4)
             corner_thickness = thickness + 1
             
+            # Draw all four corners
             # Top-left corner
-            cv2.line(board_img, (x1e, y1e + corner_length), (x1e, y1e), color, corner_thickness)
-            cv2.line(board_img, (x1e, y1e), (x1e + corner_length, y1e), color, corner_thickness)
+            cv2.line(result_img, (x1e, y1e + corner_length), (x1e, y1e), color, corner_thickness, cv2.LINE_AA)
+            cv2.line(result_img, (x1e, y1e), (x1e + corner_length, y1e), color, corner_thickness, cv2.LINE_AA)
             
             # Top-right corner
-            cv2.line(board_img, (x2e - corner_length, y1e), (x2e, y1e), color, corner_thickness)
-            cv2.line(board_img, (x2e, y1e), (x2e, y1e + corner_length), color, corner_thickness)
+            cv2.line(result_img, (x2e - corner_length, y1e), (x2e, y1e), color, corner_thickness, cv2.LINE_AA)
+            cv2.line(result_img, (x2e, y1e), (x2e, y1e + corner_length), color, corner_thickness, cv2.LINE_AA)
             
             # Bottom-left corner
-            cv2.line(board_img, (x1e, y2e - corner_length), (x1e, y2e), color, corner_thickness)
-            cv2.line(board_img, (x1e, y2e), (x1e + corner_length, y2e), color, corner_thickness)
+            cv2.line(result_img, (x1e, y2e - corner_length), (x1e, y2e), color, corner_thickness, cv2.LINE_AA)
+            cv2.line(result_img, (x1e, y2e), (x1e + corner_length, y2e), color, corner_thickness, cv2.LINE_AA)
             
             # Bottom-right corner
-            cv2.line(board_img, (x2e - corner_length, y2e), (x2e, y2e), color, corner_thickness)
-            cv2.line(board_img, (x2e, y2e), (x2e, y2e - corner_length), color, corner_thickness)
+            cv2.line(result_img, (x2e - corner_length, y2e), (x2e, y2e), color, corner_thickness, cv2.LINE_AA)
+            cv2.line(result_img, (x2e, y2e), (x2e, y2e - corner_length), color, corner_thickness, cv2.LINE_AA)
 
-            # Label the first card with Set number with enhanced styling
+            # Label the first card with Set number in an iOS-style pill badge
             if i == 0:
-                # Create pill-shaped badge background
                 text = f"Set {idx+1}"
                 text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)[0]
                 badge_width = text_size[0] + 16
@@ -826,15 +976,21 @@ def draw_detected_sets(board_img: np.ndarray, sets_detected: List[dict]) -> np.n
                 badge_x = x1e
                 badge_y = y1e - badge_height - 5
                 
-                # Draw pill-shaped badge
-                cv2.rectangle(board_img, 
+                # Draw pill-shaped badge with anti-aliasing
+                cv2.rectangle(result_img, 
                               (badge_x, badge_y), 
                               (badge_x + badge_width, badge_y + badge_height),
                               color, -1, cv2.LINE_AA)
                 
+                # Add white border to badge for iOS style
+                cv2.rectangle(result_img, 
+                              (badge_x, badge_y), 
+                              (badge_x + badge_width, badge_y + badge_height),
+                              (255, 255, 255), 1, cv2.LINE_AA)
+                
                 # Draw text in center of badge
                 cv2.putText(
-                    board_img,
+                    result_img,
                     text,
                     (badge_x + 8, badge_y + badge_height - 8),
                     cv2.FONT_HERSHEY_SIMPLEX,
@@ -843,7 +999,8 @@ def draw_detected_sets(board_img: np.ndarray, sets_detected: List[dict]) -> np.n
                     2,
                     cv2.LINE_AA
                 )
-    return board_img
+    
+    return result_img
 
 def identify_sets_from_image(
     board_img: np.ndarray,
@@ -863,7 +1020,7 @@ def identify_sets_from_image(
     cards = detect_cards(processed, card_detector)
     if not cards:
         st.session_state.no_cards_detected = True
-        return [], processed
+        return [], board_img
 
     # 3. Classify each card's features, then find sets
     df_cards = classify_cards_on_board(processed, card_detector, shape_detector, fill_model, shape_model)
@@ -871,7 +1028,9 @@ def identify_sets_from_image(
 
     if not found_sets:
         st.session_state.no_sets_found = True
-        return [], processed
+        # Return the processed image even without sets
+        original_orientation = restore_orientation(processed.copy(), was_rotated)
+        return [], original_orientation
 
     # 4. Draw sets on a copy of the image
     annotated = draw_detected_sets(processed.copy(), found_sets)
@@ -902,7 +1061,7 @@ def optimize_image_size(img_pil: Image.Image, max_dim=700) -> Image.Image:
 # =============================================================================
 def render_header():
     """
-    Renders a stylish SET-themed header with SET card icons.
+    Renders a stylish SET-themed header with glassmorphism effect.
     """
     header_html = """
     <div class="ios-header">
@@ -990,6 +1149,19 @@ def detect_mobile_device():
         touchIconMeta.rel = 'apple-touch-icon';
         touchIconMeta.href = 'data:image/png;base64,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';
         document.getElementsByTagName('head')[0].appendChild(touchIconMeta);
+        
+        // Prevent zooming on double-tap
+        document.addEventListener('touchstart', function(event) {
+            if (event.touches.length > 1) {
+                event.preventDefault();
+            }
+        }, { passive: false });
+        
+        // Add top padding for iOS status bar
+        var mainElement = document.querySelector('.main');
+        if (mainElement) {
+            mainElement.style.paddingTop = '20px';
+        }
     </script>
     """
     st.markdown(js_snippet, unsafe_allow_html=True)
@@ -1023,14 +1195,25 @@ def reset_app_state():
     st.session_state.is_mobile = is_mobile
     st.session_state.app_view = "upload"
     
+def render_premium_instruction(message: str):
+    """
+    Renders a premium iOS-style instruction message.
+    """
+    html = f"""
+    <div class="ios-instruction">
+        {message}
+    </div>
+    """
+    st.markdown(html, unsafe_allow_html=True)
+
 # =============================================================================
 # MAIN APP
 # =============================================================================
 def main():
     """
-    Main application entry point with enhanced SET-themed layout optimized for iPhone.
+    Main application entry point with premium iOS-styled layout optimized for iPhone.
     """
-    # 1. Load custom SET-themed CSS
+    # 1. Load custom iOS-styled CSS
     load_custom_css()
     
     # 2. Set proper viewport for iOS
@@ -1045,78 +1228,80 @@ def main():
     # 4. Display SET-themed header
     render_header()
     
-    # 5. APP FLOW - Single-screen approach for iPhone
+    # 5. APP FLOW - Zero-scrolling approach for iPhone
     
     # UPLOAD SCREEN
-    if not st.session_state.get("uploaded_file"):
-        # Center align uploader with custom styling
-        with st.container():
-            st.markdown("""
-            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; margin-top: 1rem;">
-                <div style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1rem; text-align: center; 
-                            background: linear-gradient(135deg, #7C3AED 0%, #EC4899 100%); 
-                            -webkit-background-clip: text; background-clip: text; 
-                            -webkit-text-fill-color: transparent;">
-                    Upload a photo of your SET game
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
+    if st.session_state.app_view == "upload":
+        # Centered instruction with premium styling
+        render_premium_instruction("Take a photo of your SET game cards")
+        
+        # iOS-style file uploader
+        st.file_uploader(
+            "Upload a SET board image",
+            type=["png", "jpg", "jpeg"],
+            key=f"uploader_{st.session_state.uploader_key}",
+            label_visibility="collapsed"
+        )
+        
+        if st.session_state.get("uploader_" + st.session_state.uploader_key):
+            uploaded_file = st.session_state.get("uploader_" + st.session_state.uploader_key)
             
-            # iOS-style file uploader
-            st.file_uploader(
-                "Upload a SET board image",
-                type=["png", "jpg", "jpeg"],
-                key=f"uploader_{st.session_state.uploader_key}",
-                label_visibility="collapsed"
-            )
-            
-            if st.session_state.get("uploader_" + st.session_state.uploader_key):
-                uploaded_file = st.session_state.get("uploader_" + st.session_state.uploader_key)
-                
-                # Reset session state for new image
-                for key in ['processed', 'processed_image', 'sets_info', 'original_image',
-                            'no_cards_detected', 'no_sets_found', 'show_original']:
-                    if key in st.session_state:
-                        if key in ('processed', 'no_cards_detected', 'no_sets_found', 'show_original'):
-                            st.session_state[key] = False
-                        else:
-                            st.session_state[key] = None
+            # Reset session state for new image
+            for key in ['processed', 'processed_image', 'sets_info', 'original_image',
+                        'no_cards_detected', 'no_sets_found', 'show_original']:
+                if key in st.session_state:
+                    if key in ('processed', 'no_cards_detected', 'no_sets_found', 'show_original'):
+                        st.session_state[key] = False
+                    else:
+                        st.session_state[key] = None
 
-                st.session_state.uploaded_file = uploaded_file
-                try:
-                    img_pil = Image.open(uploaded_file)
-                    img_pil = optimize_image_size(img_pil, max_dim=700)  # Reduced max size for better mobile fit
-                    st.session_state.original_image = img_pil
-                    st.session_state.image_height = img_pil.height
-                    st.session_state.app_view = "preview"
-                    st.rerun()
-                except Exception as e:
-                    st.error(f"Failed to load the image")
-                    st.error(str(e))
+            st.session_state.uploaded_file = uploaded_file
+            try:
+                img_pil = Image.open(uploaded_file)
+                img_pil = optimize_image_size(img_pil, max_dim=650)  # Reduced max size for better mobile fit
+                st.session_state.original_image = img_pil
+                st.session_state.image_height = img_pil.height
+                st.session_state.app_view = "preview"
+                st.rerun()
+            except Exception as e:
+                render_error("Failed to load the image. Please try another photo.")
     
     # PREVIEW SCREEN - Show original with Find Sets button
     elif st.session_state.app_view == "preview":
-        # Container for the image and loading overlay
+        # Premium container for the image
         st.markdown('<div style="position: relative;">', unsafe_allow_html=True)
         st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
         st.image(st.session_state.original_image, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Only show Find Sets button (enhanced style)
-        st.markdown('<div class="ios-button-primary find-sets-button">', unsafe_allow_html=True)
-        if st.button("Find Sets", key="find_sets_btn", use_container_width=True):
-            st.session_state.app_view = "processing"
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
+        # Instruction with premium styling
+        render_premium_instruction("Find all valid SETs in this game")
+        
+        # Green Find Sets button (enhanced style)
+        col1, col2 = st.columns([1, 1])
+        
+        with col1:
+            st.markdown('<div class="ios-button-primary find-sets-button">', unsafe_allow_html=True)
+            if st.button("Find Sets", key="find_sets_btn", use_container_width=True):
+                st.session_state.app_view = "processing"
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+        with col2:
+            st.markdown('<div class="ios-button-secondary">', unsafe_allow_html=True)
+            if st.button("Try Another", key="try_different_btn", use_container_width=True):
+                reset_app_state()
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
     
     # PROCESSING SCREEN
     elif st.session_state.app_view == "processing":
-        # Container for the image and loading overlay
+        # Premium container for the image and loading overlay
         st.markdown('<div style="position: relative;">', unsafe_allow_html=True)
         st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
         st.image(st.session_state.original_image, use_container_width=True)
-        # Overlay the enhanced loader on the image
+        # Overlay the premium loader on the image
         render_loading()
         st.markdown('</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
@@ -1134,10 +1319,8 @@ def main():
             st.rerun()
         except Exception as e:
             render_error("Error processing image")
-            with st.expander("Show error details"):
-                st.code(traceback.format_exc())
             
-            # Add retry button with enhanced style
+            # Add retry button with premium style
             st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
             if st.button("Try Again", key="retry_btn", use_container_width=True):
                 st.session_state.app_view = "preview"
@@ -1155,9 +1338,11 @@ def main():
             st.image(st.session_state.original_image, use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # Try again button with enhanced style
+            render_premium_instruction("Try taking a clearer photo with better lighting")
+            
+            # Try again button with premium style
             st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
-            if st.button("Try Another Image", key="try_again_btn", use_container_width=True):
+            if st.button("Try Another Photo", key="try_again_btn", use_container_width=True):
                 reset_app_state()
                 st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
@@ -1165,23 +1350,25 @@ def main():
         elif st.session_state.no_sets_found:
             render_warning("No valid SETs found in this game")
             
-            # Show processed image
+            # Show original image
             st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
-            st.image(cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB), use_container_width=True)
+            st.image(st.session_state.original_image, use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # Try again button with enhanced style
+            render_premium_instruction("There are no valid SET combinations in this layout")
+            
+            # Try again button with premium style
             st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
-            if st.button("Try Another Image", key="no_sets_btn", use_container_width=True):
+            if st.button("Try Another Photo", key="no_sets_btn", use_container_width=True):
                 reset_app_state()
                 st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
             
         else:
-            # Success case - show results with enhanced styling
+            # Success case - show results with premium styling
             num_sets = len(st.session_state.sets_info)
             
-            # Results header with enhanced badge and SET icons
+            # Results header with premium badge and SET icons
             st.markdown(f"""
             <div style="text-align: center; margin: 0.8rem 0;">
                 <div class="ios-badge">
@@ -1197,12 +1384,28 @@ def main():
             st.image(cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB), use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # Single action button with enhanced style
-            st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
-            if st.button("Analyze Another Game", key="new_img_btn", use_container_width=True):
-                reset_app_state()
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
+            # Button row with premium styling
+            col1, col2 = st.columns([1, 1])
+            
+            with col1:
+                st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
+                if st.button("New Game", key="new_game_btn", use_container_width=True):
+                    reset_app_state()
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+                
+            with col2:
+                st.markdown('<div class="ios-button-secondary">', unsafe_allow_html=True)
+                if st.button("Show Original", key="show_orig_btn", use_container_width=True):
+                    st.session_state.show_original = not st.session_state.get("show_original", False)
+                    st.rerun()
+                st.markdown('</div>', unsafe_allow_html=True)
+            
+            # Show original image if requested
+            if st.session_state.get("show_original", False):
+                st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
+                st.image(st.session_state.original_image, use_container_width=True)
+                st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
