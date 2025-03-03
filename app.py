@@ -1560,7 +1560,7 @@ def detect_mobile_device():
         // Add apple touch icon
         var touchIconMeta = document.createElement('link');
         touchIconMeta.rel = 'apple-touch-icon';
-        touchIconMeta.href = 'data:image/png;base64,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';
+        touchIconMeta.href = 'data:image/png;base64,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';
         document.getElementsByTagName('head')[0].appendChild(touchIconMeta);
         
         // Prevent zooming on double-tap
@@ -1715,6 +1715,46 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
         
+        # Instruction with premium styling
+        render_premium_instruction("Find all valid SETs in this game")
+        
+        # Button row with premium styling
+        col1, col2 = st.columns([1, 1])
+        
+        with col1:
+            st.markdown('<div class="ios-button-primary find-sets-button">', unsafe_allow_html=True)
+            if st.button("Find Sets", key="find_sets_btn", use_container_width=True):
+                st.session_state.app_view = "processing"
+                st.session_state.screen_transition = True
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+        with col2:
+            st.markdown('<div class="ios-button-secondary">', unsafe_allow_html=True)
+            if st.button("Try Another", key="try_different_btn", use_container_width=True):
+                reset_app_state()
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+        if st.session_state.screen_transition:
+            st.markdown('</div>', unsafe_allow_html=True)
+    
+    # PROCESSING SCREEN
+    elif st.session_state.app_view == "processing":
+        # Screen transition animation
+        if st.session_state.screen_transition:
+            st.markdown('<div class="screen-animation">', unsafe_allow_html=True)
+            st.session_state.screen_transition = False
+            
+        # Premium container for the image and loading overlay
+        st.markdown('<div style="position: relative;">', unsafe_allow_html=True)
+        st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
+        st.image(st.session_state.original_image, use_container_width=True)
+        # Overlay the premium loader centered on the image
+        render_loading()
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+        
         # Instruction text while processing
         render_premium_instruction("Detecting cards and analyzing patterns...")
         
@@ -1828,44 +1868,4 @@ def main():
             st.markdown('</div>', unsafe_allow_html=True)
 
 if __name__ == "__main__":
-    main()('</div>', unsafe_allow_html=True)
-        
-        # Instruction with premium styling
-        render_premium_instruction("Find all valid SETs in this game")
-        
-        # Button row with premium styling
-        col1, col2 = st.columns([1, 1])
-        
-        with col1:
-            st.markdown('<div class="ios-button-primary find-sets-button">', unsafe_allow_html=True)
-            if st.button("Find Sets", key="find_sets_btn", use_container_width=True):
-                st.session_state.app_view = "processing"
-                st.session_state.screen_transition = True
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-        with col2:
-            st.markdown('<div class="ios-button-secondary">', unsafe_allow_html=True)
-            if st.button("Try Another", key="try_different_btn", use_container_width=True):
-                reset_app_state()
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-        if st.session_state.screen_transition:
-            st.markdown('</div>', unsafe_allow_html=True)
-    
-    # PROCESSING SCREEN
-    elif st.session_state.app_view == "processing":
-        # Screen transition animation
-        if st.session_state.screen_transition:
-            st.markdown('<div class="screen-animation">', unsafe_allow_html=True)
-            st.session_state.screen_transition = False
-            
-        # Premium container for the image and loading overlay
-        st.markdown('<div style="position: relative;">', unsafe_allow_html=True)
-        st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
-        st.image(st.session_state.original_image, use_container_width=True)
-        # Overlay the premium loader centered on the image
-        render_loading()
-        st.markdown('</div>', unsafe_allow_html=True)
-        st.markdown
+    main()
