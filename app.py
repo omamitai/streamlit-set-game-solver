@@ -249,9 +249,9 @@ def load_custom_css():
 
     /* --- ENHANCED: Primary Button (Purple) --- */
     .ios-button-primary > button {
-        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-purple-light) 100%);
-        color: white;
-        border: none;
+        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-purple-light) 100%) !important;
+        color: white !important;
+        border: none !important;
         padding: 0.7rem;
         border-radius: 14px;
         font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
@@ -314,9 +314,9 @@ def load_custom_css():
 
     /* --- ENHANCED: Secondary Button (Red) --- */
     .ios-button-secondary > button {
-        background: linear-gradient(135deg, var(--set-red) 0%, var(--set-red-light) 100%);
-        color: white;
-        border: none;
+        background: linear-gradient(135deg, var(--set-red) 0%, var(--set-red-light) 100%) !important;
+        color: white !important;
+        border: none !important;
         padding: 0.7rem;
         border-radius: 14px;
         font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
@@ -373,7 +373,7 @@ def load_custom_css():
     
     /* --- ENHANCED: Find Sets Button (Green) --- */
     .find-sets-button > button {
-        background: linear-gradient(135deg, var(--set-green) 0%, var(--set-green-light) 100%);
+        background: linear-gradient(135deg, var(--set-green) 0%, var(--set-green-light) 100%) !important;
         box-shadow: 
             0 4px 12px rgba(16, 185, 129, 0.35),
             inset 0 1px 2px rgba(255, 255, 255, 0.3);
@@ -422,7 +422,7 @@ def load_custom_css():
         position: relative;
         border-radius: 16px;
         overflow: hidden;
-        max-height: 420px; /* Increased but still fits on iPhone */
+        max-height: 360px; /* Reduced height to ensure fit on iPhone screens */
         height: auto; /* Let content determine height */
         min-height: 180px;
         width: 92%;
@@ -1452,10 +1452,10 @@ def identify_sets_from_image(
     final_output = restore_orientation(annotated, was_rotated)
     return found_sets, final_output
 
-def optimize_image_size(img_pil: Image.Image, max_dim=650) -> Image.Image:
+def optimize_image_size(img_pil: Image.Image, max_dim=550) -> Image.Image:
     """
     Resizes a PIL image to optimize for mobile viewing while preserving aspect ratio.
-    Optimized max_dim for better fit on iPhone screens.
+    Uses a smaller max_dim (550px) to ensure everything fits on iPhone screens without scrolling.
     """
     width, height = img_pil.size
     if max(width, height) > max_dim:
@@ -1715,26 +1715,15 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Instruction with premium styling
-        render_premium_instruction("Find all valid SETs in this game")
-        
-        # Button row with premium styling
-        col1, col2 = st.columns([1, 1])
-        
-        with col1:
-            st.markdown('<div class="ios-button-primary find-sets-button">', unsafe_allow_html=True)
-            if st.button("Find Sets", key="find_sets_btn", use_container_width=True):
-                st.session_state.app_view = "processing"
-                st.session_state.screen_transition = True
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-        with col2:
-            st.markdown('<div class="ios-button-secondary">', unsafe_allow_html=True)
-            if st.button("Try Another", key="try_different_btn", use_container_width=True):
-                reset_app_state()
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
+        # Single centered Find Sets button with premium styling
+        st.markdown('<div class="ios-center-button">', unsafe_allow_html=True)
+        st.markdown('<div class="ios-button-primary find-sets-button">', unsafe_allow_html=True)
+        if st.button("Find Sets", key="find_sets_btn", use_container_width=True):
+            st.session_state.app_view = "processing"
+            st.session_state.screen_transition = True
+            st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
             
         if st.session_state.screen_transition:
             st.markdown('</div>', unsafe_allow_html=True)
@@ -1755,8 +1744,7 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Instruction text while processing
-        render_premium_instruction("Detecting cards and analyzing patterns...")
+        # No instruction needed during processing - loading spinner is sufficient
         
         # Process the image
         try:
@@ -1855,10 +1843,10 @@ def main():
             # Enhanced instruction with details
             render_premium_instruction(f"Found {num_sets} valid SET{'s' if num_sets > 1 else ''} with unique card combinations")
             
-            # Single centered New Game button (removed Show Original button as requested)
+            # Single centered button with improved wording
             st.markdown('<div class="ios-center-button">', unsafe_allow_html=True)
             st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
-            if st.button("New Game", key="new_game_btn", use_container_width=True):
+            if st.button("Scan New Board", key="new_game_btn", use_container_width=True):
                 reset_app_state()
                 st.rerun()
             st.markdown('</div>', unsafe_allow_html=True)
