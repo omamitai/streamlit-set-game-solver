@@ -226,25 +226,25 @@ def load_custom_css():
 
     /* --- Primary Button (Purple) with Enhanced Gradient --- */
     .ios-button-primary > button {
-        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-purple-light) 100%);
-        color: white;
-        border: none;
-        padding: 0.7rem;
-        border-radius: 16px;
-        font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
-        font-weight: 600;
-        font-size: 0.95rem;
-        cursor: pointer;
-        transition: all 0.2s ease-out;
-        width: 100%;
-        margin: 0.25rem 0 !important;
-        min-height: 54px; /* Increased touch target */
-        box-shadow: 0 4px 15px rgba(124, 58, 237, 0.45),
-                    inset 0 1px 1px rgba(255, 255, 255, 0.3);
-        letter-spacing: 0.01em;
-        text-transform: uppercase;
-        position: relative;
-        overflow: hidden;
+        background: linear-gradient(135deg, #7C3AED 0%, #8B5CF6 100%) !important; /* Forced color override */
+        color: white !important;
+        border: none !important;
+        padding: 0.4rem !important; /* Reduced padding */
+        border-radius: 14px !important;
+        font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease-out !important;
+        width: 100% !important;
+        margin: 0.2rem 0 !important;
+        min-height: 44px !important; /* Reduced height with Apple standard */
+        box-shadow: 0 3px 12px rgba(124, 58, 237, 0.4),
+                    inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+        letter-spacing: 0.01em !important;
+        text-transform: uppercase !important;
+        position: relative !important;
+        overflow: hidden !important;
     }
     
     .ios-button-primary > button::before {
@@ -273,25 +273,25 @@ def load_custom_css():
 
     /* --- Secondary Button (Red) with Enhanced Gradient --- */
     .ios-button-secondary > button {
-        background: linear-gradient(135deg, var(--set-red) 0%, var(--set-red-light) 100%);
-        color: white;
-        border: none;
-        padding: 0.7rem;
-        border-radius: 16px;
-        font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
-        font-weight: 600;
-        font-size: 0.95rem;
-        cursor: pointer;
-        transition: all 0.2s ease-out;
-        width: 100%;
-        margin: 0.25rem 0 !important;
-        min-height: 54px; /* Increased touch target */
-        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4),
-                    inset 0 1px 1px rgba(255, 255, 255, 0.3);
-        text-transform: uppercase;
-        letter-spacing: 0.01em;
-        position: relative;
-        overflow: hidden;
+        background: linear-gradient(135deg, #EF4444 0%, #F87171 100%) !important; /* Forced color override */
+        color: white !important;
+        border: none !important;
+        padding: 0.4rem !important; /* Reduced padding */
+        border-radius: 14px !important;
+        font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease-out !important;
+        width: 100% !important;
+        margin: 0.2rem 0 !important; 
+        min-height: 44px !important; /* Reduced height with Apple standard */
+        box-shadow: 0 3px 12px rgba(239, 68, 68, 0.4),
+                    inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.01em !important;
+        position: relative !important;
+        overflow: hidden !important;
     }
     
     .ios-button-secondary > button::before {
@@ -320,11 +320,11 @@ def load_custom_css():
     
     /* --- Find Sets Button (Green) with Enhanced Gradient --- */
     .find-sets-button > button {
-        background: linear-gradient(135deg, var(--set-green) 0%, var(--set-green-light) 100%);
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4),
-                    inset 0 1px 1px rgba(255, 255, 255, 0.3);
-        position: relative;
-        overflow: hidden;
+        background: linear-gradient(135deg, #10B981 0%, #34D399 100%) !important; /* Forced color override */
+        box-shadow: 0 3px 12px rgba(16, 185, 129, 0.4),
+                    inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+        position: relative !important;
+        overflow: hidden !important;
     }
     
     .find-sets-button > button::before {
@@ -353,14 +353,14 @@ def load_custom_css():
 
     /* --- Premium Image Container with Enhanced Styling --- */
     .ios-image-container {
-        margin: 0.75rem auto;
+        margin: 0.4rem auto;
         position: relative;
-        border-radius: 18px;
+        border-radius: 16px;
         overflow: hidden;
-        max-height: 280px; /* Optimized for iPhone - reduced to prevent scrolling */
+        max-height: 220px; /* Dramatically reduced for iPhone - prevents scrolling */
         height: auto; /* Let content determine height */
-        min-height: 180px;
-        width: 92%;
+        min-height: 150px;
+        width: 90%;
         background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
         box-shadow: 0 4px 20px rgba(124, 58, 237, 0.25),
                     inset 0 1px 1px rgba(255, 255, 255, 0.4);
@@ -393,14 +393,15 @@ def load_custom_css():
         bottom: 0;
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        background: rgba(244, 241, 250, 0.75); /* Lighter background using SET theme */
+        justify-content: center; /* Ensures vertical centering */
+        align-items: center; /* Ensures horizontal centering */
+        background: rgba(244, 241, 250, 0.8); /* Lighter background using SET theme */
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
         z-index: 10;
-        border-radius: 18px; /* Match container's radius */
+        border-radius: 16px; /* Match container's radius */
         animation: fade-in 0.3s ease;
+        pointer-events: none; /* Prevents interaction while loading */
     }
     
     @keyframes fade-in {
@@ -409,14 +410,16 @@ def load_custom_css():
     }
     
     .ios-loader {
-        width: 36px;
-        height: 36px;
+        width: 40px;
+        height: 40px;
         border: 3px solid rgba(124, 58, 237, 0.2);
         border-top: 3px solid var(--set-purple);
         border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin-bottom: 1rem;
-        box-shadow: 0 0 15px rgba(124, 58, 237, 0.2);
+        animation: spin 0.8s linear infinite;
+        margin-bottom: 0.5rem; /* Reduced space between spinner and text */
+        box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+        position: relative; /* Ensures exact centering */
+        left: 0; /* Center fix */
     }
     
     @keyframes spin {
@@ -425,16 +428,18 @@ def load_custom_css():
     }
     
     .ios-loader-text {
-        font-size: 1rem;
+        font-size: 0.9rem;
         font-weight: 600;
         color: var(--set-purple);
-        background: rgba(255, 255, 255, 0.9);
-        padding: 0.7rem 1.4rem;
-        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.95);
+        padding: 0.5rem 1.2rem;
+        border-radius: 12px;
         box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2),
                     inset 0 1px 1px rgba(255, 255, 255, 0.5);
         border: 1px solid rgba(124, 58, 237, 0.2);
         animation: pulse 2s infinite;
+        position: relative; /* Ensures exact centering */
+        left: 0; /* Center fix */
     }
     
     @keyframes pulse {
@@ -445,17 +450,17 @@ def load_custom_css():
 
     /* --- iOS-styled Alert Messages with Enhanced Styling --- */
     .ios-alert {
-        padding: 0.8rem 1rem;
-        border-radius: 16px;
-        margin: 0.8rem auto;
+        padding: 0.5rem 0.8rem;
+        border-radius: 14px;
+        margin: 0.4rem auto;
         display: flex;
         align-items: center;
-        font-size: 0.95rem;
+        font-size: 0.85rem;
         font-weight: 600;
-        min-height: 46px;
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1),
+        min-height: 38px;
+        box-shadow: 0 3px 12px rgba(0, 0, 0, 0.1),
                     inset 0 1px 1px rgba(255, 255, 255, 0.5);
-        width: 92%;
+        width: 90%;
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
         transition: all 0.3s ease;
@@ -591,14 +596,14 @@ def load_custom_css():
     /* --- SET Results Badge with Enhanced Styling --- */
     .ios-badge {
         display: inline-block;
-        padding: 0.7rem 1.2rem;
+        padding: 0.5rem 1rem;
         background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-purple-light) 100%);
         color: white;
-        border-radius: 20px;
-        font-size: 1.05rem;
+        border-radius: 16px;
+        font-size: 0.95rem;
         font-weight: 700;
-        margin: 0.5rem auto;
-        box-shadow: 0 4px 15px rgba(124, 58, 237, 0.4),
+        margin: 0.3rem auto;
+        box-shadow: 0 3px 12px rgba(124, 58, 237, 0.4),
                     inset 0 1px 1px rgba(255, 255, 255, 0.3);
         letter-spacing: 0.01em;
         border: 1px solid rgba(255, 255, 255, 0.3);
@@ -755,17 +760,17 @@ def load_custom_css():
     /* --- Instruction Text with Enhanced Styling --- */
     .ios-instruction {
         text-align: center;
-        font-size: 1rem;
+        font-size: 0.9rem;
         font-weight: 500;
         color: var(--set-text-light);
-        margin: 0.8rem auto;
+        margin: 0.4rem auto; /* Reduced margin */
         max-width: 90%;
         background: linear-gradient(135deg, rgba(255, 255, 255, 0.6) 0%, rgba(249, 247, 253, 0.6) 100%);
-        padding: 0.8rem 1.2rem;
-        border-radius: 16px;
+        padding: 0.5rem 0.8rem; /* Reduced padding */
+        border-radius: 14px;
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
-        box-shadow: 0 4px 15px rgba(124, 58, 237, 0.12),
+        box-shadow: 0 3px 10px rgba(124, 58, 237, 0.12),
                     inset 0 1px 1px rgba(255, 255, 255, 0.5);
         border: 1px solid rgba(124, 58, 237, 0.15);
         animation: slide-in 0.3s ease;
@@ -1265,10 +1270,10 @@ def identify_sets_from_image(
     final_output = restore_orientation(annotated, was_rotated)
     return found_sets, final_output
 
-def optimize_image_size(img_pil: Image.Image, max_dim=650) -> Image.Image:
+def optimize_image_size(img_pil: Image.Image, max_dim=450) -> Image.Image:
     """
     Resizes a PIL image to optimize for mobile viewing while preserving aspect ratio.
-    Reduced max_dim to 650 to ensure better fit on iPhone screens with zero scrolling.
+    Reduced max_dim to 450 to ensure better fit on iPhone screens with zero scrolling.
     """
     width, height = img_pil.size
     if max(width, height) > max_dim:
@@ -1287,23 +1292,26 @@ def optimize_image_size(img_pil: Image.Image, max_dim=650) -> Image.Image:
 # =============================================================================
 def render_header():
     """
-    Renders a stylish SET-themed header with enhanced glassmorphism effect.
+    Renders a compact stylish SET-themed header with enhanced glassmorphism effect.
     """
     header_html = """
-    <div class="ios-header">
-        <h1>SET Card Game Detector</h1>
+    <div class="ios-header" style="padding: 0.6rem 1rem; margin-bottom: 0.4rem;">
+        <h1 style="font-size: 1.3rem;">SET Card Game Detector</h1>
     </div>
     """
     st.markdown(header_html, unsafe_allow_html=True)
 
 def render_loading():
     """
-    Shows enhanced animated loading spinner centered on the image.
+    Shows enhanced animated loading spinner perfectly centered on the image.
+    Uses absolute positioning and flexbox for guaranteed centering.
     """
     loader_html = """
     <div class="ios-loader-container">
-        <div class="ios-loader"></div>
-        <div class="ios-loader-text">Analyzing cards...</div>
+        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%;">
+            <div class="ios-loader"></div>
+            <div class="ios-loader-text">Analyzing cards...</div>
+        </div>
     </div>
     """
     st.markdown(loader_html, unsafe_allow_html=True)
@@ -1483,7 +1491,7 @@ def main():
             st.session_state.uploaded_file = uploaded_file
             try:
                 img_pil = Image.open(uploaded_file)
-                img_pil = optimize_image_size(img_pil, max_dim=650)  # Reduced max size for better mobile fit
+                img_pil = optimize_image_size(img_pil, max_dim=450)  # Significantly reduced size for iPhone fit
                 st.session_state.original_image = img_pil
                 st.session_state.image_height = img_pil.height
                 st.session_state.app_view = "preview"
@@ -1593,9 +1601,9 @@ def main():
             # Success case - show results with premium styling
             num_sets = len(st.session_state.sets_info)
             
-            # Results header with premium badge and SET icons
+            # Results header with premium badge and SET icons - more compact
             st.markdown(f"""
-            <div style="text-align: center; margin: 0.8rem 0;">
+            <div style="text-align: center; margin: 0.3rem 0;">
                 <div class="ios-badge">
                     <span class="set-card-diamond"></span>
                     {num_sets} SET{'' if num_sets == 1 else 's'} Found
