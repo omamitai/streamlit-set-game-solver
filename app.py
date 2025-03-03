@@ -74,17 +74,18 @@ if "uploader_key" not in st.session_state:
     st.session_state.uploader_key = "initial"
 if "image_height" not in st.session_state:
     st.session_state.image_height = 400
-if "show_original" not in st.session_state:
-    st.session_state.show_original = False
 if "app_view" not in st.session_state:
     st.session_state.app_view = "upload"  # Possible values: "upload", "preview", "processing", "results"
+if "screen_transition" not in st.session_state:
+    st.session_state.screen_transition = False
 
 # =============================================================================
-# CUSTOM CSS - Enhanced iOS-inspired styling
+# CUSTOM CSS - Enhanced iOS-inspired styling with premium effects
 # =============================================================================
 def load_custom_css():
     """
     Loads premium iOS-styled CSS that follows Apple's Human Interface Guidelines.
+    Enhanced with additional polish for native-like appearance.
     """
     css = """
     <style>
@@ -111,6 +112,7 @@ def load_custom_css():
         --set-text-light: #4B5563;
         --set-text-muted: #6B7280;
         --set-border: rgba(124, 58, 237, 0.25);
+        --page-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     /* --- Base Styles --- */
@@ -122,6 +124,19 @@ def load_custom_css():
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        transition: background-color var(--page-transition);
+        overscroll-behavior: none; /* Prevent overscroll bounce effect */
+    }
+
+    /* --- App Container Animation --- */
+    .stApp {
+        opacity: 1;
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
     }
 
     /* --- Streamlit Override - Zero Padding for Mobile --- */
@@ -133,21 +148,49 @@ def load_custom_css():
         max-width: 100%;
     }
 
-    /* --- Premium Header with Glassmorphism --- */
+    /* --- Premium Header with Advanced Glassmorphism --- */
     .ios-header {
         display: flex;
         justify-content: center;
         align-items: center;
         padding: 0.8rem 1.2rem;
         margin: 0 auto 0.75rem;
-        background: linear-gradient(135deg, rgba(124, 58, 237, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
+        background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         border-radius: 18px;
-        box-shadow: 0 3px 12px rgba(124, 58, 237, 0.15);
+        box-shadow: 
+            0 4px 16px rgba(124, 58, 237, 0.15),
+            inset 0 1px 2px rgba(255, 255, 255, 0.5);
         border: 1px solid rgba(124, 58, 237, 0.2);
-        transition: all 0.2s ease;
+        transition: all 0.3s ease;
         max-width: 85%;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    /* Add subtle shimmer effect to header */
+    .ios-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+            to bottom right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.1) 50%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        transform: rotate(30deg);
+        animation: shimmer 6s infinite linear;
+        z-index: -1;
+    }
+    
+    @keyframes shimmer {
+        0% { transform: translateX(-100%) rotate(30deg); }
+        100% { transform: translateX(100%) rotate(30deg); }
     }
     
     .ios-header h1 {
@@ -171,12 +214,13 @@ def load_custom_css():
         width: 100%;
         padding: 0.75rem 1rem;
         background: rgba(248, 245, 255, 0.85);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
         border-bottom: 1px solid rgba(124, 58, 237, 0.1);
         display: flex;
         justify-content: center;
         align-items: center;
+        box-shadow: 0 1px 5px rgba(124, 58, 237, 0.1);
     }
     
     /* --- Mobile Container --- */
@@ -190,12 +234,20 @@ def load_custom_css():
         background: white;
         border-radius: 16px;
         overflow: hidden;
-        box-shadow: 0 3px 10px rgba(124, 58, 237, 0.1);
+        box-shadow: 
+            0 4px 12px rgba(124, 58, 237, 0.12),
+            0 1px 3px rgba(124, 58, 237, 0.1);
         margin-bottom: 0.75rem;
         border: 1px solid rgba(124, 58, 237, 0.15);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .ios-card:active {
+        transform: scale(0.98);
+        box-shadow: 0 2px 8px rgba(124, 58, 237, 0.1);
     }
 
-    /* --- Primary Button (Purple) --- */
+    /* --- ENHANCED: Primary Button (Purple) --- */
     .ios-button-primary > button {
         background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-purple-light) 100%);
         color: white;
@@ -206,28 +258,61 @@ def load_custom_css():
         font-weight: 600;
         font-size: 0.9rem;
         cursor: pointer;
-        transition: all 0.15s ease-out;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         width: 100%;
         margin: 0.25rem 0 !important;
-        min-height: 50px; /* Increased touch target */
-        box-shadow: 0 3px 12px rgba(124, 58, 237, 0.4);
+        min-height: 54px; /* Increased touch target */
+        box-shadow: 
+            0 4px 12px rgba(124, 58, 237, 0.4),
+            inset 0 1px 2px rgba(255, 255, 255, 0.3);
         letter-spacing: 0.01em;
         text-transform: uppercase;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    /* Add subtle shine effect to buttons */
+    .ios-button-primary > button::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+            to bottom right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.1) 50%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        transform: rotate(30deg);
+        animation: buttonShimmer 4s infinite linear;
+        z-index: 1;
+        pointer-events: none;
+    }
+    
+    @keyframes buttonShimmer {
+        0% { transform: translateX(-100%) rotate(30deg); }
+        100% { transform: translateX(100%) rotate(30deg); }
     }
     
     .ios-button-primary > button:hover {
         background: linear-gradient(135deg, var(--set-purple-light) 0%, var(--set-purple) 100%);
-        box-shadow: 0 4px 15px rgba(124, 58, 237, 0.5);
-        transform: translateY(-1px);
+        box-shadow: 
+            0 6px 18px rgba(124, 58, 237, 0.5),
+            inset 0 1px 3px rgba(255, 255, 255, 0.4);
+        transform: translateY(-1px) scale(1.01);
     }
     
     .ios-button-primary > button:active {
         background: linear-gradient(135deg, var(--set-purple-dark) 0%, var(--set-purple) 100%);
-        transform: translateY(1px);
-        box-shadow: 0 2px 5px rgba(124, 58, 237, 0.3);
+        transform: translateY(1px) scale(0.98);
+        box-shadow: 
+            0 2px 5px rgba(124, 58, 237, 0.3),
+            inset 0 1px 1px rgba(255, 255, 255, 0.2);
     }
 
-    /* --- Secondary Button (Red) --- */
+    /* --- ENHANCED: Secondary Button (Red) --- */
     .ios-button-secondary > button {
         background: linear-gradient(135deg, var(--set-red) 0%, var(--set-red-light) 100%);
         color: white;
@@ -238,59 +323,118 @@ def load_custom_css():
         font-weight: 600;
         font-size: 0.9rem;
         cursor: pointer;
-        transition: all 0.15s ease-out;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         width: 100%;
         margin: 0.25rem 0 !important;
-        min-height: 50px; /* Increased touch target */
-        box-shadow: 0 3px 12px rgba(239, 68, 68, 0.35);
+        min-height: 54px; /* Increased touch target */
+        box-shadow: 
+            0 4px 12px rgba(239, 68, 68, 0.35),
+            inset 0 1px 2px rgba(255, 255, 255, 0.3);
         text-transform: uppercase;
         letter-spacing: 0.01em;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .ios-button-secondary > button::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+            to bottom right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.1) 50%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        transform: rotate(30deg);
+        animation: buttonShimmer 4s infinite linear;
+        z-index: 1;
+        pointer-events: none;
     }
     
     .ios-button-secondary > button:hover {
         background: linear-gradient(135deg, var(--set-red-light) 0%, var(--set-red) 100%);
-        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.45);
-        transform: translateY(-1px);
+        box-shadow: 
+            0 6px 18px rgba(239, 68, 68, 0.45),
+            inset 0 1px 3px rgba(255, 255, 255, 0.4);
+        transform: translateY(-1px) scale(1.01);
     }
     
     .ios-button-secondary > button:active {
         background: linear-gradient(135deg, var(--set-red-dark) 0%, var(--set-red) 100%);
-        transform: translateY(1px);
-        box-shadow: 0 2px 5px rgba(239, 68, 68, 0.3);
+        transform: translateY(1px) scale(0.98);
+        box-shadow: 
+            0 2px 5px rgba(239, 68, 68, 0.3),
+            inset 0 1px 1px rgba(255, 255, 255, 0.2);
     }
     
-    /* --- Find Sets Button (Green) --- */
+    /* --- ENHANCED: Find Sets Button (Green) --- */
     .find-sets-button > button {
         background: linear-gradient(135deg, var(--set-green) 0%, var(--set-green-light) 100%);
-        box-shadow: 0 3px 12px rgba(16, 185, 129, 0.35);
+        box-shadow: 
+            0 4px 12px rgba(16, 185, 129, 0.35),
+            inset 0 1px 2px rgba(255, 255, 255, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .find-sets-button > button::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+            to bottom right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.1) 50%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        transform: rotate(30deg);
+        animation: buttonShimmer 4s infinite linear;
+        z-index: 1;
+        pointer-events: none;
     }
     
     .find-sets-button > button:hover {
         background: linear-gradient(135deg, var(--set-green-light) 0%, var(--set-green) 100%);
-        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.45);
+        box-shadow: 
+            0 6px 18px rgba(16, 185, 129, 0.45),
+            inset 0 1px 3px rgba(255, 255, 255, 0.4);
+        transform: translateY(-1px) scale(1.01);
     }
     
     .find-sets-button > button:active {
         background: linear-gradient(135deg, var(--set-green-dark) 0%, var(--set-green) 100%);
-        box-shadow: 0 2px 5px rgba(16, 185, 129, 0.3);
+        transform: translateY(1px) scale(0.98);
+        box-shadow: 
+            0 2px 5px rgba(16, 185, 129, 0.3),
+            inset 0 1px 1px rgba(255, 255, 255, 0.2);
     }
 
-    /* --- Premium Image Container --- */
+    /* --- ENHANCED: Premium Image Container --- */
     .ios-image-container {
         margin: 0.75rem auto;
         position: relative;
         border-radius: 16px;
         overflow: hidden;
-        max-height: 300px; /* Higher but still fits on iPhone */
+        max-height: 420px; /* Increased but still fits on iPhone */
         height: auto; /* Let content determine height */
         min-height: 180px;
         width: 92%;
         background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
-        box-shadow: 0 3px 12px rgba(124, 58, 237, 0.2);
+        box-shadow: 
+            0 4px 14px rgba(124, 58, 237, 0.2),
+            inset 0 1px 2px rgba(255, 255, 255, 0.3);
         border: 1px solid rgba(124, 58, 237, 0.25);
         display: flex;
         justify-content: center;
         align-items: center;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
     
     /* Hide empty containers */
@@ -303,9 +447,27 @@ def load_custom_css():
         height: 100%;
         object-fit: contain; /* Preserve aspect ratio */
         display: block; /* Eliminate bottom margin */
+        transform: scale(0.98); /* Slightly smaller to ensure fit */
+        transition: transform 0.3s ease;
     }
     
-    /* --- Premium SET Loader with Glassmorphism --- */
+    /* Image entering animation */
+    @keyframes imageEnter {
+        from {
+            opacity: 0;
+            transform: scale(0.95);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    
+    .ios-image-container img {
+        animation: imageEnter 0.3s ease-out forwards;
+    }
+    
+    /* --- ENHANCED: Premium SET Loader with Glassmorphism --- */
     .ios-loader-container {
         position: absolute;
         top: 0;
@@ -316,16 +478,17 @@ def load_custom_css():
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        background: rgba(244, 241, 250, 0.7); /* Lighter background using SET theme */
-        backdrop-filter: blur(5px);
-        -webkit-backdrop-filter: blur(5px);
+        background: rgba(244, 241, 250, 0.8); /* Increased opacity for better visibility */
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
         z-index: 10;
         border-radius: 16px; /* Match container's radius */
+        animation: fadeIn 0.3s ease-out;
     }
     
     .ios-loader {
-        width: 32px;
-        height: 32px;
+        width: 36px;
+        height: 36px;
         border: 3px solid rgba(124, 58, 237, 0.2);
         border-top: 3px solid var(--set-purple);
         border-radius: 50%;
@@ -343,14 +506,23 @@ def load_custom_css():
         font-size: 0.95rem;
         font-weight: 600;
         color: var(--set-purple);
-        background: rgba(255, 255, 255, 0.85);
+        background: rgba(255, 255, 255, 0.9);
         padding: 0.6rem 1.2rem;
         border-radius: 12px;
-        box-shadow: 0 3px 8px rgba(124, 58, 237, 0.15);
+        box-shadow: 
+            0 4px 10px rgba(124, 58, 237, 0.15),
+            inset 0 1px 2px rgba(255, 255, 255, 0.5);
         border: 1px solid rgba(124, 58, 237, 0.2);
+        animation: pulse 2s infinite ease-in-out;
+    }
+    
+    @keyframes pulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.03); }
+        100% { transform: scale(1); }
     }
 
-    /* --- iOS-styled Alert Messages --- */
+    /* --- ENHANCED: iOS-styled Alert Messages --- */
     .ios-alert {
         padding: 0.75rem 0.9rem;
         border-radius: 14px;
@@ -360,10 +532,25 @@ def load_custom_css():
         font-size: 0.9rem;
         font-weight: 600;
         min-height: 44px;
-        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+        box-shadow: 
+            0 4px 10px rgba(0, 0, 0, 0.08),
+            inset 0 1px 2px rgba(255, 255, 255, 0.4);
         width: 92%;
-        backdrop-filter: blur(5px);
-        -webkit-backdrop-filter: blur(5px);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        transition: transform 0.2s ease, opacity 0.2s ease;
+        animation: alertEnter 0.3s ease-out forwards;
+    }
+    
+    @keyframes alertEnter {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
     
     .ios-alert-error {
@@ -402,7 +589,7 @@ def load_custom_css():
         font-size: 1.1rem;
     }
     
-    /* --- iOS-style Label --- */
+    /* --- ENHANCED: iOS-style Label --- */
     .ios-label {
         font-size: 0.9rem;
         font-weight: 500;
@@ -442,25 +629,48 @@ def load_custom_css():
         margin-bottom: 0 !important;
     }
     
-    /* --- Premium File Uploader --- */
+    /* --- ENHANCED: Premium File Uploader --- */
     [data-testid="stFileUploader"] {
         background: linear-gradient(135deg, rgba(124, 58, 237, 0.05) 0%, rgba(139, 92, 246, 0.1) 100%);
         border-radius: 16px;
         padding: 1.2rem !important;
         border: 1px dashed rgba(124, 58, 237, 0.35);
-        box-shadow: 0 3px 8px rgba(124, 58, 237, 0.1);
+        box-shadow: 
+            0 4px 10px rgba(124, 58, 237, 0.1),
+            inset 0 1px 2px rgba(255, 255, 255, 0.4);
         margin: 0.5rem auto !important;
         width: 92%;
+        transition: all 0.3s ease;
+        animation: fadeIn 0.5s ease-out;
+    }
+    
+    [data-testid="stFileUploader"]:hover {
+        border-color: rgba(124, 58, 237, 0.5);
+        box-shadow: 0 6px 14px rgba(124, 58, 237, 0.15);
+        transform: translateY(-1px);
     }
     
     [data-testid="stFileUploader"] > div > button {
-        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-light-purple) 100%) !important;
+        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-purple-light) 100%) !important;
         color: white !important;
         border-radius: 12px !important;
         min-height: 48px;
-        box-shadow: 0 3px 8px rgba(124, 58, 237, 0.25);
+        box-shadow: 
+            0 4px 10px rgba(124, 58, 237, 0.25),
+            inset 0 1px 2px rgba(255, 255, 255, 0.3) !important;
         border: none !important;
         font-weight: 600 !important;
+        transition: all 0.2s ease !important;
+    }
+    
+    [data-testid="stFileUploader"] > div > button:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 6px 14px rgba(124, 58, 237, 0.35) !important;
+    }
+    
+    [data-testid="stFileUploader"] > div > button:active {
+        transform: translateY(1px) !important;
+        box-shadow: 0 2px 6px rgba(124, 58, 237, 0.2) !important;
     }
     
     /* --- Remove Extra Button Margins --- */
@@ -468,7 +678,7 @@ def load_custom_css():
         margin: 0 !important; 
     }
     
-    /* --- SET Results Badge --- */
+    /* --- ENHANCED: SET Results Badge --- */
     .ios-badge {
         display: inline-block;
         padding: 0.6rem 1rem;
@@ -478,42 +688,92 @@ def load_custom_css():
         font-size: 1rem;
         font-weight: 700;
         margin: 0.5rem auto;
-        box-shadow: 0 3px 8px rgba(124, 58, 237, 0.35);
+        box-shadow: 
+            0 4px 10px rgba(124, 58, 237, 0.35),
+            inset 0 1px 2px rgba(255, 255, 255, 0.3);
         letter-spacing: 0.01em;
         border: 1px solid rgba(255, 255, 255, 0.3);
+        position: relative;
+        overflow: hidden;
+        animation: badgeEnter 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        transform-origin: center;
     }
     
-    /* --- SET Card Indicators --- */
+    @keyframes badgeEnter {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+    
+    /* Add subtle shine effect to badge */
+    .ios-badge::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: linear-gradient(
+            to bottom right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.1) 50%,
+            rgba(255, 255, 255, 0) 100%
+        );
+        transform: rotate(30deg);
+        animation: buttonShimmer 4s infinite linear;
+        z-index: 1;
+    }
+    
+    /* --- ENHANCED: SET Card Indicators --- */
     .set-card-diamond, .set-card-oval, .set-card-squiggle {
         display: inline-block;
         margin: 0 3px;
         width: 20px;
         height: 10px;
+        transform-origin: center;
+        animation: cardIconPulse 3s infinite ease-in-out;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    @keyframes cardIconPulse {
+        0% { transform: scale(1); }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); }
     }
     
     .set-card-diamond {
         transform: rotate(45deg);
         background: var(--set-red);
+        animation-delay: 0s;
     }
     
     .set-card-oval {
         border-radius: 50%;
         background: var(--set-green);
+        animation-delay: 0.5s;
     }
     
     .set-card-squiggle {
         border-radius: 40% 60% 60% 40% / 70% 30% 70% 30%;
         background: var(--set-purple);
+        animation-delay: 1s;
     }
 
-    /* --- Premium Card Tooltip --- */
+    /* --- ENHANCED: Premium Card Tooltip --- */
     .ios-tooltip {
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        background: rgba(255, 255, 255, 0.9);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
         border-radius: 12px;
         padding: 0.6rem 0.9rem;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 
+            0 4px 12px rgba(0, 0, 0, 0.1),
+            inset 0 1px 2px rgba(255, 255, 255, 0.5);
         border: 1px solid rgba(124, 58, 237, 0.15);
         font-size: 0.85rem;
         font-weight: 500;
@@ -521,60 +781,101 @@ def load_custom_css():
         max-width: 200px;
         position: absolute;
         z-index: 20;
+        animation: tooltipEnter 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    
+    @keyframes tooltipEnter {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(5px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
     }
 
-    /* --- SET Indicator Animation --- */
+    /* --- ENHANCED: SET Indicator Animation --- */
     .set-indicator {
         position: absolute;
         width: 12px;
         height: 12px;
         border-radius: 50%;
         background: var(--set-green);
-        box-shadow: 0 0 0 rgba(16, 185, 129, 0.7);
-        animation: pulse 2s infinite;
+        box-shadow: 
+            0 0 0 rgba(16, 185, 129, 0.7),
+            0 0 5px rgba(16, 185, 129, 0.5);
+        animation: enhancedPulse 2s infinite;
     }
     
-    @keyframes pulse {
+    @keyframes enhancedPulse {
         0% {
             box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            transform: scale(1);
         }
         70% {
-            box-shadow: 0 0 0 10px rgba(16, 185, 129, 0);
+            box-shadow: 0 0 0 12px rgba(16, 185, 129, 0);
+            transform: scale(1.2);
         }
         100% {
             box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+            transform: scale(1);
         }
     }
     
-    /* --- Empty State Messages --- */
+    /* --- ENHANCED: Empty State Messages --- */
     .ios-empty-state {
         text-align: center;
         padding: 1.5rem;
         color: var(--set-text-light);
         font-size: 0.95rem;
         font-weight: 500;
+        animation: fadeIn 0.5s ease-out;
     }
     
     .ios-empty-state-icon {
-        font-size: 2rem;
-        margin-bottom: 0.5rem;
+        font-size: 2.2rem;
+        margin-bottom: 0.8rem;
         color: var(--set-purple-light);
+        animation: iconPulse 2s infinite ease-in-out;
+        display: inline-block;
     }
     
-    /* --- Instruction Text --- */
+    @keyframes iconPulse {
+        0% { transform: scale(1); opacity: 0.8; }
+        50% { transform: scale(1.1); opacity: 1; }
+        100% { transform: scale(1); opacity: 0.8; }
+    }
+    
+    /* --- ENHANCED: Instruction Text --- */
     .ios-instruction {
         text-align: center;
         font-size: 0.95rem;
         font-weight: 500;
         color: var(--set-text-light);
-        margin: 0.5rem auto;
+        margin: 0.7rem auto;
         max-width: 90%;
-        background: rgba(255, 255, 255, 0.5);
-        padding: 0.6rem 1rem;
-        border-radius: 10px;
-        backdrop-filter: blur(5px);
-        -webkit-backdrop-filter: blur(5px);
-        border: 1px solid rgba(124, 58, 237, 0.1);
+        background: rgba(255, 255, 255, 0.7);
+        padding: 0.8rem 1.2rem;
+        border-radius: 14px;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(124, 58, 237, 0.15);
+        box-shadow: 
+            0 4px 12px rgba(124, 58, 237, 0.1),
+            inset 0 1px 2px rgba(255, 255, 255, 0.4);
+        animation: instructionEnter 0.5s ease-out;
+    }
+    
+    @keyframes instructionEnter {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
     
     /* --- Custom Image Upload Button --- */
@@ -588,23 +889,47 @@ def load_custom_css():
         font-weight: 600;
         font-size: 0.95rem;
         cursor: pointer;
-        transition: all 0.15s ease-out;
+        transition: all 0.2s ease;
         display: inline-block;
         text-align: center;
         margin: 0.5rem auto;
-        min-height: 50px;
+        min-height: 54px;
         min-width: 200px;
-        box-shadow: 0 3px 12px rgba(124, 58, 237, 0.4);
+        box-shadow: 
+            0 4px 12px rgba(124, 58, 237, 0.4),
+            inset 0 1px 2px rgba(255, 255, 255, 0.3);
     }
     
-    /* --- Premium Result Styles --- */
+    /* --- ENHANCED: Premium Result Styles --- */
     .ios-result-item {
         background: white;
-        border-radius: 12px;
+        border-radius: 14px;
         padding: 0.8rem;
-        margin: 0.5rem 0;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+        margin: 0.6rem 0;
+        box-shadow: 
+            0 4px 10px rgba(0, 0, 0, 0.05),
+            inset 0 1px 2px rgba(255, 255, 255, 0.5);
         border: 1px solid rgba(124, 58, 237, 0.15);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        animation: resultItemEnter 0.4s ease-out forwards;
+        animation-delay: calc(var(--item-index, 0) * 0.1s);
+        opacity: 0;
+    }
+    
+    @keyframes resultItemEnter {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .ios-result-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
     }
     
     .ios-result-title {
@@ -622,7 +947,7 @@ def load_custom_css():
         display: none !important;
     }
     
-    /* --- Floating Action Button --- */
+    /* --- ENHANCED: Floating Action Button --- */
     .ios-fab {
         position: fixed;
         bottom: 20px;
@@ -634,35 +959,108 @@ def load_custom_css():
         display: flex;
         justify-content: center;
         align-items: center;
-        box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+        box-shadow: 
+            0 6px 16px rgba(124, 58, 237, 0.4),
+            inset 0 1px 2px rgba(255, 255, 255, 0.3);
         cursor: pointer;
         z-index: 1000;
         color: white;
         font-size: 24px;
-        transition: all 0.2s ease;
+        transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         border: 1px solid rgba(255, 255, 255, 0.3);
+        animation: fabEnter 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.3s forwards;
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    
+    @keyframes fabEnter {
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
     }
     
     .ios-fab:hover {
         transform: scale(1.05);
-        box-shadow: 0 5px 15px rgba(124, 58, 237, 0.5);
+        box-shadow: 0 8px 20px rgba(124, 58, 237, 0.5);
     }
     
-    /* --- Full-Screen Loader --- */
-    .ios-fullscreen-loader {
+    .ios-fab:active {
+        transform: scale(0.95);
+        box-shadow: 0 4px 10px rgba(124, 58, 237, 0.4);
+    }
+    
+    /* --- ENHANCED: Full-Screen Transitions --- */
+    .ios-screen-transition {
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(244, 241, 250, 0.9);
+        background: rgba(124, 58, 237, 0.2);
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
         z-index: 9999;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+    
+    .ios-screen-transition.active {
+        opacity: 1;
+    }
+
+    /* --- ENHANCED: Center Button --- */
+    .ios-center-button {
+        display: flex;
+        justify-content: center;
+        margin: 1rem auto 0.5rem;
+        width: 92%;
+    }
+
+    .ios-center-button > div {
+        width: 100%;
+        max-width: 280px;
+    }
+    
+    /* --- ENHANCED: Screen Animation --- */
+    @keyframes screenEnter {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .screen-animation {
+        animation: screenEnter 0.3s ease-out forwards;
+    }
+    
+    /* --- ENHANCED: Extra Touches --- */
+    ::selection {
+        background: rgba(124, 58, 237, 0.2);
+        color: var(--set-purple);
+    }
+    
+    /* Disable iOS text selection highlight */
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+    
+    /* Force hardware acceleration for smoother animations */
+    .stApp {
+        -webkit-transform: translateZ(0);
+        -moz-transform: translateZ(0);
+        -ms-transform: translateZ(0);
+        -o-transform: translateZ(0);
+        transform: translateZ(0);
     }
     </style>
     """
@@ -948,7 +1346,7 @@ def draw_detected_sets(board_img: np.ndarray, sets_detected: List[dict]) -> np.n
             
             # Add iOS-style rounded corners with thicker lines
             corner_length = min(30, (x2e - x1e) // 4)
-            corner_thickness = thickness + 1
+            corner_thickness = thickness + 2  # Increased thickness for more prominent corners
             
             # Draw all four corners
             # Top-left corner
@@ -967,28 +1365,43 @@ def draw_detected_sets(board_img: np.ndarray, sets_detected: List[dict]) -> np.n
             cv2.line(result_img, (x2e - corner_length, y2e), (x2e, y2e), color, corner_thickness, cv2.LINE_AA)
             cv2.line(result_img, (x2e, y2e), (x2e, y2e - corner_length), color, corner_thickness, cv2.LINE_AA)
 
+            # Add subtle inner glow (two concentric rectangles with different opacity)
+            inner_color = (
+                min(255, color[0] + 40),
+                min(255, color[1] + 40),
+                min(255, color[2] + 40)
+            )
+            
+            # Inner rectangle (glow effect)
+            inner_expansion = expansion - 2
+            x1i = max(0, x1 - inner_expansion)
+            y1i = max(0, y1 - inner_expansion)
+            x2i = min(result_img.shape[1], x2 + inner_expansion)
+            y2i = min(result_img.shape[0], y2 + inner_expansion)
+            cv2.rectangle(result_img, (x1i, y1i), (x2i, y2i), inner_color, 1, cv2.LINE_AA)
+
             # Label the first card with Set number in an iOS-style pill badge
             if i == 0:
                 text = f"Set {idx+1}"
                 text_size = cv2.getTextSize(text, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)[0]
                 badge_width = text_size[0] + 16
-                badge_height = 26
+                badge_height = 28  # Slightly taller for premium look
                 badge_x = x1e
-                badge_y = y1e - badge_height - 5
+                badge_y = y1e - badge_height - 6
                 
-                # Draw pill-shaped badge with anti-aliasing
+                # Draw rounded pill-shaped badge with anti-aliasing
                 cv2.rectangle(result_img, 
                               (badge_x, badge_y), 
                               (badge_x + badge_width, badge_y + badge_height),
                               color, -1, cv2.LINE_AA)
                 
-                # Add white border to badge for iOS style
+                # Add subtle white inner border to badge for iOS style
                 cv2.rectangle(result_img, 
                               (badge_x, badge_y), 
                               (badge_x + badge_width, badge_y + badge_height),
                               (255, 255, 255), 1, cv2.LINE_AA)
                 
-                # Draw text in center of badge
+                # Draw text in center of badge with better positioning
                 cv2.putText(
                     result_img,
                     text,
@@ -1039,10 +1452,10 @@ def identify_sets_from_image(
     final_output = restore_orientation(annotated, was_rotated)
     return found_sets, final_output
 
-def optimize_image_size(img_pil: Image.Image, max_dim=700) -> Image.Image:
+def optimize_image_size(img_pil: Image.Image, max_dim=650) -> Image.Image:
     """
     Resizes a PIL image to optimize for mobile viewing while preserving aspect ratio.
-    Reduced max_dim to 700 to ensure better fit on iPhone screens.
+    Optimized max_dim for better fit on iPhone screens.
     """
     width, height = img_pil.size
     if max(width, height) > max_dim:
@@ -1061,7 +1474,7 @@ def optimize_image_size(img_pil: Image.Image, max_dim=700) -> Image.Image:
 # =============================================================================
 def render_header():
     """
-    Renders a stylish SET-themed header with glassmorphism effect.
+    Renders a stylish SET-themed header with enhanced glassmorphism effect.
     """
     header_html = """
     <div class="ios-header">
@@ -1072,7 +1485,7 @@ def render_header():
 
 def render_loading():
     """
-    Shows enhanced animated loading spinner centered on the image.
+    Shows enhanced animated loading spinner perfectly centered on the image.
     """
     loader_html = """
     <div class="ios-loader-container">
@@ -1084,7 +1497,7 @@ def render_loading():
 
 def render_error(message: str):
     """
-    Renders an enhanced iOS-style error message.
+    Renders an enhanced iOS-style error message with animation.
     """
     html = f"""
     <div class="ios-alert ios-alert-error">
@@ -1095,7 +1508,7 @@ def render_error(message: str):
 
 def render_warning(message: str):
     """
-    Renders an enhanced iOS-style warning message.
+    Renders an enhanced iOS-style warning message with animation.
     """
     html = f"""
     <div class="ios-alert ios-alert-warning">
@@ -1106,7 +1519,7 @@ def render_warning(message: str):
 
 def render_success_message(num_sets: int):
     """
-    Renders an enhanced iOS-style success message.
+    Renders an enhanced iOS-style success message with animation.
     """
     if num_sets == 0:
         return
@@ -1132,7 +1545,7 @@ def detect_mobile_device():
             document.getElementsByTagName('head')[0].appendChild(meta);
         }
         
-        // Add iOS status bar meta tags
+        // Add iOS status bar meta tags for full-screen web app experience
         var statusBarMeta = document.createElement('meta');
         statusBarMeta.name = 'apple-mobile-web-app-status-bar-style';
         statusBarMeta.content = 'black-translucent';
@@ -1147,7 +1560,7 @@ def detect_mobile_device():
         // Add apple touch icon
         var touchIconMeta = document.createElement('link');
         touchIconMeta.rel = 'apple-touch-icon';
-        touchIconMeta.href = 'data:image/png;base64,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';
+        touchIconMeta.href = 'data:image/png;base64,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';
         document.getElementsByTagName('head')[0].appendChild(touchIconMeta);
         
         // Prevent zooming on double-tap
@@ -1162,6 +1575,27 @@ def detect_mobile_device():
         if (mainElement) {
             mainElement.style.paddingTop = '20px';
         }
+        
+        // Disable rubber-band effect
+        document.body.style.overflow = 'hidden';
+        document.body.style.position = 'fixed';
+        document.body.style.width = '100%';
+        document.body.style.height = '100%';
+        
+        // Add screen transition effect
+        window.addEventListener('load', function() {
+            var transitionDiv = document.createElement('div');
+            transitionDiv.className = 'ios-screen-transition';
+            document.body.appendChild(transitionDiv);
+            
+            // Function to trigger transition
+            window.triggerScreenTransition = function() {
+                transitionDiv.classList.add('active');
+                setTimeout(function() {
+                    transitionDiv.classList.remove('active');
+                }, 300);
+            };
+        });
     </script>
     """
     st.markdown(js_snippet, unsafe_allow_html=True)
@@ -1191,13 +1625,13 @@ def reset_app_state():
     st.session_state.image_height = 400
     st.session_state.uploader_key = str(random.randint(1000, 9999))
     st.session_state.should_reset = True
-    st.session_state.show_original = False
     st.session_state.is_mobile = is_mobile
     st.session_state.app_view = "upload"
+    st.session_state.screen_transition = True
     
 def render_premium_instruction(message: str):
     """
-    Renders a premium iOS-style instruction message.
+    Renders a premium iOS-style instruction message with animation.
     """
     html = f"""
     <div class="ios-instruction">
@@ -1213,7 +1647,7 @@ def main():
     """
     Main application entry point with premium iOS-styled layout optimized for iPhone.
     """
-    # 1. Load custom iOS-styled CSS
+    # 1. Load custom iOS-styled CSS with enhanced effects
     load_custom_css()
     
     # 2. Set proper viewport for iOS
@@ -1248,9 +1682,9 @@ def main():
             
             # Reset session state for new image
             for key in ['processed', 'processed_image', 'sets_info', 'original_image',
-                        'no_cards_detected', 'no_sets_found', 'show_original']:
+                        'no_cards_detected', 'no_sets_found']:
                 if key in st.session_state:
-                    if key in ('processed', 'no_cards_detected', 'no_sets_found', 'show_original'):
+                    if key in ('processed', 'no_cards_detected', 'no_sets_found'):
                         st.session_state[key] = False
                     else:
                         st.session_state[key] = None
@@ -1258,16 +1692,22 @@ def main():
             st.session_state.uploaded_file = uploaded_file
             try:
                 img_pil = Image.open(uploaded_file)
-                img_pil = optimize_image_size(img_pil, max_dim=650)  # Reduced max size for better mobile fit
+                img_pil = optimize_image_size(img_pil, max_dim=650)  # Optimized sizing
                 st.session_state.original_image = img_pil
                 st.session_state.image_height = img_pil.height
                 st.session_state.app_view = "preview"
+                st.session_state.screen_transition = True
                 st.rerun()
             except Exception as e:
                 render_error("Failed to load the image. Please try another photo.")
     
     # PREVIEW SCREEN - Show original with Find Sets button
     elif st.session_state.app_view == "preview":
+        # Screen transition animation
+        if st.session_state.screen_transition:
+            st.markdown('<div class="screen-animation">', unsafe_allow_html=True)
+            st.session_state.screen_transition = False
+        
         # Premium container for the image
         st.markdown('<div style="position: relative;">', unsafe_allow_html=True)
         st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
@@ -1275,36 +1715,8 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Instruction with premium styling
-        render_premium_instruction("Find all valid SETs in this game")
-        
-        # Green Find Sets button (enhanced style)
-        col1, col2 = st.columns([1, 1])
-        
-        with col1:
-            st.markdown('<div class="ios-button-primary find-sets-button">', unsafe_allow_html=True)
-            if st.button("Find Sets", key="find_sets_btn", use_container_width=True):
-                st.session_state.app_view = "processing"
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
-            
-        with col2:
-            st.markdown('<div class="ios-button-secondary">', unsafe_allow_html=True)
-            if st.button("Try Another", key="try_different_btn", use_container_width=True):
-                reset_app_state()
-                st.rerun()
-            st.markdown('</div>', unsafe_allow_html=True)
-    
-    # PROCESSING SCREEN
-    elif st.session_state.app_view == "processing":
-        # Premium container for the image and loading overlay
-        st.markdown('<div style="position: relative;">', unsafe_allow_html=True)
-        st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
-        st.image(st.session_state.original_image, use_container_width=True)
-        # Overlay the premium loader on the image
-        render_loading()
-        st.markdown('</div>', unsafe_allow_html=True)
-        st.markdown('</div>', unsafe_allow_html=True)
+        # Instruction text while processing
+        render_premium_instruction("Detecting cards and analyzing patterns...")
         
         # Process the image
         try:
@@ -1316,19 +1728,31 @@ def main():
             st.session_state.processed_image = processed_img
             st.session_state.processed = True
             st.session_state.app_view = "results"
+            st.session_state.screen_transition = True
             st.rerun()
         except Exception as e:
             render_error("Error processing image")
             
             # Add retry button with premium style
+            st.markdown('<div class="ios-center-button">', unsafe_allow_html=True)
             st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
             if st.button("Try Again", key="retry_btn", use_container_width=True):
                 st.session_state.app_view = "preview"
+                st.session_state.screen_transition = True
                 st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+        if st.session_state.screen_transition:
             st.markdown('</div>', unsafe_allow_html=True)
     
     # RESULTS SCREEN
     elif st.session_state.app_view == "results":
+        # Screen transition animation
+        if st.session_state.screen_transition:
+            st.markdown('<div class="screen-animation">', unsafe_allow_html=True)
+            st.session_state.screen_transition = False
+            
         # Handle error cases
         if st.session_state.no_cards_detected:
             render_error("No cards detected in the image")
@@ -1341,10 +1765,12 @@ def main():
             render_premium_instruction("Try taking a clearer photo with better lighting")
             
             # Try again button with premium style
+            st.markdown('<div class="ios-center-button">', unsafe_allow_html=True)
             st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
             if st.button("Try Another Photo", key="try_again_btn", use_container_width=True):
                 reset_app_state()
                 st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
         elif st.session_state.no_sets_found:
@@ -1358,10 +1784,12 @@ def main():
             render_premium_instruction("There are no valid SET combinations in this layout")
             
             # Try again button with premium style
+            st.markdown('<div class="ios-center-button">', unsafe_allow_html=True)
             st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
             if st.button("Try Another Photo", key="no_sets_btn", use_container_width=True):
                 reset_app_state()
                 st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
         else:
@@ -1384,28 +1812,60 @@ def main():
             st.image(cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB), use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # Button row with premium styling
-            col1, col2 = st.columns([1, 1])
+            # Enhanced instruction with details
+            render_premium_instruction(f"Found {num_sets} valid SET{'s' if num_sets > 1 else ''} with unique card combinations")
             
-            with col1:
-                st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
-                if st.button("New Game", key="new_game_btn", use_container_width=True):
-                    reset_app_state()
-                    st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
-                
-            with col2:
-                st.markdown('<div class="ios-button-secondary">', unsafe_allow_html=True)
-                if st.button("Show Original", key="show_orig_btn", use_container_width=True):
-                    st.session_state.show_original = not st.session_state.get("show_original", False)
-                    st.rerun()
-                st.markdown('</div>', unsafe_allow_html=True)
+            # Single centered New Game button (removed Show Original button as requested)
+            st.markdown('<div class="ios-center-button">', unsafe_allow_html=True)
+            st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
+            if st.button("New Game", key="new_game_btn", use_container_width=True):
+                reset_app_state()
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+            st.markdown('</div>', unsafe_allow_html=True)
             
-            # Show original image if requested
-            if st.session_state.get("show_original", False):
-                st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
-                st.image(st.session_state.original_image, use_container_width=True)
-                st.markdown('</div>', unsafe_allow_html=True)
+        if st.session_state.screen_transition:
+            st.markdown('</div>', unsafe_allow_html=True)
 
-if _name_ == "_main_":
-    main()
+if __name__ == "__main__":
+    main()('</div>', unsafe_allow_html=True)
+        
+        # Instruction with premium styling
+        render_premium_instruction("Find all valid SETs in this game")
+        
+        # Button row with premium styling
+        col1, col2 = st.columns([1, 1])
+        
+        with col1:
+            st.markdown('<div class="ios-button-primary find-sets-button">', unsafe_allow_html=True)
+            if st.button("Find Sets", key="find_sets_btn", use_container_width=True):
+                st.session_state.app_view = "processing"
+                st.session_state.screen_transition = True
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+        with col2:
+            st.markdown('<div class="ios-button-secondary">', unsafe_allow_html=True)
+            if st.button("Try Another", key="try_different_btn", use_container_width=True):
+                reset_app_state()
+                st.rerun()
+            st.markdown('</div>', unsafe_allow_html=True)
+            
+        if st.session_state.screen_transition:
+            st.markdown('</div>', unsafe_allow_html=True)
+    
+    # PROCESSING SCREEN
+    elif st.session_state.app_view == "processing":
+        # Screen transition animation
+        if st.session_state.screen_transition:
+            st.markdown('<div class="screen-animation">', unsafe_allow_html=True)
+            st.session_state.screen_transition = False
+            
+        # Premium container for the image and loading overlay
+        st.markdown('<div style="position: relative;">', unsafe_allow_html=True)
+        st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
+        st.image(st.session_state.original_image, use_container_width=True)
+        # Overlay the premium loader centered on the image
+        render_loading()
+        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown
