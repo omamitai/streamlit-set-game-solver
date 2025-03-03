@@ -93,7 +93,7 @@ def load_custom_css():
     @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap');
     @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Text:wght@400;500;600&display=swap');
 
-    /* --- SET-themed Variables with Responsive Spacing --- */
+    /* --- SET-themed Variables with Refined Responsive Spacing --- */
     :root {
         /* Colors */
         --set-purple: #7C3AED;
@@ -115,19 +115,30 @@ def load_custom_css():
         --set-border: rgba(124, 58, 237, 0.25);
         --page-transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         
-        /* Responsive spacing system (absolute units) */
+        /* Dynamic spacing (will be updated by JS) */
+        --vspace-xs: 0.35vh;
+        --vspace-sm: 0.7vh;
+        --vspace-md: 1.2vh;
+        --vspace-lg: 1.6vh;
+        --vspace-xl: 2.2vh;
+        
+        /* Fixed horizontal spacing */
         --space-xs: 0.25rem;
         --space-sm: 0.5rem;
         --space-md: 0.75rem;
         --space-lg: 1rem;
         --space-xl: 1.5rem;
         
-        /* Viewport-relative spacing (vertical rhythm) */
-        --vspace-xs: 0.5vh;
-        --vspace-sm: 1vh;
-        --vspace-md: 1.5vh;
-        --vspace-lg: 2vh;
-        --vspace-xl: 3vh;
+        /* Dynamic component sizes (updated by JS) */
+        --header-height: 2rem;
+        --button-height: 2.75rem;
+        --font-size-instruction: 0.9rem;
+        
+        /* Safe areas for notched iPhones */
+        --safe-area-inset-top: env(safe-area-inset-top, 0px);
+        --safe-area-inset-right: env(safe-area-inset-right, 0px);
+        --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+        --safe-area-inset-left: env(safe-area-inset-left, 0px);
     }
 
     /* --- Base Styles --- */
@@ -141,6 +152,17 @@ def load_custom_css():
         background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%239C92AC' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
         transition: background-color var(--page-transition);
         overscroll-behavior: none; /* Prevent overscroll bounce effect */
+        margin: 0;
+        padding: 0;
+    }
+
+    /* --- Streamlit Override - Zero Padding for Mobile --- */
+    .main .block-container {
+        padding-top: 0;
+        padding-bottom: 0;
+        padding-left: 0;
+        padding-right: 0;
+        max-width: 100%;
     }
 
     /* --- App Container Animation --- */
@@ -154,22 +176,13 @@ def load_custom_css():
         to { opacity: 1; }
     }
 
-    /* --- Streamlit Override - Zero Padding for Mobile --- */
-    .main .block-container {
-        padding-top: var(--vspace-xs);
-        padding-bottom: var(--vspace-sm);
-        padding-left: var(--space-xs);
-        padding-right: var(--space-xs);
-        max-width: 100%;
-    }
-
-    /* --- Premium Header with Reduced Height --- */
+    /* --- Compact Premium Header --- */
     .ios-header {
         display: flex;
         justify-content: center;
         align-items: center;
-        padding: var(--vspace-xs) var(--space-lg);
-        margin: 0 auto var(--vspace-xs);
+        padding: var(--vspace-xs) var(--space-md);
+        margin: var(--vspace-xs) auto var(--vspace-xs);
         background: linear-gradient(135deg, rgba(124, 58, 237, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
@@ -181,7 +194,7 @@ def load_custom_css():
         max-width: 85%;
         position: relative;
         overflow: hidden;
-        height: 2.2rem; /* Reduced fixed height */
+        height: var(--header-height); /* Dynamic height based on device */
     }
     
     /* Add subtle shimmer effect to header */
@@ -210,7 +223,7 @@ def load_custom_css():
     
     .ios-header h1 {
         font-family: -apple-system, 'SF Pro Display', BlinkMacSystemFont, sans-serif;
-        font-size: 1.1rem; /* Smaller font */
+        font-size: 1.1rem;
         font-weight: 700;
         margin: 0;
         background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-pink) 100%);
@@ -224,13 +237,10 @@ def load_custom_css():
     /* --- ENHANCED: Premium Image Container --- */
     .ios-image-container {
         margin: var(--vspace-xs) auto;
-        position: relative; /* Critical for loading spinner positioning */
+        position: relative;
         border-radius: 20px;
         overflow: hidden;
-        max-height: min(50vh, 320px); /* Dynamic calculation with fallback */
-        height: auto;
-        min-height: 180px; 
-        width: 85%;
+        /* Width is dynamically set via JS */
         background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
         box-shadow: 
             0 8px 20px rgba(124, 58, 237, 0.15),
@@ -241,6 +251,7 @@ def load_custom_css():
         align-items: center;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
         margin-bottom: var(--vspace-xs);
+        /* Height is dynamically set via JS */
     }
     
     /* Scale image content to fit perfectly within container */
@@ -249,7 +260,7 @@ def load_custom_css():
         height: 100%;
         object-fit: contain; /* Ensures no cropping */
         display: block;
-        transform: scale(0.95); /* Slight inset for aesthetic purposes */
+        transform: scale(0.98); /* Slight inset for aesthetic purposes */
         transition: transform 0.3s ease;
     }
     
@@ -274,26 +285,31 @@ def load_custom_css():
         animation: imageEnter 0.3s ease-out forwards;
     }
     
-    /* --- ENHANCED: Premium SET Loader with Glassmorphism --- */
+    /* --- ENHANCED: Premium SET Loader with Perfect Centering --- */
     .ios-loader-container {
         position: absolute;
         top: 0;
         left: 0;
-        width: 100%; /* Full width of parent */
-        height: 100%; /* Full height of parent */
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
         display: flex;
         flex-direction: column;
-        justify-content: center; /* Vertical centering */
-        align-items: center; /* Horizontal centering */
+        justify-content: center;
+        align-items: center;
         background: rgba(244, 241, 250, 0.85);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
-        z-index: 10;
+        z-index: 999;
         border-radius: 20px;
         animation: fadeIn 0.4s ease-out;
+        /* Ensure alignment against parent */
+        transform: translateZ(0);
     }
     
     .ios-loader {
+        position: relative;
         width: 42px;
         height: 42px;
         border: 3px solid rgba(124, 58, 237, 0.15);
@@ -301,7 +317,24 @@ def load_custom_css():
         border-radius: 50%;
         animation: spin 1s linear infinite;
         box-shadow: 0 0 15px rgba(124, 58, 237, 0.2);
-        transform: translateZ(0); /* Force hardware acceleration */
+        /* Force hardware acceleration and ensure pixel-perfect centering */
+        transform: translateZ(0);
+        margin: 0;
+    }
+    
+    /* Add loading label beneath spinner for better UX */
+    .ios-loader::after {
+        content: "Finding Sets...";
+        position: absolute;
+        top: calc(100% + 15px);
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--set-purple);
+        text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
+        letter-spacing: 0.01em;
     }
     
     @keyframes spin {
@@ -312,7 +345,7 @@ def load_custom_css():
     /* --- ENHANCED: Compact Instruction Text --- */
     .ios-instruction {
         text-align: center;
-        font-size: 0.9rem; /* Smaller font */
+        font-size: var(--font-size-instruction);
         font-weight: 500;
         color: #4B5563;
         margin: var(--vspace-xs) auto;
@@ -345,13 +378,13 @@ def load_custom_css():
         margin: var(--vspace-xs) auto;
         display: flex;
         align-items: center;
-        font-size: 0.85rem; /* Smaller font */
+        font-size: 0.85rem;
         font-weight: 600;
-        min-height: 40px; /* Reduced height */
+        min-height: 36px; /* Further reduced height */
         box-shadow: 
             0 4px 10px rgba(0, 0, 0, 0.08),
             inset 0 1px 2px rgba(255, 255, 255, 0.4);
-        width: 90%;
+        width: 85%;
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
         transition: transform 0.2s ease, opacity 0.2s ease;
@@ -414,11 +447,11 @@ def load_custom_css():
         border-radius: 16px;
         font-family: -apple-system, 'SF Pro Display', BlinkMacSystemFont, sans-serif;
         font-weight: 600;
-        font-size: 0.9rem; /* Smaller font */
+        font-size: 0.9rem;
         cursor: pointer;
         width: 100%;
         margin: var(--vspace-xs) 0 !important;
-        min-height: 44px; /* Reduced height following Apple guidelines */
+        min-height: var(--button-height);
         box-shadow: 
             0 4px 12px rgba(124, 58, 237, 0.25),
             inset 0 1px 3px rgba(255, 255, 255, 0.4);
@@ -556,7 +589,7 @@ def load_custom_css():
             0 4px 10px rgba(124, 58, 237, 0.1),
             inset 0 1px 2px rgba(255, 255, 255, 0.4);
         margin: 0.5rem auto !important;
-        width: 92%;
+        width: 85%;
         transition: all 0.3s ease;
         animation: fadeIn 0.5s ease-out;
     }
@@ -690,28 +723,6 @@ def load_custom_css():
         -ms-transform: translateZ(0);
         -o-transform: translateZ(0);
         transform: translateZ(0);
-    }
-    
-    /* Responsive optimizations for very small devices */
-    @media screen and (max-height: 650px) {
-        .ios-header {
-            height: 1.8rem; /* Even smaller header */
-            padding: 0.2rem 0.8rem;
-        }
-        
-        .ios-header h1 {
-            font-size: 1rem;
-        }
-        
-        .ios-button-primary > button {
-            min-height: 40px;
-            font-size: 0.85rem;
-        }
-        
-        .ios-instruction {
-            font-size: 0.8rem;
-            padding: 0.3rem 0.5rem;
-        }
     }
     </style>
     """
@@ -1103,14 +1114,14 @@ def identify_sets_from_image(
     final_output = restore_orientation(annotated, was_rotated)
     return found_sets, final_output
 
-def optimize_image_size(img_pil: Image.Image, max_dim=650) -> Image.Image:
+def optimize_image_size(img_pil: Image.Image, max_dim=800) -> Image.Image:
     """
-    Resizes a PIL image using a responsive approach for mobile viewing.
-    Uses a higher quality initial resize while letting CSS handle final display.
+    Intelligently resizes a PIL image using a responsive approach for mobile viewing.
+    Preserves aspect ratio while optimizing for different iPhone screen sizes.
     
     Args:
         img_pil: PIL Image to resize
-        max_dim: Maximum dimension (default 650px for better quality)
+        max_dim: Maximum dimension for high-density retina displays (default 800px)
     
     Returns:
         Optimally resized PIL Image
@@ -1118,7 +1129,19 @@ def optimize_image_size(img_pil: Image.Image, max_dim=650) -> Image.Image:
     width, height = img_pil.size
     aspect_ratio = width / height
     
-    # Only downsize if image is larger than max_dim
+    # First, check if image is very large (from high megapixel cameras)
+    if max(width, height) > 1500:
+        # Aggressive downsize for very large images to prevent memory issues
+        if width > height:
+            new_width = 1500
+            new_height = int(new_width / aspect_ratio)
+        else:
+            new_height = 1500
+            new_width = int(new_height * aspect_ratio)
+        img_pil = img_pil.resize((new_width, new_height), Image.LANCZOS)
+        width, height = img_pil.size
+    
+    # Standard resize for normal-sized images
     if max(width, height) > max_dim:
         if width > height:
             new_width = max_dim
@@ -1140,7 +1163,7 @@ def optimize_image_size(img_pil: Image.Image, max_dim=650) -> Image.Image:
 def render_header():
     """
     Renders a compact SET-themed header with enhanced glassmorphism effect.
-    Uses reduced height to maximize vertical space.
+    Uses dynamic height based on device size for optimal space utilization.
     """
     header_html = """
     <div class="ios-header">
@@ -1152,10 +1175,11 @@ def render_header():
 def render_loading():
     """
     Shows enhanced animated loading spinner perfectly centered on the image.
-    Uses flexbox and absolute positioning for pixel-perfect centering.
+    Uses flexbox and absolute positioning with transform for pixel-perfect centering.
+    Includes ARIA attributes for accessibility.
     """
     loader_html = """
-    <div class="ios-loader-container">
+    <div class="ios-loader-container" aria-live="polite" role="status">
         <div class="ios-loader"></div>
     </div>
     """
@@ -1199,8 +1223,8 @@ def render_success_message(num_sets: int):
 
 def detect_mobile_device():
     """
-    Sets proper viewport for mobile devices with enhanced iOS-specific meta tags
-    and adds responsive image sizing JavaScript.
+    Sets proper viewport for iOS devices and adds dynamic image sizing JavaScript.
+    Supports notched iPhones with safe area insets and prevents scrolling/zooming.
     """
     js_snippet = """
     <script>
@@ -1224,7 +1248,7 @@ def detect_mobile_device():
         webAppMeta.content = 'yes';
         document.getElementsByTagName('head')[0].appendChild(webAppMeta);
         
-        // Add apple touch icon
+        // Add apple touch icon for home screen
         var touchIconMeta = document.createElement('link');
         touchIconMeta.rel = 'apple-touch-icon';
         touchIconMeta.href = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAYAAAA9zQYyAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAk3SURBVHgB7d1dbFxXFQfw/7p2J3bsOJuUQpoNhU/TJA05a4JFqGpLk44Ui0CjUlWLOvMSTvuEgPZtGlpa2IsoL2yceVClPkBbwQMgFdQKFgK1SRALkk09QDDgVpuSUJE6/gg0XrOvE3vsuZ9zr+978zvSKJk7vrZnZ/9sbp179hmCEEIIIYQQQgghhBBCCCGEEEIIIYQQQgghhBCiM3CEEGUwA44hOZNNNnuCyXOZ50XWgTfvZzTrx4eP00zEM75n1sGgvFe/gZ0NOkR41LEMLFyExlNvNMXKXXyDBZODtJ5e2z2/TgoIHYk5N2tDKEW0FsXtydnXrFlcJJe1eSC/4OrDC+m0oONwJH/H3KO+E5y6TJ38fB8uhNrUJg7Gs8HhbMvgpcw4GR44eZnsMt85Y+UHHEQQtqsbY2dY2WdEzh2GDfyLXGpgp+N9WRsHb/CCQU5iD5kP+N5qBqfOLwfDmTgZR5sEm9JjJwb4JhFHbTLOyCfXOTl2MsP/nMBKFJeK+AUvOkOzLHUONY7POu+Krc75AafhBtNQnB9s4xfcgtabxG3Haf7lzGJDxnwwn8vt3HGJ/56uTf6fmU/gCP//GmYyYx4cJyNhPGALJHbMYIINOdlFoq7X3sJecnHT2prdx//eRs+hlJnY/J9/+fVgwlgrg8llABpyq/7eZF8ogSSo+wfmvFb2zd/iP373L2fJXuJtgkq9Sw+eY4P+7a4buNnPt5YuVDyS+XWH+3n35MPU2MN5kx2GorqPQxxmC5zCzzDCSaxyPc9r9Sc10t9mUNt1zBzvNOMZPPvUV+6/pKdjDa6pODl3cPZgp3c5vOXK7tys1HGR0O2p6YbGNG5kc81ygX9B/5FE5FDJ8qrxCDfy0ZijBDfypj3/+R9dPFnr987lUmZ5NRV3F5nx7yCh1Aq9JXOcOugD0DrH4y7v8z6zu7i9d9f67qeedfFU4+Lntl91F9N2Fn8aHrtvD9qU2hGaxQcTilzy3H47gw/YWL84vGUh7+K9zX7fTCaT558prZJvyg9k9B20nUQKhdS/0A64wLv8xYn0Oqa+RlP3/CDzK15kWvjfbPeBP175/kPfnJi++9/n7n7v7mX3DxcnuNNkGZpJ3EJz7t93T7cGL2M5i10B7O96nczt0YWGEGWJCc0R+XNIiLgpx9Z1E9CI5XLYxs1AY8rdS3HEET6QitC2pFMCC0kT94Hc0bTfO7d3hufj4T3Bn+N/PKz8g8HXXLbdTRHOBYtHPFZPPnMoXsUs/l1ESyhf5NbQjdLgJczjoxObZ/ct+PziH7N337/2QXRqV/WUa+fMDy4+mLtZhOCY0Mnr6fKN5D4XYgw6O1A25ej0jGHOz+Zj++d5wR6otdBVV4urr2/wj40+BCKy/kJvc4QPnepCiNAcFzz47ljecliz138/vnvhjHCsv/DM+Ypba/fPUuMWmgcHzrTccs/auvt93+uum8zicRxbeDZ/5uyBpU8+dZ+X11O7INHUFHqhHsKR4GvLX/zO+96+3tQtG7qua+nV04f2LWU33rKT6/QmvB/Z5FgInYu7M//T66urUWH9/Lta4mZm3ryCttPSdnQcLVXqaUg0NYLLG0NU+gy9J6nRBwa3KnT8A/KWB/N/XN9+/Mq7N15f+l2/Tqnn4GBkkSDUFDr+uFz0+efc6cPhA4GwRafXyR6iwUJCqCh09HWO3i7QgGXA//nL3/reud+2DlP68yvuTOXzmM7nQl+BVxLZ2dz43NbZ3BTqpVYmNKq0g2vkNyCQTmvokdDcCzW1c6kXnUjNJJBKLaeSThVpq3Ryf4mGUlHokodrW7W6ofSDaDgVha5L9VpaGta4iSt0fZtOLx08HZtQSkKXivahVBS6VnXuvVEJSVxLV6Frm3XufZ3uZKNm0fO9XBu3d7a3N53dmBuEX2930aYadcBS7dBJvGmTpquBw00//3FwYdsvXtn++wsf2P7KK9u3X7yKLZw40CQfgKdJFqH5V1lo3d77vJm/eJVXa/eYDBtW+01rEqGp+1I36lLSTK4Ek8xVlB0uTSIoF3IoOYqTf0NNfaG7aGw59YT++ulVrGD/mJ9N53tTVWjqkMjcmsSl6Zs4aOJbna1JOUkVpaRqDq2JzLtjuDg+hbjQvb1qUpZyaM+YGplS81OVtJRD5raMW1U/QidXW3VSVWjtGQPLvxXRtXRddrDOojLl0P7dOJBQqgrdqaNJUHxjD+pKW1vlhO7k0TnqoOpDcEoK3c73aBSZf5l46HRRT1FZylGXZq6qbv/oloG9qwdPrU3/M3qmqtA6vp+D+SdxEZVKIAHUFLqjR+bSSF//gVy9mj6yxfLZOYgAagrdwYn1Jn6JlKe20O6Fya+6r9qsV/42PfX3/WjD3+1r6glNBw7G35UUVCvPzPURe70p+j+/f/8T9+3pfxS/7t67tY+Jl1LqCc333j9X1UEJPRfCHdZSndTc2hZ/XjDreNvYVK7iCeJaGVD9C6SLtOzlaPS+gVwJJ4X+zcv7Zh+47+7xPx9P38NvB/Yut1r2W3/6anDHfvrLjY8/9tD4+QcfeySf++5aNhVw9FQyHJ9feGnvT36exd6XXvzKfbsNtYVGJKJSt5mVrKpOFzo6+0ILJUNxGsWn7lR9FDrQTQrP/fRPybjJWHFR4rfPvfznqacm7lu+0N2vJaEdA8eFboWiUivKJFJb6Hh/lOPO+9E+fvrr3/z+9RODn/9MvhjY/oM/uS+sX3MfTyW9+YvT+1/7L9r4tnypVRa6XnHa2i0/88D26u833L8/lPfmLmUy7h//tHHp+Wc3/s3Xzp4/f/DQ8yfy1vV7rl3uWllxb3OX63UkoCrlaJGhLPUWuUZPiZ7ffB1apH6E5hhXRyfVQvX2qSu0qOLlAaS00J2D23sbaGZTleUIrVRPObRMLrR57fy0TFWhVaHoXUVBoapMOaSx0Ob7QbRTNUJ3kQFnqK1XUqHt6+vZQj+0F1qrQvfOUFtHpRGa49XQmSIUE65T6B6hNT2FNnaOWnsgNKVnDq1J/Nqa5a7vI4G0p+nI3NN9JJqeKUcXWXv3aBihtc+hu4j1VZ03m9CcpnmEFpxhN0KrXENr4bssQv83FPCbvK5McWoAAAAASUVORK5CYII=';
@@ -1237,50 +1261,101 @@ def detect_mobile_device():
             }
         }, { passive: false });
         
-        // Add top padding for iOS status bar
-        var mainElement = document.querySelector('.main');
-        if (mainElement) {
-            mainElement.style.paddingTop = '20px';
-        }
-        
         // Disable rubber-band effect
         document.body.style.overflow = 'hidden';
         document.body.style.position = 'fixed';
         document.body.style.width = '100%';
         document.body.style.height = '100%';
         
-        // Calculate optimal image container height
-        function calculateOptimalImageHeight() {
+        // IMPROVED: Dynamic image sizing calculation
+        function calculateOptimalImageDimensions() {
+            // Get viewport dimensions
             const vh = window.innerHeight;
+            const vw = window.innerWidth;
+            
+            // Get heights of fixed UI elements
             const headerHeight = document.querySelector('.ios-header')?.offsetHeight || 0;
             const instructionHeight = document.querySelector('.ios-instruction')?.offsetHeight || 0;
             const buttonContainerHeight = document.querySelector('.ios-center-button')?.offsetHeight || 0;
             const alertHeight = document.querySelector('.ios-alert')?.offsetHeight || 0;
             
-            // Calculate space needed for non-image UI elements + margins
+            // Calculate total UI elements height with a safety margin for potential elements not in DOM yet
             const uiElementsHeight = headerHeight + instructionHeight + buttonContainerHeight + alertHeight;
-            const safetyMargin = vh * 0.15; // 15% of viewport for padding/margins
             
-            // Calculate available height (max 60% of viewport, min 180px)
-            const availableHeight = Math.max(180, Math.min((vh - uiElementsHeight - safetyMargin), vh * 0.6));
+            // Calculate safety margins (top and bottom)
+            const topMargin = vh * 0.05; // 5% of viewport height
+            const bottomMargin = vh * 0.08; // 8% of viewport height
+            
+            // Calculate available space for image
+            // Use min to ensure we don't exceed 65% of viewport height on larger screens
+            const availableHeight = Math.min(
+                vh - uiElementsHeight - topMargin - bottomMargin,
+                vh * 0.65
+            );
+            
+            // Enforce minimum height (for very small screens or landscape)
+            const minHeight = Math.max(180, vh * 0.25); 
+            const maxHeight = Math.min(vh * 0.65, Math.max(minHeight, availableHeight));
+            
+            // Calculate optimal width (85% of viewport width but not more than 500px)
+            const optimalWidth = Math.min(vw * 0.85, 500);
             
             // Apply to all image containers
             document.querySelectorAll('.ios-image-container').forEach(container => {
-                container.style.maxHeight = `${availableHeight}px`;
+                container.style.maxHeight = `${maxHeight}px`;
+                container.style.width = `${optimalWidth}px`;
+                container.style.margin = `${vh * 0.015}px auto`;
             });
             
-            // Apply responsive spacing based on device height
+            // Apply adaptive spacing based on device height
             const root = document.documentElement;
-            if (vh < 700) {
-                // Tighter spacing for smaller devices
+            
+            // Extra small devices (iPhone SE, iPhone 8)
+            if (vh < 600) {
+                root.style.setProperty('--vspace-xs', '0.25vh');
+                root.style.setProperty('--vspace-sm', '0.5vh');
+                root.style.setProperty('--vspace-md', '0.9vh');
+                root.style.setProperty('--vspace-lg', '1.2vh');
+                root.style.setProperty('--header-height', '1.8rem');
+                root.style.setProperty('--button-height', '2.5rem');
+                root.style.setProperty('--font-size-instruction', '0.8rem');
+            } 
+            // Small devices (iPhone 12/13 mini)
+            else if (vh < 750) {
                 root.style.setProperty('--vspace-xs', '0.3vh');
                 root.style.setProperty('--vspace-sm', '0.7vh');
-                root.style.setProperty('--vspace-md', '1.2vh');
-            } else {
-                // Standard spacing for larger devices
-                root.style.setProperty('--vspace-xs', '0.5vh');
-                root.style.setProperty('--vspace-sm', '1vh');
-                root.style.setProperty('--vspace-md', '1.5vh');
+                root.style.setProperty('--vspace-md', '1.1vh');
+                root.style.setProperty('--vspace-lg', '1.5vh');
+                root.style.setProperty('--header-height', '2rem');
+                root.style.setProperty('--button-height', '2.75rem');
+                root.style.setProperty('--font-size-instruction', '0.85rem');
+            }
+            // Medium/large devices (iPhone 14/15/Pro/Max)
+            else {
+                root.style.setProperty('--vspace-xs', '0.4vh');
+                root.style.setProperty('--vspace-sm', '0.8vh');
+                root.style.setProperty('--vspace-md', '1.3vh');
+                root.style.setProperty('--vspace-lg', '1.8vh');
+                root.style.setProperty('--header-height', '2.2rem');
+                root.style.setProperty('--button-height', '3rem');
+                root.style.setProperty('--font-size-instruction', '0.9rem');
+            }
+            
+            // Support for dynamic safe areas on notched iPhones
+            const safeAreaTop = getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-top') || '0px';
+            const safeAreaBottom = getComputedStyle(document.documentElement).getPropertyValue('--safe-area-inset-bottom') || '0px';
+            
+            // Apply safe area adjustments if available
+            if (safeAreaTop !== '0px') {
+                document.querySelector('.main')?.style.setProperty('padding-top', safeAreaTop);
+            }
+            
+            // Adjust bottom margin to account for home indicator on newer iPhones
+            if (safeAreaBottom !== '0px' && safeAreaBottom !== '0') {
+                const buttons = document.querySelector('.ios-center-button');
+                if (buttons) {
+                    buttons.style.marginBottom = `calc(${safeAreaBottom} + var(--vspace-sm))`;
+                }
             }
         }
         
@@ -1298,17 +1373,17 @@ def detect_mobile_device():
         }
         
         // Run on load and whenever window is resized
-        window.addEventListener('load', () => setTimeout(calculateOptimalImageHeight, 300));
-        window.addEventListener('resize', debounce(calculateOptimalImageHeight, 200));
+        window.addEventListener('load', () => setTimeout(calculateOptimalImageDimensions, 300));
+        window.addEventListener('resize', debounce(calculateOptimalImageDimensions, 200));
         
         // Use MutationObserver to detect dynamic content changes
-        const observer = new MutationObserver(debounce(calculateOptimalImageHeight, 150));
+        const observer = new MutationObserver(debounce(calculateOptimalImageDimensions, 150));
         observer.observe(document.body, { childList: true, subtree: true });
         
         // Track device orientation changes
         window.addEventListener('orientationchange', function() {
             // Add slight delay to ensure dimensions are updated
-            setTimeout(calculateOptimalImageHeight, 300);
+            setTimeout(calculateOptimalImageDimensions, 300);
         });
         
         // Add screen transition effect
@@ -1361,7 +1436,7 @@ def reset_app_state():
 def render_premium_instruction(message: str):
     """
     Renders a compact iOS-style instruction message with animation.
-    Uses viewport-relative units for consistent spacing.
+    Uses viewport-relative units for consistent spacing across different devices.
     """
     html = f"""
     <div class="ios-instruction">
@@ -1422,7 +1497,7 @@ def main():
             st.session_state.uploaded_file = uploaded_file
             try:
                 img_pil = Image.open(uploaded_file)
-                img_pil = optimize_image_size(img_pil, max_dim=650)  # Higher quality initial resize
+                img_pil = optimize_image_size(img_pil, max_dim=800)  # Higher quality initial resize
                 st.session_state.original_image = img_pil
                 st.session_state.image_height = img_pil.height
                 st.session_state.app_view = "preview"
