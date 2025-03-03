@@ -195,14 +195,14 @@ def load_custom_css():
     
     .ios-header h1 {
         font-family: -apple-system, 'SF Pro Display', BlinkMacSystemFont, sans-serif;
-        font-size: 1.3rem;
+        font-size: 1.4rem;
         font-weight: 700;
         margin: 0;
         background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-pink) 100%);
         -webkit-background-clip: text;
         background-clip: text;
         -webkit-text-fill-color: transparent;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.01em;
         text-shadow: 0 1px 2px rgba(124, 58, 237, 0.1);
     }
     
@@ -247,194 +247,135 @@ def load_custom_css():
         box-shadow: 0 2px 8px rgba(124, 58, 237, 0.1);
     }
 
-    /* --- ENHANCED: Primary Button (Purple) --- */
+    /* --- Reimagined Buttons - Modern iOS 17 Style --- */
     .ios-button-primary > button {
-        background: linear-gradient(135deg, var(--set-purple) 0%, var(--set-purple-light) 100%) !important;
+        background: linear-gradient(135deg, #7C3AED 0%, #9333EA 100%) !important;
         color: white !important;
         border: none !important;
-        padding: 0.7rem;
-        border-radius: 14px;
-        font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
+        padding: 0.8rem 1rem;
+        border-radius: 18px; /* Increased roundness */
+        font-family: -apple-system, 'SF Pro Display', BlinkMacSystemFont, sans-serif;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.95rem;
         cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         width: 100%;
-        margin: 0.25rem 0 !important;
-        min-height: 54px; /* Increased touch target */
+        margin: 0.5rem 0 !important;
+        min-height: 56px; /* Increased touch target */
         box-shadow: 
-            0 4px 12px rgba(124, 58, 237, 0.4),
-            inset 0 1px 2px rgba(255, 255, 255, 0.3);
+            0 6px 16px rgba(124, 58, 237, 0.3),
+            inset 0 1px 3px rgba(255, 255, 255, 0.4);
         letter-spacing: 0.01em;
-        text-transform: uppercase;
         position: relative;
         overflow: hidden;
+        transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+        transform: translateY(0);
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 0.5rem;
     }
     
-    /* Add subtle shine effect to buttons */
-    .ios-button-primary > button::after {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: linear-gradient(
-            to bottom right,
-            rgba(255, 255, 255, 0) 0%,
-            rgba(255, 255, 255, 0.1) 50%,
-            rgba(255, 255, 255, 0) 100%
-        );
-        transform: rotate(30deg);
-        animation: buttonShimmer 4s infinite linear;
-        z-index: 1;
-        pointer-events: none;
-    }
-    
-    @keyframes buttonShimmer {
-        0% { transform: translateX(-100%) rotate(30deg); }
-        100% { transform: translateX(100%) rotate(30deg); }
-    }
-    
+    /* Add interactive hover effect */
     .ios-button-primary > button:hover {
-        background: linear-gradient(135deg, var(--set-purple-light) 0%, var(--set-purple) 100%);
+        transform: translateY(-2px);
         box-shadow: 
-            0 6px 18px rgba(124, 58, 237, 0.5),
+            0 8px 20px rgba(124, 58, 237, 0.4),
             inset 0 1px 3px rgba(255, 255, 255, 0.4);
-        transform: translateY(-1px) scale(1.01);
+        background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%) !important;
     }
     
+    /* Add interactive active effect */
     .ios-button-primary > button:active {
-        background: linear-gradient(135deg, var(--set-purple-dark) 0%, var(--set-purple) 100%);
-        transform: translateY(1px) scale(0.98);
+        transform: translateY(1px);
         box-shadow: 
-            0 2px 5px rgba(124, 58, 237, 0.3),
-            inset 0 1px 1px rgba(255, 255, 255, 0.2);
-    }
-
-    /* --- ENHANCED: Secondary Button (Red) --- */
-    .ios-button-secondary > button {
-        background: linear-gradient(135deg, var(--set-red) 0%, var(--set-red-light) 100%) !important;
-        color: white !important;
-        border: none !important;
-        padding: 0.7rem;
-        border-radius: 14px;
-        font-family: -apple-system, 'SF Pro Text', BlinkMacSystemFont, sans-serif;
-        font-weight: 600;
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        width: 100%;
-        margin: 0.25rem 0 !important;
-        min-height: 54px; /* Increased touch target */
-        box-shadow: 
-            0 4px 12px rgba(239, 68, 68, 0.35),
+            0 3px 8px rgba(124, 58, 237, 0.3),
             inset 0 1px 2px rgba(255, 255, 255, 0.3);
-        text-transform: uppercase;
-        letter-spacing: 0.01em;
-        position: relative;
-        overflow: hidden;
+        background: linear-gradient(135deg, #6D28D9 0%, #7C3AED 100%) !important;
     }
     
-    .ios-button-secondary > button::after {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: linear-gradient(
-            to bottom right,
-            rgba(255, 255, 255, 0) 0%,
-            rgba(255, 255, 255, 0.1) 50%,
-            rgba(255, 255, 255, 0) 100%
-        );
-        transform: rotate(30deg);
-        animation: buttonShimmer 4s infinite linear;
-        z-index: 1;
-        pointer-events: none;
+    /* Button icon with glow effect */
+    .button-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 0.35rem;
+        filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.5));
     }
     
-    .ios-button-secondary > button:hover {
-        background: linear-gradient(135deg, var(--set-red-light) 0%, var(--set-red) 100%);
-        box-shadow: 
-            0 6px 18px rgba(239, 68, 68, 0.45),
-            inset 0 1px 3px rgba(255, 255, 255, 0.4);
-        transform: translateY(-1px) scale(1.01);
-    }
-    
-    .ios-button-secondary > button:active {
-        background: linear-gradient(135deg, var(--set-red-dark) 0%, var(--set-red) 100%);
-        transform: translateY(1px) scale(0.98);
-        box-shadow: 
-            0 2px 5px rgba(239, 68, 68, 0.3),
-            inset 0 1px 1px rgba(255, 255, 255, 0.2);
-    }
-    
-    /* --- ENHANCED: Find Sets Button (Green) --- */
+    /* Find Sets button (Green) with magnifying glass icon */
     .find-sets-button > button {
-        background: linear-gradient(135deg, var(--set-green) 0%, var(--set-green-light) 100%) !important;
+        background: linear-gradient(135deg, #059669 0%, #10B981 100%) !important;
         box-shadow: 
-            0 4px 12px rgba(16, 185, 129, 0.35),
-            inset 0 1px 2px rgba(255, 255, 255, 0.3);
-        position: relative;
-        overflow: hidden;
-    }
-    
-    .find-sets-button > button::after {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: linear-gradient(
-            to bottom right,
-            rgba(255, 255, 255, 0) 0%,
-            rgba(255, 255, 255, 0.1) 50%,
-            rgba(255, 255, 255, 0) 100%
-        );
-        transform: rotate(30deg);
-        animation: buttonShimmer 4s infinite linear;
-        z-index: 1;
-        pointer-events: none;
+            0 6px 16px rgba(16, 185, 129, 0.3),
+            inset 0 1px 3px rgba(255, 255, 255, 0.4);
     }
     
     .find-sets-button > button:hover {
-        background: linear-gradient(135deg, var(--set-green-light) 0%, var(--set-green) 100%);
+        background: linear-gradient(135deg, #10B981 0%, #34D399 100%) !important;
         box-shadow: 
-            0 6px 18px rgba(16, 185, 129, 0.45),
+            0 8px 20px rgba(16, 185, 129, 0.4),
             inset 0 1px 3px rgba(255, 255, 255, 0.4);
-        transform: translateY(-1px) scale(1.01);
     }
     
     .find-sets-button > button:active {
-        background: linear-gradient(135deg, var(--set-green-dark) 0%, var(--set-green) 100%);
-        transform: translateY(1px) scale(0.98);
+        background: linear-gradient(135deg, #047857 0%, #059669 100%) !important;
         box-shadow: 
-            0 2px 5px rgba(16, 185, 129, 0.3),
-            inset 0 1px 1px rgba(255, 255, 255, 0.2);
+            0 3px 8px rgba(16, 185, 129, 0.3),
+            inset 0 1px 2px rgba(255, 255, 255, 0.3);
+    }
+    
+    /* Scan New Board button with camera icon */
+    .scan-button > button {
+        background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%) !important;
+        box-shadow: 
+            0 6px 16px rgba(79, 70, 229, 0.3),
+            inset 0 1px 3px rgba(255, 255, 255, 0.4);
+    }
+    
+    .scan-button > button:hover {
+        background: linear-gradient(135deg, #6366F1 0%, #818CF8 100%) !important;
+        box-shadow: 
+            0 8px 20px rgba(79, 70, 229, 0.4),
+            inset 0 1px 3px rgba(255, 255, 255, 0.4);
+    }
+    
+    .scan-button > button:active {
+        background: linear-gradient(135deg, #4338CA 0%, #4F46E5 100%) !important;
+        box-shadow: 
+            0 3px 8px rgba(79, 70, 229, 0.3),
+            inset 0 1px 2px rgba(255, 255, 255, 0.3);
     }
 
     /* --- ENHANCED: Premium Image Container --- */
     .ios-image-container {
         margin: 0.75rem auto;
         position: relative;
-        border-radius: 16px;
+        border-radius: 20px;
         overflow: hidden;
-        max-height: 360px; /* Reduced height to ensure fit on iPhone screens */
-        height: auto; /* Let content determine height */
-        min-height: 180px;
-        width: 92%;
-        background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(236, 72, 153, 0.08) 100%);
+        max-height: 320px; /* Further reduced height for better fit */
+        height: auto;
+        min-height: 180px; 
+        width: 85%; /* Narrower width for better overall balance */
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
         box-shadow: 
-            0 4px 14px rgba(124, 58, 237, 0.2),
-            inset 0 1px 2px rgba(255, 255, 255, 0.3);
-        border: 1px solid rgba(124, 58, 237, 0.25);
+            0 10px 25px rgba(124, 58, 237, 0.15),
+            inset 0 1px 3px rgba(255, 255, 255, 0.4);
+        border: 1px solid rgba(124, 58, 237, 0.2);
         display: flex;
         justify-content: center;
         align-items: center;
         transition: transform 0.3s ease, box-shadow 0.3s ease;
+        margin-bottom: 1rem; /* Add bottom margin for better spacing */
+    }
+    
+    /* Scale image content to fit perfectly within container */
+    .ios-image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+        transform: scale(0.95); /* Slightly smaller to ensure fit with margin */
+        transition: transform 0.3s ease;
     }
     
     /* Hide empty containers */
@@ -478,23 +419,23 @@ def load_custom_css():
         flex-direction: column;
         justify-content: center;
         align-items: center;
-        background: rgba(244, 241, 250, 0.8); /* Increased opacity for better visibility */
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        background: rgba(244, 241, 250, 0.85); /* Slightly more opaque for better visibility */
+        backdrop-filter: blur(12px); /* Increased blur for better effect */
+        -webkit-backdrop-filter: blur(12px);
         z-index: 10;
-        border-radius: 16px; /* Match container's radius */
-        animation: fadeIn 0.3s ease-out;
+        border-radius: 20px; /* Match container's radius */
+        animation: fadeIn 0.4s ease-out;
     }
     
     .ios-loader {
-        width: 36px;
-        height: 36px;
-        border: 3px solid rgba(124, 58, 237, 0.2);
+        width: 42px; /* Larger loader */
+        height: 42px;
+        border: 3px solid rgba(124, 58, 237, 0.15);
         border-top: 3px solid var(--set-purple);
         border-radius: 50%;
         animation: spin 1s linear infinite;
-        margin-bottom: 0.8rem;
-        box-shadow: 0 0 10px rgba(124, 58, 237, 0.15);
+        box-shadow: 0 0 15px rgba(124, 58, 237, 0.2);
+        margin-bottom: 1rem;
     }
     
     @keyframes spin {
@@ -503,23 +444,7 @@ def load_custom_css():
     }
     
     .ios-loader-text {
-        font-size: 0.95rem;
-        font-weight: 600;
-        color: var(--set-purple);
-        background: rgba(255, 255, 255, 0.9);
-        padding: 0.6rem 1.2rem;
-        border-radius: 12px;
-        box-shadow: 
-            0 4px 10px rgba(124, 58, 237, 0.15),
-            inset 0 1px 2px rgba(255, 255, 255, 0.5);
-        border: 1px solid rgba(124, 58, 237, 0.2);
-        animation: pulse 2s infinite ease-in-out;
-    }
-    
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.03); }
-        100% { transform: scale(1); }
+        display: none; /* Hide the loader text for cleaner interface */
     }
 
     /* --- ENHANCED: iOS-styled Alert Messages --- */
@@ -852,19 +777,19 @@ def load_custom_css():
         text-align: center;
         font-size: 0.95rem;
         font-weight: 500;
-        color: var(--set-text-light);
-        margin: 0.7rem auto;
-        max-width: 90%;
-        background: rgba(255, 255, 255, 0.7);
-        padding: 0.8rem 1.2rem;
-        border-radius: 14px;
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(124, 58, 237, 0.15);
+        color: #4B5563; /* Darker for better readability */
+        margin: 0.5rem auto 0.75rem;
+        max-width: 85%; /* Match image container width */
+        background: rgba(255, 255, 255, 0.5);
+        padding: 0.7rem 1rem;
+        border-radius: 16px;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(124, 58, 237, 0.1);
         box-shadow: 
-            0 4px 12px rgba(124, 58, 237, 0.1),
+            0 4px 8px rgba(124, 58, 237, 0.08),
             inset 0 1px 2px rgba(255, 255, 255, 0.4);
-        animation: instructionEnter 0.5s ease-out;
+        animation: instructionEnter 0.4s ease-out;
     }
     
     @keyframes instructionEnter {
@@ -1014,17 +939,25 @@ def load_custom_css():
         opacity: 1;
     }
 
-    /* --- ENHANCED: Center Button --- */
+    /* --- ENHANCED: Center Button Container --- */
     .ios-center-button {
         display: flex;
         justify-content: center;
-        margin: 1rem auto 0.5rem;
-        width: 92%;
+        margin: 0.5rem auto 1rem;
+        width: 85%; /* Match image container width */
+        perspective: 1000px; /* For 3D effect */
     }
 
     .ios-center-button > div {
         width: 100%;
-        max-width: 280px;
+        max-width: 250px;
+        transform-style: preserve-3d;
+        transition: transform 0.2s ease;
+    }
+    
+    /* Add subtle hover effect to button container */
+    .ios-center-button > div:hover {
+        transform: translateZ(5px);
     }
     
     /* --- ENHANCED: Screen Animation --- */
@@ -1452,22 +1385,26 @@ def identify_sets_from_image(
     final_output = restore_orientation(annotated, was_rotated)
     return found_sets, final_output
 
-def optimize_image_size(img_pil: Image.Image, max_dim=550) -> Image.Image:
+def optimize_image_size(img_pil: Image.Image, max_dim=480) -> Image.Image:
     """
-    Resizes a PIL image to optimize for mobile viewing while preserving aspect ratio.
-    Uses a smaller max_dim (550px) to ensure everything fits on iPhone screens without scrolling.
+    Resizes a PIL image using an advanced approach for mobile viewing.
+    Uses a smaller max_dim (480px) and preserves aspect ratio while ensuring optimal display.
     """
     width, height = img_pil.size
-    if max(width, height) > max_dim:
-        if width > height:
-            new_width = max_dim
-            new_height = int(height * (max_dim / width))
-        else:
-            new_height = max_dim
-            new_width = int(width * (max_dim / height))
-
-        return img_pil.resize((new_width, new_height), Image.LANCZOS)
-    return img_pil
+    aspect_ratio = width / height
+    
+    # Calculate optimal dimensions based on device constraints
+    if aspect_ratio > 1:  # Landscape orientation
+        new_width = min(max_dim, width)
+        new_height = int(new_width / aspect_ratio)
+    else:  # Portrait orientation 
+        new_height = min(max_dim, height)
+        new_width = int(new_height * aspect_ratio)
+    
+    # Apply high-quality resizing with antialiasing
+    resized_img = img_pil.resize((new_width, new_height), Image.LANCZOS)
+    
+    return resized_img
 
 # =============================================================================
 # UI RENDERING HELPERS
@@ -1478,7 +1415,7 @@ def render_header():
     """
     header_html = """
     <div class="ios-header">
-        <h1>SET Card Game Detector</h1>
+        <h1>SET Detector</h1>
     </div>
     """
     st.markdown(header_html, unsafe_allow_html=True)
@@ -1715,13 +1652,29 @@ def main():
         st.markdown('</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
         
-        # Single centered Find Sets button with premium styling
+        # Single centered Find Sets button with premium styling and icon
         st.markdown('<div class="ios-center-button">', unsafe_allow_html=True)
         st.markdown('<div class="ios-button-primary find-sets-button">', unsafe_allow_html=True)
+        
+        # Add magnifying glass icon to button
+        find_sets_button_html = f"""
+        <button type="button" data-testid="baseButton-secondary">
+            <span class="button-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </span>
+            Find Sets
+        </button>
+        """
+        
+        # Use the custom HTML button 
         if st.button("Find Sets", key="find_sets_btn", use_container_width=True):
             st.session_state.app_view = "processing"
             st.session_state.screen_transition = True
             st.rerun()
+            
         st.markdown('</div>', unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
             
@@ -1821,34 +1774,39 @@ def main():
             st.markdown('</div>', unsafe_allow_html=True)
             
         else:
-            # Success case - show results with premium styling
+            # Success case - show results with premium styling but without redundant badge
             num_sets = len(st.session_state.sets_info)
-            
-            # Results header with premium badge and SET icons
-            st.markdown(f"""
-            <div style="text-align: center; margin: 0.8rem 0;">
-                <div class="ios-badge">
-                    <span class="set-card-diamond"></span>
-                    {num_sets} SET{'' if num_sets == 1 else 's'} Found
-                    <span class="set-card-oval"></span>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
             
             # Display processed image with sets highlighted
             st.markdown('<div class="ios-image-container">', unsafe_allow_html=True)
             st.image(cv2.cvtColor(st.session_state.processed_image, cv2.COLOR_BGR2RGB), use_container_width=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
-            # Enhanced instruction with details
-            render_premium_instruction(f"Found {num_sets} valid SET{'s' if num_sets > 1 else ''} with unique card combinations")
+            # Enhanced instruction with details - more concise
+            render_premium_instruction(f"Found {num_sets} valid SET{'s' if num_sets > 1 else ''}")
             
-            # Single centered button with improved wording
+            # Single centered button with improved wording and icon
             st.markdown('<div class="ios-center-button">', unsafe_allow_html=True)
-            st.markdown('<div class="ios-button-primary">', unsafe_allow_html=True)
+            st.markdown('<div class="ios-button-primary scan-button">', unsafe_allow_html=True)
+            
+            # Add camera icon to button
+            scan_button_html = f"""
+            <button type="button" data-testid="baseButton-secondary">
+                <span class="button-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+                        <circle cx="12" cy="13" r="4"></circle>
+                    </svg>
+                </span>
+                Scan New Board
+            </button>
+            """
+            
+            # Use the custom HTML button
             if st.button("Scan New Board", key="new_game_btn", use_container_width=True):
                 reset_app_state()
                 st.rerun()
+                
             st.markdown('</div>', unsafe_allow_html=True)
             st.markdown('</div>', unsafe_allow_html=True)
             
